@@ -2,12 +2,11 @@
   "dependencies": {
     "NUnit": "3.5.0",
     "dotnet-test-nunit": "3.4.0-beta-3",
-    "Core": "1.0.0-*",
     "PopcornExport": "1.0.0-*"
   },
   "frameworks": {
-    "netcoreapp1.0": {
-      "imports": "portable-net45+win8"
+    "netcoreapp1.1": {
+      "imports": [ "portable-net451+win8" ]
     }
   },
   "runtimes": {
