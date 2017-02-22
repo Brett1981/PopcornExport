@@ -15,7 +15,17 @@
         /// <summary>
         /// Shows collection name
         /// </summary>
-        public const string ShowCollectionName = "shows";
+        public const string ShowsCollectionName = "shows";
+
+        /// <summary>
+        /// Anime collection name
+        /// </summary>
+        public const string AnimeCollectionName = "anime";
+
+        /// <summary>
+        /// Movies collection name
+        /// </summary>
+        public const string MoviesCollectionName = "movies";
 
         /// <summary>
         /// Application Insights key used for logging

@@ -82,7 +82,7 @@ namespace PopcornExport.Services.Export
                         }
                     }
 
-                    var loggingTraceEnd = $@"Export {exportType.ToFriendlyString()} ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+                    var loggingTraceEnd = $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                     _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
 
                     return export;

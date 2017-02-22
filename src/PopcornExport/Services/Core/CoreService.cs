@@ -65,7 +65,7 @@ namespace PopcornExport.Services.Core
                     switch (export)
                     {
                         case ExportType.Anime:
-                            importService = new ImportAnimeService();
+                            importService = new ImportAnimeService(_mongoDbService, _loggingService);
                             await importService.Import(documents);
                             break;
                         case ExportType.Shows:
@@ -73,7 +73,7 @@ namespace PopcornExport.Services.Core
                             await importService.Import(documents);
                             break;
                         case ExportType.Movies:
-                            importService = new ImportMoviesService();
+                            importService = new ImportMoviesService(_mongoDbService, _loggingService);
                             await importService.Import(documents);
                             break;
                         default:

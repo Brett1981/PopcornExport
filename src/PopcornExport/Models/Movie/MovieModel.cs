@@ -1,16 +1,15 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using PopcornExport.Models.Episode;
 using PopcornExport.Models.Image;
 using PopcornExport.Models.Rating;
-using System.Collections.Generic;
+using PopcornExport.Models.Torrent;
 using System.Runtime.Serialization;
 
-namespace PopcornExport.Models.Show
+namespace PopcornExport.Models.Movie
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class ShowModel
+    public class MovieModel
     {
         [BsonId]
         public string _id { get; set; }
@@ -18,10 +17,6 @@ namespace PopcornExport.Models.Show
         [DataMember]
         [BsonElement("imdb_id")]
         public string ImdbId { get; set; }
-
-        [DataMember]
-        [BsonElement("tvdb_id")]
-        public string TvdbId { get; set; }
 
         [DataMember]
         [BsonElement("title")]
@@ -32,10 +27,6 @@ namespace PopcornExport.Models.Show
         public string Year { get; set; }
 
         [DataMember]
-        [BsonElement("slug")]
-        public string Slug { get; set; }
-
-        [DataMember]
         [BsonElement("synopsis")]
         public string Synopsis { get; set; }
 
@@ -44,40 +35,20 @@ namespace PopcornExport.Models.Show
         public string Runtime { get; set; }
 
         [DataMember]
-        [BsonElement("country")]
-        public string Country { get; set; }
+        [BsonElement("released")]
+        public long Released { get; set; }
 
         [DataMember]
-        [BsonElement("network")]
-        public string Network { get; set; }
+        [BsonElement("trailer")]
+        public string Trailer { get; set; }
 
         [DataMember]
-        [BsonElement("air_day")]
-        public string AirDay { get; set; }
+        [BsonElement("certification")]
+        public string Certification { get; set; }
 
         [DataMember]
-        [BsonElement("air_time")]
-        public string AirTime { get; set; }
-
-        [DataMember]
-        [BsonElement("status")]
-        public string Status { get; set; }
-
-        [DataMember]
-        [BsonElement("num_seasons")]
-        public int NumSeasons { get; set; }
-
-        [DataMember]
-        [BsonElement("last_updated")]
-        public long LastUpdated { get; set; }
-
-        [DataMember]
-        [BsonElement("__v")]
-        public int V { get; set; }
-
-        [DataMember]
-        [BsonElement("episodes")]
-        public List<EpisodeShowModel> Episodes { get; set; }
+        [BsonElement("torrents")]
+        public TorrentModel Torrents { get; set; }
 
         [DataMember]
         [BsonElement("genres")]

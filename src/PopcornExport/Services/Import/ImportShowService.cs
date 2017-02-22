@@ -91,44 +91,17 @@ namespace PopcornExport.Services.Import
                     };
 
                     // Retrieve shows from database
-                    var collectionShows = _mongoDbService.GetCollection(Constants.ShowCollectionName);
+                    var collectionShows = _mongoDbService.GetCollection(Constants.ShowsCollectionName);
 
-                    // Find the show in database if any
-                    var match = (await collectionShows.FindAsync(filter)).FirstOrDefault();
-                    if (match == null)
-                    {
-                        // The show has not been found, insert it
-                        watch.Restart();
-                        await collectionShows.InsertOneAsync(document);
-                        watch.Stop();
-                        updatedshows++;
-                        Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.Write("  CREATED  ");
-                    }
-                    else
-                    {
-                        // The show has been found in database, check if it has been updated
-                        var lastUpdated = match["last_updated"].AsInt64;
-                        if (lastUpdated != show.LastUpdated)
-                        {
-                            watch.Restart();
-                            await collectionShows.FindOneAndUpdateAsync(filter, update, upsert);
-                            watch.Stop();
-                            updatedshows++;
-                            Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                            Console.ForegroundColor = ConsoleColor.DarkYellow;
-                            Console.Write("  UPDATED  ");
-                        }
-                        else
-                        {
-                            // The show has not been updated, do nothing
-                            updatedshows++;
-                            Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                            Console.ForegroundColor = ConsoleColor.DarkRed;
-                            Console.Write("  NOT UPDATED  ");
-                        }
-                    }
+                    watch.Restart();
+
+                    // Update show
+                    await collectionShows.FindOneAndUpdateAsync(filter, update, upsert);
+                    watch.Stop();
+                    updatedshows++;
+                    Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
+                    Console.ForegroundColor = ConsoleColor.DarkYellow;
+                    Console.Write("  UPDATED  ");
 
                     // Sum up
                     Console.ResetColor();

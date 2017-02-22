@@ -27,5 +27,9 @@ namespace PopcornExport.Models.Torrent
         [DataMember]
         [BsonElement("url")]
         public string Url { get; set; }
+
+        [DataMember]
+        [BsonElement("filesize")]
+        public string Filesize { get; set; }
     }
 }

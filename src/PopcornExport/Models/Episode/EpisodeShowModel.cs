@@ -1,5 +1,4 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
-using Newtonsoft.Json;
 using PopcornExport.Models.Watched;
 using System;
 using System.Collections.Generic;
@@ -7,11 +6,11 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
-namespace PopcornExport.Models.Show
+namespace PopcornExport.Models.Episode
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class Episode
+    public class EpisodeShowModel
     {
         [DataMember]
         [BsonElement("torrents")]
