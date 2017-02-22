@@ -1,18 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26206.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E4DD8D55-6520-4B62-94BA-435AEF5DA9D7}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F86CEFCC-FE3A-4337-9E56-9B045A6D1516}"
-	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PopcornExport", "src\PopcornExport\PopcornExport.csproj", "{CDD607EE-50C1-4FB7-8C2A-EE2A789A71CF}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "PopcornExport", "src\PopcornExport\PopcornExport.xproj", "{CDD607EE-50C1-4FB7-8C2A-EE2A789A71CF}"
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "PopcornExport.Test", "src\PopcornExport.Test\PopcornExport.Test.xproj", "{4EBD859A-4629-47F1-B7E0-F8634AB90A3C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PopcornExport.Test", "src\PopcornExport.Test\PopcornExport.Test.csproj", "{4EBD859A-4629-47F1-B7E0-F8634AB90A3C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
