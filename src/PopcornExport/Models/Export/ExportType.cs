@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace PopcornScraper
+namespace PopcornExport.Models.Export
 {
-    public class Program
+    public enum ExportType
     {
-        public static void Main(string[] args)
-        {
-        }
+        Anime,
+        Shows,
+        Movies
     }
 }
