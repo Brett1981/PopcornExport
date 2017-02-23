@@ -62,7 +62,7 @@ namespace PopcornExport.Services.Core
                 var exports = new[] {ExportType.Anime, ExportType.Movies, ExportType.Shows};
 
                 // Process each export type in parallel
-                var tasks = exports.Select(async export =>
+                foreach (var export in exports)
                 {
                     // Load export
                     var documents = await _exportService.LoadExport(export);
@@ -72,23 +72,24 @@ namespace PopcornExport.Services.Core
                     switch (export)
                     {
                         case ExportType.Anime:
-                            importService = new ImportAnimeService(_mongoDbService, new AssetsAnimeService(), _loggingService);
+                            importService = new ImportAnimeService(_mongoDbService, new AssetsAnimeService(),
+                                _loggingService);
                             await importService.Import(documents);
                             break;
                         case ExportType.Shows:
-                            importService = new ImportShowService(_mongoDbService, new AssetsShowService(), _loggingService);
+                            importService = new ImportShowService(_mongoDbService, new AssetsShowService(),
+                                _loggingService);
                             await importService.Import(documents);
                             break;
                         case ExportType.Movies:
-                            importService = new ImportMovieService(_mongoDbService, new AssetsMovieService(), _loggingService);
+                            importService = new ImportMovieService(_mongoDbService, new AssetsMovieService(),
+                                _loggingService);
                             await importService.Import(documents);
                             break;
                         default:
                             throw new NotImplementedException();
                     }
-                });
-
-                await Task.WhenAll(tasks);
+                }
 
                 var loggingTraceEnd =
                     $@"Export ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
