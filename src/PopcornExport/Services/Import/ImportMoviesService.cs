@@ -40,11 +40,14 @@ namespace PopcornExport.Services.Import
         /// <summary>
         /// Import movies to database
         /// </summary>
-        /// <param name="documents">Documents to import</param>
+        /// <param name="docs">Documents to import</param>
         /// <returns><see cref="Task"/></returns>
-        public async Task Import(IEnumerable<BsonDocument> documents)
+        public async Task Import(IEnumerable<BsonDocument> docs)
         {
-            var loggingTraceBegin = $@"Import {documents.Count()} movies started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+            var documents = docs.ToList();
+            var loggingTraceBegin =
+                $@"Import {documents.Count} movies started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                    CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var watch = new Stopwatch();
@@ -62,17 +65,17 @@ namespace PopcornExport.Services.Import
 
                     // Set udpate builder to update a movie
                     var update = Builders<BsonDocument>.Update.Set("imdb_id", movie.ImdbId)
-                                                                .Set("title", movie.Title)
-                                                                .Set("year", movie.Year)
-                                                                .Set("synopsis", movie.Synopsis)
-                                                                .Set("runtime", movie.Runtime)
-                                                                .Set("released", movie.Released)
-                                                                .Set("trailer", movie.Trailer)
-                                                                .Set("certification", movie.Certification)
-                                                                .Set("torrents", movie.Torrents)
-                                                                .Set("genres", movie.Genres)
-                                                                .Set("images", movie.Images)
-                                                                .Set("rating", movie.Rating);
+                        .Set("title", movie.Title)
+                        .Set("year", movie.Year)
+                        .Set("synopsis", movie.Synopsis)
+                        .Set("runtime", movie.Runtime)
+                        .Set("released", movie.Released)
+                        .Set("trailer", movie.Trailer)
+                        .Set("certification", movie.Certification)
+                        .Set("torrents", movie.Torrents)
+                        .Set("genres", movie.Genres)
+                        .Set("images", movie.Images)
+                        .Set("rating", movie.Rating);
 
                     // If a movie does not exist in database, create it
                     var upsert = new FindOneAndUpdateOptions<BsonDocument>()
@@ -97,7 +100,7 @@ namespace PopcornExport.Services.Import
                     Console.ResetColor();
                     Console.Write($"{movie.Title} in {watch.ElapsedMilliseconds} ms.");
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write($"  {updatedmovies}/{documents.Count()}");
+                    Console.Write($"  {updatedmovies}/{documents.Count}");
                     Console.ResetColor();
                     Console.WriteLine(Environment.NewLine);
                 }
@@ -112,7 +115,9 @@ namespace PopcornExport.Services.Import
             Console.WriteLine("Done processing movies.");
             Console.ResetColor();
 
-            var loggingTraceEnd = $@"Import movies ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+            var loggingTraceEnd =
+                $@"Import movies ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                    CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
         }
     }

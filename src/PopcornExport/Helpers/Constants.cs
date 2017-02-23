@@ -1,5 +1,8 @@
 ﻿namespace PopcornExport.Helpers
 {
+    /// <summary>
+    /// Constants of the project
+    /// </summary>
     public class Constants
     {
         /// <summary>

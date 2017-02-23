@@ -1,8 +1,6 @@
 ﻿using MongoDB.Bson;
 using PopcornExport.Models.Export;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace PopcornExport.Services.Export

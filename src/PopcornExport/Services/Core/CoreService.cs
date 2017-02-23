@@ -11,6 +11,9 @@ using System.Threading.Tasks;
 
 namespace PopcornExport.Services.Core
 {
+    /// <summary>
+    /// Core service
+    /// </summary>
     public sealed class CoreService : ICoreService
     {
         /// <summary>
@@ -34,7 +37,8 @@ namespace PopcornExport.Services.Core
         /// <param name="exportService">Export service</param>
         /// <param name="mongoDbService">MongoDb service</param>
         /// <param name="loggingService">Logging service</param>
-        public CoreService(IExportService exportService, IMongoDbService<BsonDocument> mongoDbService, ILoggingService loggingService)
+        public CoreService(IExportService exportService, IMongoDbService<BsonDocument> mongoDbService,
+            ILoggingService loggingService)
         {
             _exportService = exportService;
             _loggingService = loggingService;
@@ -49,10 +53,12 @@ namespace PopcornExport.Services.Core
         {
             try
             {
-                var loggingTraceBegin = $@"Export started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+                var loggingTraceBegin =
+                    $@"Export started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                        CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-                var exports = new[] { ExportType.Anime, ExportType.Movies, ExportType.Shows };
+                var exports = new[] {ExportType.Anime, ExportType.Movies, ExportType.Shows};
 
                 // Process each export type in parallel
                 var tasks = exports.Select(async export =>
@@ -83,10 +89,11 @@ namespace PopcornExport.Services.Core
 
                 await Task.WhenAll(tasks);
 
-                var loggingTraceEnd = $@"Export ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
-                _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
+                var loggingTraceEnd =
+                    $@"Export ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+                _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _loggingService.Telemetry.TrackException(ex);
             }

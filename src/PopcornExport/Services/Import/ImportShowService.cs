@@ -43,11 +43,14 @@ namespace PopcornExport.Services.Import
         /// <summary>
         /// Import shows to database
         /// </summary>
-        /// <param name="documents">Documents to import</param>
+        /// <param name="docs">Documents to import</param>
         /// <returns><see cref="Task"/></returns>
-        public async Task Import(IEnumerable<BsonDocument> documents)
+        public async Task Import(IEnumerable<BsonDocument> docs)
         {
-            var loggingTraceBegin = $@"Import {documents.Count()} shows started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+            var documents = docs.ToList();
+            var loggingTraceBegin =
+                $@"Import {documents.Count} shows started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                    CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var watch = new Stopwatch();
@@ -65,24 +68,24 @@ namespace PopcornExport.Services.Import
 
                     // Set udpate builder to update a show
                     var update = Builders<BsonDocument>.Update.Set("imdb_id", show.ImdbId)
-                                                                .Set("tvdb_id", show.TvdbId)
-                                                                .Set("title", show.Title)
-                                                                .Set("year", show.Year)
-                                                                .Set("slug", show.Slug)
-                                                                .Set("synopsis", show.Synopsis)
-                                                                .Set("runtime", show.Runtime)
-                                                                .Set("country", show.Country)
-                                                                .Set("network", show.Network)
-                                                                .Set("air_day", show.AirDay)
-                                                                .Set("air_time", show.AirTime)
-                                                                .Set("status", show.Status)
-                                                                .Set("num_seasons", show.NumSeasons)
-                                                                .Set("last_updated", show.LastUpdated)
-                                                                .Set("__v", show.V)
-                                                                .Set("episodes", show.Episodes)
-                                                                .Set("genres", show.Genres)
-                                                                .Set("images", show.Images)
-                                                                .Set("rating", show.Rating);
+                        .Set("tvdb_id", show.TvdbId)
+                        .Set("title", show.Title)
+                        .Set("year", show.Year)
+                        .Set("slug", show.Slug)
+                        .Set("synopsis", show.Synopsis)
+                        .Set("runtime", show.Runtime)
+                        .Set("country", show.Country)
+                        .Set("network", show.Network)
+                        .Set("air_day", show.AirDay)
+                        .Set("air_time", show.AirTime)
+                        .Set("status", show.Status)
+                        .Set("num_seasons", show.NumSeasons)
+                        .Set("last_updated", show.LastUpdated)
+                        .Set("__v", show.V)
+                        .Set("episodes", show.Episodes)
+                        .Set("genres", show.Genres)
+                        .Set("images", show.Images)
+                        .Set("rating", show.Rating);
 
                     // If a show does not exist in database, create it
                     var upsert = new FindOneAndUpdateOptions<BsonDocument>()
@@ -107,11 +110,11 @@ namespace PopcornExport.Services.Import
                     Console.ResetColor();
                     Console.Write($"{show.Title} in {watch.ElapsedMilliseconds} ms.");
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write($"  {updatedshows}/{documents.Count()}");
+                    Console.Write($"  {updatedshows}/{documents.Count}");
                     Console.ResetColor();
                     Console.WriteLine(Environment.NewLine);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _loggingService.Telemetry.TrackException(ex);
                 }
@@ -122,7 +125,9 @@ namespace PopcornExport.Services.Import
             Console.WriteLine("Done processing shows.");
             Console.ResetColor();
 
-            var loggingTraceEnd = $@"Import shows ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+            var loggingTraceEnd =
+                $@"Import shows ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                    CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
         }
     }

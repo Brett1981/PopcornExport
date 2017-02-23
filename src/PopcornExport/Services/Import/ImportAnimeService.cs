@@ -40,11 +40,14 @@ namespace PopcornExport.Services.Import
         /// <summary>
         /// Import movies to database
         /// </summary>
-        /// <param name="documents">Documents to import</param>
+        /// <param name="docs">Documents to import</param>
         /// <returns><see cref="Task"/></returns>
-        public async Task Import(IEnumerable<BsonDocument> documents)
+        public async Task Import(IEnumerable<BsonDocument> docs)
         {
-            var loggingTraceBegin = $@"Import {documents.Count()} movies started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+            var documents = docs.ToList();
+            var loggingTraceBegin =
+                $@"Import {documents.Count} movies started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                    CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var watch = new Stopwatch();
@@ -62,20 +65,20 @@ namespace PopcornExport.Services.Import
 
                     // Set udpate builder to update an anime
                     var update = Builders<BsonDocument>.Update.Set("mal_id", anime.MalId)
-                                                                .Set("title", anime.Title)
-                                                                .Set("year", anime.Year)
-                                                                .Set("slug", anime.Slug)
-                                                                .Set("synopsis", anime.Synopsis)
-                                                                .Set("runtime", anime.Runtime)
-                                                                .Set("status", anime.Status)
-                                                                .Set("type", anime.Type)
-                                                                .Set("last_updated", anime.LastUpdated)
-                                                                .Set("__v", anime.V)
-                                                                .Set("num_seasons", anime.NumSeasons)
-                                                                .Set("episodes", anime.Episodes)
-                                                                .Set("genres", anime.Genres)
-                                                                .Set("images", anime.Images)
-                                                                .Set("rating", anime.Rating);
+                        .Set("title", anime.Title)
+                        .Set("year", anime.Year)
+                        .Set("slug", anime.Slug)
+                        .Set("synopsis", anime.Synopsis)
+                        .Set("runtime", anime.Runtime)
+                        .Set("status", anime.Status)
+                        .Set("type", anime.Type)
+                        .Set("last_updated", anime.LastUpdated)
+                        .Set("__v", anime.V)
+                        .Set("num_seasons", anime.NumSeasons)
+                        .Set("episodes", anime.Episodes)
+                        .Set("genres", anime.Genres)
+                        .Set("images", anime.Images)
+                        .Set("rating", anime.Rating);
 
                     // If an anime does not exist in database, create it
                     var upsert = new FindOneAndUpdateOptions<BsonDocument>()
@@ -100,7 +103,7 @@ namespace PopcornExport.Services.Import
                     Console.ResetColor();
                     Console.Write($"{anime.Title} in {watch.ElapsedMilliseconds} ms.");
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write($"  {updatedanimes}/{documents.Count()}");
+                    Console.Write($"  {updatedanimes}/{documents.Count}");
                     Console.ResetColor();
                     Console.WriteLine(Environment.NewLine);
                 }
@@ -115,7 +118,9 @@ namespace PopcornExport.Services.Import
             Console.WriteLine("Done processing animes.");
             Console.ResetColor();
 
-            var loggingTraceEnd = $@"Import animes ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+            var loggingTraceEnd =
+                $@"Import animes ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                    CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
         }
     }

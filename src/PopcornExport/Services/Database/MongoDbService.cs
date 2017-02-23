@@ -13,33 +13,27 @@ namespace PopcornExport.Services.Database
     public sealed class MongoDbService<T> : IMongoDbService<T> where T : BsonDocument
     {
         /// <summary>
-        /// Mongo client
-        /// </summary>
-        IMongoClient _client;
-
-        /// <summary>
         /// Mongo database
         /// </summary>
-        IMongoDatabase _db;
+        private readonly IMongoDatabase _db;
 
         /// <summary>
         /// Establish a connection to database
         /// </summary>
-        /// <param name="connectionString">Connection string</param>
         public MongoDbService()
         {
             var builder = new ConfigurationBuilder()
-                            .AddJsonFile("appsettings.json");
+                .AddJsonFile("appsettings.json");
             var configuration = builder.Build();
             var connectionString = configuration["mongoConnection"];
 
-            MongoClientSettings settings = MongoClientSettings.FromUrl(
-              new MongoUrl(connectionString)
+            var settings = MongoClientSettings.FromUrl(
+                new MongoUrl(connectionString)
             );
 
-            settings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
-            _client = new MongoClient(settings);
-            _db = _client.GetDatabase(Constants.MongoDbName);
+            settings.SslSettings = new SslSettings {EnabledSslProtocols = SslProtocols.Tls12};
+            IMongoClient client = new MongoClient(settings);
+            _db = client.GetDatabase(Constants.MongoDbName);
         }
 
         /// <summary>

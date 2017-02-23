@@ -42,50 +42,56 @@ namespace PopcornExport.Services.Export
         {
             try
             {
-                var loggingTraceBegin = $@"Export {exportType.ToFriendlyString()} started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+                var loggingTraceBegin =
+                    $@"Export {exportType.ToFriendlyString()} started at {DateTime.UtcNow.ToString(
+                        "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-                var client = new RestClient(Constants.PopcornApiFetchUrl);
-                var request = new RestRequest("{segment}", Method.GET);
-                switch (exportType)
+                using (var client = new RestClient(Constants.PopcornApiFetchUrl))
                 {
-                    case ExportType.Anime:
-                        request.AddUrlSegment("segment", "anime");
-                        break;
-                    case ExportType.Movies:
-                        request.AddUrlSegment("segment", "movie");
-                        break;
-                    case ExportType.Shows:
-                        request.AddUrlSegment("segment", "show");
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
-
-                // Execute request
-                var response = await client.Execute(request);
-
-                // Load response into memory
-                using (StreamReader reader = new StreamReader(new MemoryStream(response.RawBytes), Encoding.UTF8))
-                {
-                    string line;
-                    List<BsonDocument> export = new List<BsonDocument>();
-
-                    // Read all response parts
-                    while ((line = reader.ReadLine()) != null)
+                    var request = new RestRequest("{segment}", Method.GET);
+                    switch (exportType)
                     {
-                        BsonDocument document;
-                        // Try to parse a document
-                        if (BsonDocument.TryParse(line, out document))
-                        {
-                            export.Add(document);
-                        }
+                        case ExportType.Anime:
+                            request.AddUrlSegment("segment", "anime");
+                            break;
+                        case ExportType.Movies:
+                            request.AddUrlSegment("segment", "movie");
+                            break;
+                        case ExportType.Shows:
+                            request.AddUrlSegment("segment", "show");
+                            break;
+                        default:
+                            throw new NotImplementedException();
                     }
 
-                    var loggingTraceEnd = $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
-                    _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
+                    // Execute request
+                    var response = await client.Execute(request);
 
-                    return export;
+                    // Load response into memory
+                    using (var reader = new StreamReader(new MemoryStream(response.RawBytes), Encoding.UTF8))
+                    {
+                        string line;
+                        var export = new List<BsonDocument>();
+
+                        // Read all response parts
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            BsonDocument document;
+                            // Try to parse a document
+                            if (BsonDocument.TryParse(line, out document))
+                            {
+                                export.Add(document);
+                            }
+                        }
+
+                        var loggingTraceEnd =
+                            $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {DateTime.UtcNow.ToString(
+                                "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+                        _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
+
+                        return export;
+                    }
                 }
             }
             catch (Exception ex)
