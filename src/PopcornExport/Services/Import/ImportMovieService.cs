@@ -11,10 +11,11 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using PopcornExport.Services.Assets;
 
 namespace PopcornExport.Services.Import
 {
-    public sealed class ImportMoviesService : IImportService
+    public sealed class ImportMovieService : IImportService
     {
         /// <summary>
         /// The logging service
@@ -27,14 +28,21 @@ namespace PopcornExport.Services.Import
         private readonly IMongoDbService<BsonDocument> _mongoDbService;
 
         /// <summary>
-        /// Instanciate a <see cref="ImportMoviesService"/>
+        /// Assets service
+        /// </summary>
+        private readonly IAssetsService _assetsService;
+
+        /// <summary>
+        /// Instanciate a <see cref="ImportMovieService"/>
         /// </summary>
         /// <param name="mongoDbService">MongoDb service</param>
+        /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportMoviesService(IMongoDbService<BsonDocument> mongoDbService, ILoggingService loggingService)
+        public ImportMovieService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService, ILoggingService loggingService)
         {
             _mongoDbService = mongoDbService;
             _loggingService = loggingService;
+            _assetsService = assetsService;
         }
 
         /// <summary>
@@ -59,6 +67,9 @@ namespace PopcornExport.Services.Import
                 {
                     // Deserialize a document to a movie
                     var movie = BsonSerializer.Deserialize<MovieModel>(document);
+                    await _assetsService.UploadFile($@"{movie.ImdbId}/banner/{movie.Images.Banner.Split('/').Last()}.jpg", movie.Images.Banner);
+                    await _assetsService.UploadFile($@"{movie.ImdbId}/fanart/{movie.Images.Fanart.Split('/').Last()}.jpg", movie.Images.Fanart);
+                    await _assetsService.UploadFile($@"{movie.ImdbId}/poster/{movie.Images.Poster.Split('/').Last()}.jpg", movie.Images.Poster);
 
                     // Set filter to search a movie in database
                     var filter = Builders<BsonDocument>.Filter.Eq("imdb_id", movie.ImdbId);
@@ -80,7 +91,7 @@ namespace PopcornExport.Services.Import
                         .Set("rating", movie.Rating);
 
                     // If a movie does not exist in database, create it
-                    var upsert = new FindOneAndUpdateOptions<BsonDocument>()
+                    var upsert = new FindOneAndUpdateOptions<BsonDocument>
                     {
                         IsUpsert = true
                     };

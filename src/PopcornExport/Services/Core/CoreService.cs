@@ -8,6 +8,7 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using PopcornExport.Services.Assets;
 
 namespace PopcornExport.Services.Core
 {
@@ -71,15 +72,15 @@ namespace PopcornExport.Services.Core
                     switch (export)
                     {
                         case ExportType.Anime:
-                            importService = new ImportAnimeService(_mongoDbService, _loggingService);
+                            importService = new ImportAnimeService(_mongoDbService, new AssetsAnimeService(), _loggingService);
                             await importService.Import(documents);
                             break;
                         case ExportType.Shows:
-                            importService = new ImportShowService(_mongoDbService, _loggingService);
+                            importService = new ImportShowService(_mongoDbService, new AssetsShowService(), _loggingService);
                             await importService.Import(documents);
                             break;
                         case ExportType.Movies:
-                            importService = new ImportMoviesService(_mongoDbService, _loggingService);
+                            importService = new ImportMovieService(_mongoDbService, new AssetsMovieService(), _loggingService);
                             await importService.Import(documents);
                             break;
                         default:

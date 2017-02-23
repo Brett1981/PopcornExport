@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using PopcornExport.Services.Assets;
 
 namespace PopcornExport.Services.Import
 {
@@ -30,13 +31,20 @@ namespace PopcornExport.Services.Import
         private readonly IMongoDbService<BsonDocument> _mongoDbService;
 
         /// <summary>
+        /// Assets service
+        /// </summary>
+        private readonly IAssetsService _assetsService;
+
+        /// <summary>
         /// Instanciate a <see cref="ImportShowService"/>
         /// </summary>
         /// <param name="mongoDbService">MongoDb service</param>
+        /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportShowService(IMongoDbService<BsonDocument> mongoDbService, ILoggingService loggingService)
+        public ImportShowService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService, ILoggingService loggingService)
         {
             _mongoDbService = mongoDbService;
+            _assetsService = assetsService;
             _loggingService = loggingService;
         }
 
@@ -62,6 +70,10 @@ namespace PopcornExport.Services.Import
                 {
                     // Deserialize a document to a show
                     var show = BsonSerializer.Deserialize<ShowModel>(document);
+
+                    await _assetsService.UploadFile($@"{show.ImdbId}/banner/{show.Images.Banner.Split('/').Last()}.jpg", show.Images.Banner);
+                    await _assetsService.UploadFile($@"{show.ImdbId}/fanart/{show.Images.Fanart.Split('/').Last()}.jpg", show.Images.Fanart);
+                    await _assetsService.UploadFile($@"{show.ImdbId}/poster/{show.Images.Poster.Split('/').Last()}.jpg", show.Images.Poster);
 
                     // Set filter to search a show in database
                     var filter = Builders<BsonDocument>.Filter.Eq("imdb_id", show.ImdbId);

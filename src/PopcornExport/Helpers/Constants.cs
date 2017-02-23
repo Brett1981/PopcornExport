@@ -6,9 +6,14 @@
     public class Constants
     {
         /// <summary>
-        /// Popcorn Api to fetch
+        /// Popcorn Api to import
         /// </summary>
-        public const string PopcornApiFetchUrl = "https://tv-v2.api-fetch.website/exports";
+        public const string OriginalPopcornApi = "https://tv-v2.api-fetch.website/exports";
+
+        /// <summary>
+        /// Popcorn Api to export
+        /// </summary>
+        public const string AzurePopcornApi = "https://popcornapi.azurewebsites.net/api/";
 
         /// <summary>
         /// MongoDb Database to use as export

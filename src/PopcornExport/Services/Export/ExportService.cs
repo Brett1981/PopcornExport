@@ -47,7 +47,7 @@ namespace PopcornExport.Services.Export
                         "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-                using (var client = new RestClient(Constants.PopcornApiFetchUrl))
+                using (var client = new RestClient(Constants.OriginalPopcornApi))
                 {
                     var request = new RestRequest("{segment}", Method.GET);
                     switch (exportType)

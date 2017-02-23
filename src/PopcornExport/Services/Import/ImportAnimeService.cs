@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using PopcornExport.Services.Assets;
 
 namespace PopcornExport.Services.Import
 {
@@ -27,14 +28,21 @@ namespace PopcornExport.Services.Import
         private readonly IMongoDbService<BsonDocument> _mongoDbService;
 
         /// <summary>
+        /// Assets service
+        /// </summary>
+        private readonly IAssetsService _assetsService;
+
+        /// <summary>
         /// Instanciate a <see cref="ImportAnimeService"/>
         /// </summary>
         /// <param name="mongoDbService">MongoDb service</param>
+        /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportAnimeService(IMongoDbService<BsonDocument> mongoDbService, ILoggingService loggingService)
+        public ImportAnimeService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService, ILoggingService loggingService)
         {
             _mongoDbService = mongoDbService;
             _loggingService = loggingService;
+            _assetsService = assetsService;
         }
 
         /// <summary>
@@ -59,6 +67,10 @@ namespace PopcornExport.Services.Import
                 {
                     // Deserialize a document to an anime
                     var anime = BsonSerializer.Deserialize<AnimeModel>(document);
+
+                    await _assetsService.UploadFile($@"{anime.MalId}/banner/{anime.Images.Banner.Split('/').Last()}.jpg", anime.Images.Banner);
+                    await _assetsService.UploadFile($@"{anime.MalId}/fanart/{anime.Images.Fanart.Split('/').Last()}.jpg", anime.Images.Fanart);
+                    await _assetsService.UploadFile($@"{anime.MalId}/poster/{anime.Images.Poster.Split('/').Last()}.jpg", anime.Images.Poster);
 
                     // Set filter to search an anime in database
                     var filter = Builders<BsonDocument>.Filter.Eq("mal_id", anime.MalId);
