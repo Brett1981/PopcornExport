@@ -23,11 +23,27 @@ namespace PopcornExport.Test.Services.Export
         }
 
         [Test]
-        public void ExportService_Anime_ShouldNotBeNull()
+        public void Export_Anime_ShouldNotBeNull()
         {
             var anime = _exportService.LoadExport(Models.Export.ExportType.Anime).GetAwaiter().GetResult();
             Assert.IsNotNull(anime);
             Assert.IsNotEmpty(anime);
+        }
+
+        [Test]
+        public void Export_Shows_ShouldNotBeNull()
+        {
+            var shows = _exportService.LoadExport(Models.Export.ExportType.Shows).GetAwaiter().GetResult();
+            Assert.IsNotNull(shows);
+            Assert.IsNotEmpty(shows);
+        }
+
+        [Test]
+        public void Export_Movies_ShouldNotBeNull()
+        {
+            var movies = _exportService.LoadExport(Models.Export.ExportType.Movies).GetAwaiter().GetResult();
+            Assert.IsNotNull(movies);
+            Assert.IsNotEmpty(movies);
         }
     }
 }

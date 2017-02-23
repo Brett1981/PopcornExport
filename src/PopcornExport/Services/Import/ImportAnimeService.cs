@@ -95,6 +95,7 @@ namespace PopcornExport.Services.Import
                     await collectionMovies.FindOneAndUpdateAsync(filter, update, upsert);
                     watch.Stop();
                     updatedanimes++;
+                    Console.WriteLine(Environment.NewLine);
                     Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
                     Console.ForegroundColor = ConsoleColor.DarkYellow;
                     Console.Write("  UPDATED  ");
@@ -105,7 +106,6 @@ namespace PopcornExport.Services.Import
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write($"  {updatedanimes}/{documents.Count}");
                     Console.ResetColor();
-                    Console.WriteLine(Environment.NewLine);
                 }
                 catch (Exception ex)
                 {
@@ -114,6 +114,7 @@ namespace PopcornExport.Services.Import
             }
 
             // Finish
+            Console.WriteLine(Environment.NewLine);
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Done processing animes.");
             Console.ResetColor();
