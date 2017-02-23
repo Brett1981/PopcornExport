@@ -12,9 +12,6 @@ namespace PopcornExport.Models.Show
     [DataContract]
     public class ShowModel
     {
-        [BsonId]
-        public string _id { get; set; }
-
         [DataMember]
         [BsonElement("imdb_id")]
         public string ImdbId { get; set; }
@@ -69,7 +66,7 @@ namespace PopcornExport.Models.Show
 
         [DataMember]
         [BsonElement("last_updated")]
-        public long LastUpdated { get; set; }
+        public double LastUpdated { get; set; }
 
         [DataMember]
         [BsonElement("__v")]

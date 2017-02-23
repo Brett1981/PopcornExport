@@ -12,9 +12,6 @@ namespace PopcornExport.Models.Anime
     [DataContract]
     public class AnimeModel
     {
-        [BsonId]
-        public string _id { get; set; }
-
         [DataMember]
         [BsonElement("mal_id")]
         public string MalId { get; set; }
@@ -53,7 +50,7 @@ namespace PopcornExport.Models.Anime
 
         [DataMember]
         [BsonElement("last_updated")]
-        public long LastUpdated { get; set; }
+        public double LastUpdated { get; set; }
 
         [DataMember]
         [BsonElement("num_seasons")]

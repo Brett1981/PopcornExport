@@ -4,6 +4,7 @@ using PopcornExport.Models.Image;
 using PopcornExport.Models.Rating;
 using PopcornExport.Models.Torrent;
 using System.Runtime.Serialization;
+using PopcornExport.Models.Torrent.Movie;
 
 namespace PopcornExport.Models.Movie
 {
@@ -11,9 +12,6 @@ namespace PopcornExport.Models.Movie
     [DataContract]
     public class MovieModel
     {
-        [BsonId]
-        public string _id { get; set; }
-
         [DataMember]
         [BsonElement("imdb_id")]
         public string ImdbId { get; set; }
@@ -36,7 +34,7 @@ namespace PopcornExport.Models.Movie
 
         [DataMember]
         [BsonElement("released")]
-        public long Released { get; set; }
+        public double Released { get; set; }
 
         [DataMember]
         [BsonElement("trailer")]
@@ -48,7 +46,15 @@ namespace PopcornExport.Models.Movie
 
         [DataMember]
         [BsonElement("torrents")]
-        public TorrentModel Torrents { get; set; }
+        public TorrentMovieLang Torrents { get; set; }
+
+        [DataMember]
+        [BsonElement("country")]
+        public string Country { get; set; }
+
+        [DataMember]
+        [BsonElement("last_updated")]
+        public double LastUpdated { get; set; }
 
         [DataMember]
         [BsonElement("genres")]

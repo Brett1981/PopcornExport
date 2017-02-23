@@ -73,6 +73,8 @@ namespace PopcornExport.Services.Import
                         .Set("trailer", movie.Trailer)
                         .Set("certification", movie.Certification)
                         .Set("torrents", movie.Torrents)
+                        .Set("country", movie.Country)
+                        .Set("last_updated", movie.LastUpdated)
                         .Set("genres", movie.Genres)
                         .Set("images", movie.Images)
                         .Set("rating", movie.Rating);

@@ -7,26 +7,27 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
-namespace PopcornExport
+namespace PopcornExport.Models.Torrent.Movie
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class TorrentWrapper
+    public class TorrentMovieNode
     {
-        [DataMember()]
+        [DataMember]
         [BsonElement("0")]
-        public TorrentModel Torrent_0 { get; set; }
+        public TorrentMovie Torrent_0 { get; set; }
 
-        [DataMember()]
+        [DataMember]
         [BsonElement("480p")]
-        public TorrentModel Torrent_480p { get; set; }
+        public TorrentMovie Torrent_480p { get; set; }
 
-        [DataMember()]
+        [DataMember]
         [BsonElement("720p")]
-        public TorrentModel Torrent_720p { get; set; }
+        public TorrentMovie Torrent_720p { get; set; }
 
-        [DataMember()]
+        [DataMember]
         [BsonElement("1080p")]
-        public TorrentModel Torrent_1080p { get; set; }
+        public TorrentMovie Torrent_1080p { get; set; }
     }
+
 }

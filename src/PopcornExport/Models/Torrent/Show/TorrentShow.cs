@@ -6,11 +6,11 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
-namespace PopcornExport.Models.Torrent
+namespace PopcornExport.Models.Torrent.Show
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class TorrentModel
+    public class TorrentShow
     {
         [DataMember]
         [BsonElement("provider")]
@@ -27,9 +27,5 @@ namespace PopcornExport.Models.Torrent
         [DataMember]
         [BsonElement("url")]
         public string Url { get; set; }
-
-        [DataMember]
-        [BsonElement("filesize")]
-        public string Filesize { get; set; }
     }
 }
