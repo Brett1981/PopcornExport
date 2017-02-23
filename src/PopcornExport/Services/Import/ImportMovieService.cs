@@ -66,29 +66,61 @@ namespace PopcornExport.Services.Import
                 try
                 {
                     // Deserialize a document to a movie
-                    var movie = BsonSerializer.Deserialize<MovieModel>(document);
-                    await _assetsService.UploadFile($@"{movie.ImdbId}/banner/{movie.Images.Banner.Split('/').Last()}.jpg", movie.Images.Banner);
-                    await _assetsService.UploadFile($@"{movie.ImdbId}/fanart/{movie.Images.Fanart.Split('/').Last()}.jpg", movie.Images.Fanart);
-                    await _assetsService.UploadFile($@"{movie.ImdbId}/poster/{movie.Images.Poster.Split('/').Last()}.jpg", movie.Images.Poster);
+                    var movie = BsonSerializer.Deserialize<MovieBson>(document);
+                    movie.BackgroundImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/background/{movie.BackgroundImage.Split('/').Last()}", movie.BackgroundImage);
+                    movie.SmallCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/small/{movie.SmallCoverImage.Split('/').Last()}", movie.SmallCoverImage);
+                    movie.MediumCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/medium/{movie.MediumCoverImage.Split('/').Last()}", movie.MediumCoverImage);
+                    movie.LargeCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/large/{movie.LargeCoverImage.Split('/').Last()}", movie.LargeCoverImage);
+                    movie.MediumScreenshotImage1 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/1/{movie.MediumScreenshotImage1.Split('/').Last()}", movie.MediumScreenshotImage1);
+                    movie.MediumScreenshotImage2 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/2/{movie.MediumScreenshotImage2.Split('/').Last()}", movie.MediumScreenshotImage2);
+                    movie.MediumScreenshotImage3 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/3/{movie.MediumScreenshotImage3.Split('/').Last()}", movie.MediumScreenshotImage3);
+                    movie.LargeScreenshotImage1 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/1/{movie.LargeScreenshotImage1.Split('/').Last()}", movie.LargeScreenshotImage1);
+                    movie.LargeScreenshotImage2 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/2/{movie.LargeScreenshotImage2.Split('/').Last()}", movie.LargeScreenshotImage2);
+                    movie.LargeScreenshotImage3 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/3/{movie.LargeScreenshotImage3.Split('/').Last()}", movie.LargeScreenshotImage3);
+
+
+                    foreach (var torrent in movie.Torrents)
+                    {
+                        torrent.Url =
+                            await _assetsService.UploadFile($@"torrents/{movie.ImdbCode}/{movie.ImdbCode}.torrent",
+                                torrent.Url);
+                    }
 
                     // Set filter to search a movie in database
-                    var filter = Builders<BsonDocument>.Filter.Eq("imdb_id", movie.ImdbId);
+                    var filter = Builders<BsonDocument>.Filter.Eq("imdb_code", movie.ImdbCode);
 
                     // Set udpate builder to update a movie
-                    var update = Builders<BsonDocument>.Update.Set("imdb_id", movie.ImdbId)
+                    var update = Builders<BsonDocument>.Update.Set("imdb_code", movie.ImdbCode)
+                        .Set("url", movie.Url)
+                        .Set("imdb_code", movie.ImdbCode)
                         .Set("title", movie.Title)
+                        .Set("title_long", movie.TitleLong)
                         .Set("year", movie.Year)
-                        .Set("synopsis", movie.Synopsis)
+                        .Set("slug", movie.Slug)
+                        .Set("rating", movie.Rating)
                         .Set("runtime", movie.Runtime)
-                        .Set("released", movie.Released)
-                        .Set("trailer", movie.Trailer)
-                        .Set("certification", movie.Certification)
-                        .Set("torrents", movie.Torrents)
-                        .Set("country", movie.Country)
-                        .Set("last_updated", movie.LastUpdated)
                         .Set("genres", movie.Genres)
-                        .Set("images", movie.Images)
-                        .Set("rating", movie.Rating);
+                        .Set("language", movie.Language)
+                        .Set("mpa_rating", movie.MpaRating)
+                        .Set("download_count", movie.DownloadCount)
+                        .Set("like_count", movie.LikeCount)
+                        .Set("description_intro", movie.DescriptionIntro)
+                        .Set("description_full", movie.DescriptionFull)
+                        .Set("yt_trailer_code", movie.YtTrailerCode)
+                        .Set("cast", movie.Cast)
+                        .Set("torrents", movie.Torrents)
+                        .Set("date_uploaded", movie.DateUploaded)
+                        .Set("date_uploaded_unix", movie.DateUploadedUnix)
+                        .Set("background_image", movie.BackgroundImage)
+                        .Set("small_cover_image", movie.SmallCoverImage)
+                        .Set("medium_cover_image", movie.MediumCoverImage)
+                        .Set("large_cover_image", movie.LargeCoverImage)
+                        .Set("medium_screenshot_image1", movie.MediumScreenshotImage1)
+                        .Set("medium_screenshot_image2", movie.MediumScreenshotImage2)
+                        .Set("medium_screenshot_image3", movie.MediumScreenshotImage3)
+                        .Set("large_screenshot_image1", movie.LargeScreenshotImage1)
+                        .Set("large_screenshot_image2", movie.LargeScreenshotImage2)
+                        .Set("large_screenshot_image3", movie.LargeScreenshotImage3);
 
                     // If a movie does not exist in database, create it
                     var upsert = new FindOneAndUpdateOptions<BsonDocument>

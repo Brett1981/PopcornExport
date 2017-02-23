@@ -9,8 +9,12 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.Extensibility.Implementation;
+using Newtonsoft.Json;
+using PopcornExport.Models.Movie;
 
 namespace PopcornExport.Services.Export
 {
@@ -47,57 +51,115 @@ namespace PopcornExport.Services.Export
                         "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-                using (var client = new RestClient(Constants.OriginalPopcornApi))
+                var export = new List<BsonDocument>();
+                if (exportType == ExportType.Anime || exportType == ExportType.Shows)
                 {
-                    var request = new RestRequest("{segment}", Method.GET);
-                    switch (exportType)
+                    using (var client = new RestClient(Constants.OriginalPopcornApi))
                     {
-                        case ExportType.Anime:
-                            request.AddUrlSegment("segment", "anime");
-                            break;
-                        case ExportType.Movies:
-                            request.AddUrlSegment("segment", "movie");
-                            break;
-                        case ExportType.Shows:
-                            request.AddUrlSegment("segment", "show");
-                            break;
-                        default:
-                            throw new NotImplementedException();
-                    }
-
-                    // Execute request
-                    var response = await client.Execute(request);
-
-                    // Load response into memory
-                    using (var reader = new StreamReader(new MemoryStream(response.RawBytes), Encoding.UTF8))
-                    {
-                        string line;
-                        var export = new List<BsonDocument>();
-
-                        // Read all response parts
-                        while ((line = reader.ReadLine()) != null)
+                        var request = new RestRequest("{segment}", Method.GET);
+                        switch (exportType)
                         {
-                            BsonDocument document;
-                            // Try to parse a document
-                            if (BsonDocument.TryParse(line, out document))
-                            {
-                                export.Add(document);
-                            }
+                            case ExportType.Anime:
+                                request.AddUrlSegment("segment", "anime");
+                                break;
+                            case ExportType.Shows:
+                                request.AddUrlSegment("segment", "show");
+                                break;
                         }
 
-                        var loggingTraceEnd =
-                            $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {DateTime.UtcNow.ToString(
-                                "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
-                        _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
-
-                        return export;
+                        // Execute request
+                        var response = await client.Execute(request);
+                        // Load response into memory
+                        using (var reader = new StreamReader(new MemoryStream(response.RawBytes), Encoding.UTF8))
+                        {
+                            string line;
+                            // Read all response parts
+                            while ((line = reader.ReadLine()) != null)
+                            {
+                                ConvertJsonToBsonDocument(line, export);
+                            }
+                        }
                     }
                 }
+                else if (exportType == ExportType.Movies)
+                {
+                    var page = 1;
+                    bool movieFound;
+                    do
+                    {
+                        using (var client = new RestClient(Constants.YTSApiUrl))
+                        {
+                            var moviesByPageRequest = GetMoviesByPageRequest(page);
+                            // Execute request
+                            var response = await client.Execute<MovieShortJsonNode>(moviesByPageRequest);
+                            movieFound = response.Data.Data.Movies.Any();
+                            page++;
+                            foreach (var movie in response.Data.Data.Movies)
+                            {
+                                var movieByIdRequest = GetMovieById(movie.Id);
+                                var fullMovie = await client.Execute<MovieFullJsonNode>(movieByIdRequest);
+                                ConvertJsonToBsonDocument(JsonConvert.SerializeObject(fullMovie.Data.Data.Movie), export);
+                            }
+                        }
+                    } while (movieFound);
+                }
+
+                var loggingTraceEnd =
+                    $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {DateTime.UtcNow.ToString(
+                        "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+                _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
+
+                return export;
+
             }
             catch (Exception ex)
             {
                 _loggingService.Telemetry.TrackException(ex);
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Get movie by Id
+        /// </summary>
+        /// <param name="movieId">Movie Id to get</param>
+        /// <returns><see cref="RestRequest"/></returns>
+        private RestRequest GetMovieById(int movieId)
+        {
+            var request = new RestRequest("{segment}", Method.GET);
+            request.AddUrlSegment("segment", "movie_details.json");
+            request.AddQueryParameter("movie_id", movieId);
+            request.AddQueryParameter("with_images", "true");
+            request.AddQueryParameter("with_cast", "true");
+            return request;
+        }
+
+        /// <summary>
+        /// Get movies by page
+        /// </summary>
+        /// <param name="page">Page to fetch</param>
+        /// <returns><see cref="RestRequest"/></returns>
+        private RestRequest GetMoviesByPageRequest(int page)
+        {
+            var request = new RestRequest("{segment}", Method.GET);
+            request.AddUrlSegment("segment", "list_movies.json");
+            request.AddQueryParameter("limit", 50);
+            request.AddQueryParameter("page", page);
+            return request;
+        }
+
+        /// <summary>
+        /// Convert json to BsonDocument
+        /// </summary>
+        /// <param name="json">Json to convert</param>
+        /// <param name="export">BsonDocument to update</param>
+        private void ConvertJsonToBsonDocument(string json, List<BsonDocument> export)
+        {
+            BsonDocument document;
+            // Try to parse a document
+            if (BsonDocument.TryParse(json, out document))
+            {
+                export.Add(document);
             }
         }
     }

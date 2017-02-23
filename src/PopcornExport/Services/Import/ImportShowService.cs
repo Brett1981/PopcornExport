@@ -71,9 +71,14 @@ namespace PopcornExport.Services.Import
                     // Deserialize a document to a show
                     var show = BsonSerializer.Deserialize<ShowModel>(document);
 
-                    await _assetsService.UploadFile($@"{show.ImdbId}/banner/{show.Images.Banner.Split('/').Last()}.jpg", show.Images.Banner);
-                    await _assetsService.UploadFile($@"{show.ImdbId}/fanart/{show.Images.Fanart.Split('/').Last()}.jpg", show.Images.Fanart);
-                    await _assetsService.UploadFile($@"{show.ImdbId}/poster/{show.Images.Poster.Split('/').Last()}.jpg", show.Images.Poster);
+                    if(!string.IsNullOrEmpty(show.Images.Banner))
+                        show.Images.Banner = await _assetsService.UploadFile($@"images/{show.ImdbId}/banner/{show.Images.Banner.Split('/').Last()}", show.Images.Banner);
+
+                    if (!string.IsNullOrEmpty(show.Images.Fanart))
+                        show.Images.Fanart = await _assetsService.UploadFile($@"images/{show.ImdbId}/fanart/{show.Images.Fanart.Split('/').Last()}", show.Images.Fanart);
+
+                    if (!string.IsNullOrEmpty(show.Images.Poster))
+                        show.Images.Poster = await _assetsService.UploadFile($@"images/{show.ImdbId}/poster/{show.Images.Poster.Split('/').Last()}", show.Images.Poster);
 
                     // Set filter to search a show in database
                     var filter = Builders<BsonDocument>.Filter.Eq("imdb_id", show.ImdbId);

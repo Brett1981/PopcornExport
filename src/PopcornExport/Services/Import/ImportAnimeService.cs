@@ -68,9 +68,14 @@ namespace PopcornExport.Services.Import
                     // Deserialize a document to an anime
                     var anime = BsonSerializer.Deserialize<AnimeModel>(document);
 
-                    await _assetsService.UploadFile($@"{anime.MalId}/banner/{anime.Images.Banner.Split('/').Last()}.jpg", anime.Images.Banner);
-                    await _assetsService.UploadFile($@"{anime.MalId}/fanart/{anime.Images.Fanart.Split('/').Last()}.jpg", anime.Images.Fanart);
-                    await _assetsService.UploadFile($@"{anime.MalId}/poster/{anime.Images.Poster.Split('/').Last()}.jpg", anime.Images.Poster);
+                    if (!string.IsNullOrEmpty(anime.Images.Banner))
+                        anime.Images.Banner = await _assetsService.UploadFile($@"images/{anime.MalId}/banner/{anime.Images.Banner.Split('/').Last()}", anime.Images.Banner);
+
+                    if (!string.IsNullOrEmpty(anime.Images.Fanart))
+                        anime.Images.Fanart = await _assetsService.UploadFile($@"images/{anime.MalId}/fanart/{anime.Images.Fanart.Split('/').Last()}", anime.Images.Fanart);
+
+                    if (!string.IsNullOrEmpty(anime.Images.Poster))
+                        anime.Images.Poster = await _assetsService.UploadFile($@"images/{anime.MalId}/poster/{anime.Images.Poster.Split('/').Last()}", anime.Images.Poster);
 
                     // Set filter to search an anime in database
                     var filter = Builders<BsonDocument>.Filter.Eq("mal_id", anime.MalId);

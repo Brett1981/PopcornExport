@@ -11,9 +11,14 @@
         public const string OriginalPopcornApi = "https://tv-v2.api-fetch.website/exports";
 
         /// <summary>
+        /// YTS Api
+        /// </summary>
+        public const string YTSApiUrl = "https://yts.ag/api/v2/";
+
+        /// <summary>
         /// Popcorn Api to export
         /// </summary>
-        public const string AzurePopcornApi = "https://popcornapi.azurewebsites.net/api/";
+        public const string AzurePopcornApi = "https://popcornapi.azurewebsites.net";
 
         /// <summary>
         /// MongoDb Database to use as export

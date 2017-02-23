@@ -12,14 +12,29 @@ namespace PopcornExport.Services.Assets
     {
         public async Task<string> UploadFile(string fileName, string fileUrl)
         {
-            using (var client = new RestClient(Constants.AzurePopcornApi))
+            try
             {
-                var request = new RestRequest("{segment}", Method.POST);
-                request.AddUrlSegment("segment", "shows/assets");
-                request.AddQueryParameter("fileName", fileName);
-                request.AddQueryParameter("fileUrl", fileUrl);
-                var response = await client.Execute<string>(request);
-                return response.Data;
+                Uri result;
+                if (Uri.TryCreate(fileUrl, UriKind.Absolute, out result))
+                {
+                    using (var client = new RestClient(Constants.AzurePopcornApi))
+                    {
+                        var request = new RestRequest("{segment}", Method.POST);
+                        request.AddUrlSegment("segment", "shows/assets");
+                        request.AddQueryParameter("fileName", fileName);
+                        request.AddQueryParameter("fileUrl", fileUrl);
+                        var response = await client.Execute<string>(request);
+                        return response.Data;
+                    }
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }
+            catch (Exception ex)
+            {
+                return string.Empty;
             }
         }
     }
