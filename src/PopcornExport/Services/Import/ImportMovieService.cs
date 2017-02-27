@@ -140,7 +140,6 @@ namespace PopcornExport.Services.Import
                         }),
                         Task.Run(async () =>
                         {
-
                             if (!string.IsNullOrEmpty(movie.LargeCoverImage))
                                 movie.LargeCoverImage =
                                     await _assetsService.UploadFile(
@@ -158,7 +157,6 @@ namespace PopcornExport.Services.Import
                         }),
                         Task.Run(async () =>
                         {
-
                             if (!string.IsNullOrEmpty(movie.MediumScreenshotImage2))
                                 movie.MediumScreenshotImage2 =
                                     await _assetsService.UploadFile(
@@ -186,7 +184,6 @@ namespace PopcornExport.Services.Import
                         }),
                         Task.Run(async () =>
                         {
-
                             if (!string.IsNullOrEmpty(movie.LargeScreenshotImage2))
                                 movie.LargeScreenshotImage2 =
                                     await _assetsService.UploadFile(
