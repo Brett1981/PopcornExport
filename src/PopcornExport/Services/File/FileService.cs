@@ -15,7 +15,20 @@ namespace PopcornExport.Services.File
     /// </summary>
     public sealed class FileService : IFileService
     {
+        /// <summary>
+        /// True if service is initialized
+        /// </summary>
+        private bool _initialized;
+
+        /// <summary>
+        /// <see cref="CloudStorageAccount"/>
+        /// </summary>
         private readonly CloudStorageAccount _storageAccount;
+
+        /// <summary>
+        /// Container
+        /// </summary>
+        private CloudBlobContainer _container;
 
         /// <summary>
         /// Create an instance of <see cref="FileService"/>
@@ -29,6 +42,27 @@ namespace PopcornExport.Services.File
         }
 
         /// <summary>
+        /// Initialize the file service
+        /// </summary>
+        /// <returns></returns>
+        public async Task Initialize()
+        {
+            var blobClient = _storageAccount.CreateCloudBlobClient();
+            _container = blobClient.GetContainerReference(Constants.AssetsFolder);
+
+            await _container.CreateIfNotExistsAsync();
+
+            var permissions = await _container.GetPermissionsAsync();
+            if (permissions.PublicAccess != BlobContainerPublicAccessType.Blob)
+            {
+                permissions.PublicAccess = BlobContainerPublicAccessType.Blob;
+                await _container.SetPermissionsAsync(permissions);
+            }
+
+            _initialized = true;
+        }
+
+        /// <summary>
         /// Upload a file to Azure Storage from a url
         /// </summary>
         /// <param name="fileName">File name</param>
@@ -39,19 +73,9 @@ namespace PopcornExport.Services.File
         {
             try
             {
-                var blobClient = _storageAccount.CreateCloudBlobClient();
-                var container = blobClient.GetContainerReference(Constants.AssetsFolder);
+                if (!_initialized) throw new Exception("Service is not initialized");
 
-                await container.CreateIfNotExistsAsync();
-
-                var permissions = await container.GetPermissionsAsync();
-                if (permissions.PublicAccess != BlobContainerPublicAccessType.Blob)
-                {
-                    permissions.PublicAccess = BlobContainerPublicAccessType.Blob;
-                    await container.SetPermissionsAsync(permissions);
-                }
-
-                var blob = container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
+                var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
                 if (!await blob.ExistsAsync())
                 {
                     using (var client = new HttpClient
@@ -66,7 +90,7 @@ namespace PopcornExport.Services.File
                             using (var contentStream = await response.Content.ReadAsStreamAsync())
                             {
                                 // Create a directory under the root directory 
-                                var file = container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
+                                var file = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
                                 await file.UploadFromStreamAsync(contentStream);
                                 return file.Uri.AbsoluteUri;
                             }

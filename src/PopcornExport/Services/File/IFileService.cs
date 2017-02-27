@@ -12,6 +12,12 @@ namespace PopcornExport.Services.File
     public interface IFileService
     {
         /// <summary>
+        /// Initialize file service
+        /// </summary>
+        /// <returns></returns>
+        Task Initialize();
+
+        /// <summary>
         /// Upload a file to Azure Storage from a url
         /// </summary>
         /// <param name="fileName">File name</param>

@@ -29,7 +29,13 @@ namespace PopcornExport
                     e => new MongoDbService<BsonDocument>(configuration["MongoDb:ConnectionString"]))
                 .AddTransient<IFileService>(
                     e =>
-                        new FileService(configuration["AzureStorage:AccountName"], configuration["AzureStorage:Key"]))
+                    {
+                        var fileService = new FileService(configuration["AzureStorage:AccountName"],
+                            configuration["AzureStorage:Key"]);
+                        fileService.Initialize().GetAwaiter().GetResult();
+                        return fileService;
+                    }
+                )
                 .AddLogging();
 
             // add StructureMap
