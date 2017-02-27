@@ -86,18 +86,26 @@ namespace PopcornExport.Services.Export
                     bool movieFound;
                     do
                     {
-                        using (var client = new RestClient(Constants.YTSApiUrl))
+                        using (var client = new RestClient(Constants.YtsApiUrl))
                         {
                             var moviesByPageRequest = GetMoviesByPageRequest(page);
                             // Execute request
                             var response = await client.Execute<MovieShortJsonNode>(moviesByPageRequest);
-                            movieFound = response.Data.Data.Movies.Any();
-                            page++;
-                            foreach (var movie in response.Data.Data.Movies)
+                            if (response?.Data?.Data?.Movies == null)
                             {
-                                var movieByIdRequest = GetMovieById(movie.Id);
-                                var fullMovie = await client.Execute<MovieFullJsonNode>(movieByIdRequest);
-                                ConvertJsonToBsonDocument(JsonConvert.SerializeObject(fullMovie.Data.Data.Movie), export);
+                                movieFound = false;
+                            }
+                            else
+                            {
+                                movieFound = response.Data.Data.Movies.Any();
+                                page++;
+                                foreach (var movie in response.Data.Data.Movies)
+                                {
+                                    var movieByIdRequest = GetMovieById(movie.Id);
+                                    var fullMovie = await client.Execute<MovieFullJsonNode>(movieByIdRequest);
+                                    ConvertJsonToBsonDocument(JsonConvert.SerializeObject(fullMovie.Data.Data.Movie),
+                                        export);
+                                }
                             }
                         }
                     } while (movieFound);

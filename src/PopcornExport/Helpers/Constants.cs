@@ -13,12 +13,7 @@
         /// <summary>
         /// YTS Api
         /// </summary>
-        public const string YTSApiUrl = "https://yts.ag/api/v2/";
-
-        /// <summary>
-        /// Popcorn Api to export
-        /// </summary>
-        public const string AzurePopcornApi = "https://popcornapi.azurewebsites.net";
+        public const string YtsApiUrl = "https://yts.ag/api/v2/";
 
         /// <summary>
         /// MongoDb Database to use as export
