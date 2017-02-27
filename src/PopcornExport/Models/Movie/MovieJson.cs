@@ -67,6 +67,12 @@ namespace PopcornExport.Models.Movie
         [JsonProperty("date_uploaded_unix")]
         public int DateUploadedUnix { get; set; }
 
+        [JsonProperty("poster_image")]
+        public string PosterImage { get; set; }
+
+        [JsonProperty("backdrop_image")]
+        public string BackdropImage { get; set; }
+
         [JsonProperty("background_image")]
         public string BackgroundImage { get; set; }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace PopcornExport.Models.Torrent.Movie
@@ -35,6 +36,7 @@ namespace PopcornExport.Models.Torrent.Movie
         public string Size { get; set; }
 
         [DataMember]
+        [BsonRepresentation(BsonType.Double)]
         [BsonElement("size_bytes")]
         public long SizeBytes { get; set; }
 
