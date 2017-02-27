@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using PopcornExport.Models.Anime;
 using PopcornExport.Services.Assets;
+using System.Collections.Async;
 
 namespace PopcornExport.Services.Import
 {
@@ -62,13 +63,13 @@ namespace PopcornExport.Services.Import
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-            var watch = new Stopwatch();
             var updatedAnimes = 0;
 
-            foreach (var document in documents)
+            await documents.ParallelForEachAsync(async document => 
             {
                 try
                 {
+                    var watch = new Stopwatch();
                     // Deserialize a document to an anime
                     var anime = BsonSerializer.Deserialize<AnimeBson>(document);
 
@@ -131,7 +132,7 @@ namespace PopcornExport.Services.Import
                     // Retrieve animes from database
                     var collectionMovies = _mongoDbService.GetCollection(Constants.AnimeCollectionName);
 
-                    watch.Restart();
+                    watch.Start();
 
                     // Update anime
                     await collectionMovies.FindOneAndUpdateAsync(filter, update, upsert);
@@ -139,27 +140,19 @@ namespace PopcornExport.Services.Import
                     updatedAnimes++;
                     Console.WriteLine(Environment.NewLine);
                     Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                    Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write("  UPDATED ANIME ");
-
-                    // Sum up
-                    Console.ResetColor();
                     Console.Write($"{anime.Title} in {watch.ElapsedMilliseconds} ms.");
-                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write($"  {updatedAnimes}/{documents.Count}");
-                    Console.ResetColor();
                 }
                 catch (Exception ex)
                 {
                     _loggingService.Telemetry.TrackException(ex);
                 }
-            }
+            }, 10, false);
 
             // Finish
             Console.WriteLine(Environment.NewLine);
-            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Done processing animes.");
-            Console.ResetColor();
 
             var loggingTraceEnd =
                 $@"Import animes ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",

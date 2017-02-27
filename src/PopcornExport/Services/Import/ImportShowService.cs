@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using PopcornExport.Models.Show;
 using PopcornExport.Services.Assets;
+using System.Collections.Async;
 
 namespace PopcornExport.Services.Import
 {
@@ -62,13 +63,13 @@ namespace PopcornExport.Services.Import
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-            var watch = new Stopwatch();
             var updatedshows = 0;
 
-            foreach (var document in documents)
+            await documents.ParallelForEachAsync(async document => 
             {
                 try
                 {
+                    var watch = new Stopwatch();
                     // Deserialize a document to a show
                     var show = BsonSerializer.Deserialize<ShowBson>(document);
 
@@ -137,7 +138,7 @@ namespace PopcornExport.Services.Import
                     // Retrieve shows from database
                     var collectionShows = _mongoDbService.GetCollection(Constants.ShowsCollectionName);
 
-                    watch.Restart();
+                    watch.Start();
 
                     // Update show
                     await collectionShows.FindOneAndUpdateAsync(filter, update, upsert);
@@ -145,27 +146,19 @@ namespace PopcornExport.Services.Import
                     updatedshows++;
                     Console.WriteLine(Environment.NewLine);
                     Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                    Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("  UPDATED SHOW ");
-
-                    // Sum up
-                    Console.ResetColor();
                     Console.Write($"{show.Title} in {watch.ElapsedMilliseconds} ms.");
-                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.Write($"  {updatedshows}/{documents.Count}");
-                    Console.ResetColor();
                 }
                 catch (Exception ex)
                 {
                     _loggingService.Telemetry.TrackException(ex);
                 }
-            }
+            }, 10, false);
 
             // Finish
             Console.WriteLine(Environment.NewLine);
-            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Done processing shows.");
-            Console.ResetColor();
 
             var loggingTraceEnd =
                 $@"Import shows ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",

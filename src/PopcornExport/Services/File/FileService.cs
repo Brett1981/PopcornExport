@@ -80,7 +80,7 @@ namespace PopcornExport.Services.File
                 {
                     using (var client = new HttpClient
                     {
-                        Timeout = TimeSpan.FromSeconds(2)
+                        Timeout = TimeSpan.FromSeconds(1)
                     })
                     using (var request = new HttpRequestMessage(HttpMethod.Get, url))
                     {

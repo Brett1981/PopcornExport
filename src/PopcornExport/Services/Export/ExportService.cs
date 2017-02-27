@@ -101,10 +101,17 @@ namespace PopcornExport.Services.Export
                                 page++;
                                 foreach (var movie in response.Data.Data.Movies)
                                 {
-                                    var movieByIdRequest = GetMovieById(movie.Id);
-                                    var fullMovie = await client.Execute<MovieFullJsonNode>(movieByIdRequest);
-                                    ConvertJsonToBsonDocument(JsonConvert.SerializeObject(fullMovie.Data.Data.Movie),
-                                        export);
+                                    try 
+                                    {
+                                        var movieByIdRequest = GetMovieById(movie.Id);
+                                        var fullMovie = await client.Execute<MovieFullJsonNode>(movieByIdRequest);
+                                        ConvertJsonToBsonDocument(JsonConvert.SerializeObject(fullMovie.Data.Data.Movie),
+                                            export);
+                                    }
+                                    catch(Exception ex)
+                                    {
+                                        _loggingService.Telemetry.TrackException(ex);
+                                    }
                                 }
                             }
                         }
