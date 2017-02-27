@@ -79,30 +79,39 @@ namespace PopcornExport.Services.Import
                     var movie = BsonSerializer.Deserialize<MovieBson>(document);
                     var tmdbMovie = await tmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images);
 
-                    var backdrop = GetImagePathFromTmdb(tmdbClient,
-                        tmdbMovie.Images.Backdrops.Aggregate(
-                            (image1, image2) => image1.VoteAverage > image2.VoteAverage ? image1 : image2));
-
-                    var poster = GetImagePathFromTmdb(tmdbClient,
-                        tmdbMovie.Images.Posters.Aggregate(
-                            (image1, image2) => image1.VoteAverage > image2.VoteAverage ? image1 : image2));
                     var tasks = new List<Task>
                     {
                         Task.Run(async () =>
                         {
-                            if (!string.IsNullOrEmpty(backdrop))
+                            if (tmdbMovie.Images?.Backdrops != null && tmdbMovie.Images.Backdrops.Any())
+                            {
+                                var backdrop = GetImagePathFromTmdb(tmdbClient,
+                                    tmdbMovie.Images.Backdrops.Aggregate(
+                                        (image1, image2) =>
+                                            image1 != null && image2 != null && image1.VoteAverage < image2.VoteAverage
+                                                ? image2
+                                                : image1));
                                 movie.BackdropImage =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/backdrop/{backdrop.Split('/').Last()}",
                                         backdrop);
+                            }
                         }),
                         Task.Run(async () =>
                         {
-                            if (!string.IsNullOrEmpty(poster))
+                            if (tmdbMovie.Images?.Posters != null && tmdbMovie.Images.Posters.Any())
+                            {
+                                var poster = GetImagePathFromTmdb(tmdbClient,
+                                    tmdbMovie.Images.Posters.Aggregate(
+                                        (image1, image2) =>
+                                            image1 != null && image2 != null && image1.VoteAverage < image2.VoteAverage
+                                                ? image2
+                                                : image1));
                                 movie.PosterImage =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/poster/{poster.Split('/').Last()}",
                                         poster);
+                            }
                         }),
                         Task.Run(async () =>
                         {
@@ -114,7 +123,6 @@ namespace PopcornExport.Services.Import
                         }),
                         Task.Run(async () =>
                         {
-
                             if (!string.IsNullOrEmpty(movie.SmallCoverImage))
                                 movie.SmallCoverImage =
                                     await _assetsService.UploadFile(
