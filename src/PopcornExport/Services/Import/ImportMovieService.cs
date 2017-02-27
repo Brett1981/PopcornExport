@@ -206,13 +206,22 @@ namespace PopcornExport.Services.Import
                         }),
                         Task.Run(async () =>
                         {
-
                             foreach (var torrent in movie.Torrents)
                             {
                                 torrent.Url =
                                     await _assetsService.UploadFile(
                                         $@"torrents/{movie.ImdbCode}/{movie.ImdbCode}.torrent",
                                         torrent.Url);
+                            }
+                        }),
+                        Task.Run(async () =>
+                        {
+                            foreach (var cast in movie.Cast)
+                            {
+                                cast.SmallImage = await _assetsService.UploadFile(
+                                        $@"images/{movie.ImdbCode}/cast/{cast.ImdbCode}/{cast.SmallImage.Split
+                                            ('/')
+                                            .Last()}", cast.SmallImage);
                             }
                         })
                     };
