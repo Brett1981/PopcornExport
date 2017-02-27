@@ -11,6 +11,6 @@ namespace PopcornExport.Services.Core
         /// Process the exportation
         /// </summary>
         /// <returns><see cref="Task"/></returns>
-        Task Process();
+        Task Export();
     }
 }

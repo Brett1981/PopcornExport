@@ -1,15 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using PopcornExport.Helpers;
-using RestSharp.Portable;
-using RestSharp.Portable.HttpClient;
+using PopcornExport.Models.Export;
+using PopcornExport.Services.File;
 
 namespace PopcornExport.Services.Assets
 {
-    public class AssetsMovieService : IAssetsService
+    /// <summary>
+    /// Manage assets for movies
+    /// </summary>
+    public sealed class AssetsMovieService : IAssetsService
     {
+        /// <summary>
+        /// The file service
+        /// </summary>
+        private readonly IFileService _fileService;
+
+        /// <summary>
+        /// Create an instance of <see cref="AssetsAnimeService"/>
+        /// </summary>
+        public AssetsMovieService(IFileService fileService)
+        {
+            _fileService = fileService;
+        }
+
         public async Task<string> UploadFile(string fileName, string fileUrl)
         {
             try
@@ -17,22 +30,15 @@ namespace PopcornExport.Services.Assets
                 Uri result;
                 if (Uri.TryCreate(fileUrl, UriKind.Absolute, out result))
                 {
-                    using (var client = new RestClient(Constants.AzurePopcornApi))
-                    {
-                        var request = new RestRequest("{segment}", Method.POST);
-                        request.AddUrlSegment("segment", "movies/assets");
-                        request.AddQueryParameter("fileName", fileName);
-                        request.AddQueryParameter("fileUrl", fileUrl);
-                        var response = await client.Execute<string>(request);
-                        return response.Data;
-                    }
+                    return
+                        await _fileService.UploadFileFromUrlToAzureStorage(fileName, fileUrl, ExportType.Movies);
                 }
                 else
                 {
                     return string.Empty;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return string.Empty;
             }

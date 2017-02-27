@@ -15,6 +15,9 @@ using PopcornExport.Services.Assets;
 
 namespace PopcornExport.Services.Import
 {
+    /// <summary>
+    /// Import animes
+    /// </summary>
     public sealed class ImportAnimeService : IImportService
     {
         /// <summary>
@@ -114,8 +117,8 @@ namespace PopcornExport.Services.Import
                     updatedanimes++;
                     Console.WriteLine(Environment.NewLine);
                     Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                    Console.ForegroundColor = ConsoleColor.DarkYellow;
-                    Console.Write("  UPDATED  ");
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.Write("  UPDATED ANIME ");
 
                     // Sum up
                     Console.ResetColor();

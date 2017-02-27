@@ -121,8 +121,8 @@ namespace PopcornExport.Services.Import
                     updatedshows++;
                     Console.WriteLine(Environment.NewLine);
                     Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                    Console.ForegroundColor = ConsoleColor.DarkYellow;
-                    Console.Write("  UPDATED  ");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("  UPDATED SHOW ");
 
                     // Sum up
                     Console.ResetColor();

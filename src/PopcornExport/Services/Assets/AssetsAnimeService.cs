@@ -1,15 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
-using PopcornExport.Helpers;
-using RestSharp.Portable;
-using RestSharp.Portable.HttpClient;
+using PopcornExport.Models.Export;
+using PopcornExport.Services.File;
 
 namespace PopcornExport.Services.Assets
 {
-    public class AssetsAnimeService : IAssetsService
+    /// <summary>
+    /// Manage assets for anime
+    /// </summary>
+    public sealed class AssetsAnimeService : IAssetsService
     {
+        /// <summary>
+        /// The file service
+        /// </summary>
+        private readonly IFileService _fileService;
+
+        /// <summary>
+        /// Create an instance of <see cref="AssetsAnimeService"/>
+        /// </summary>
+        public AssetsAnimeService(IFileService fileService)
+        {
+            _fileService = fileService;
+        }
+
+        /// <summary>
+        /// Upload a file
+        /// </summary>
+        /// <param name="fileName">File name to upload</param>
+        /// <param name="fileUrl">File url to upload</param>
+        /// <returns>Remote string</returns>
         public async Task<string> UploadFile(string fileName, string fileUrl)
         {
             try
@@ -17,22 +36,14 @@ namespace PopcornExport.Services.Assets
                 Uri result;
                 if (Uri.TryCreate(fileUrl, UriKind.Absolute, out result))
                 {
-                    using (var client = new RestClient(Constants.AzurePopcornApi))
-                    {
-                        var request = new RestRequest("{segment}", Method.POST);
-                        request.AddUrlSegment("segment", "animes/assets");
-                        request.AddQueryParameter("fileName", fileName);
-                        request.AddQueryParameter("fileUrl", fileUrl);
-                        var response = await client.Execute<string>(request);
-                        return response.Data;
-                    }
+                    return await _fileService.UploadFileFromUrlToAzureStorage(fileName, fileUrl, ExportType.Anime);
                 }
                 else
                 {
                     return string.Empty;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return string.Empty;
             }

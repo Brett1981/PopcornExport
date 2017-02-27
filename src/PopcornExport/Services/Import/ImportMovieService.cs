@@ -15,6 +15,9 @@ using PopcornExport.Services.Assets;
 
 namespace PopcornExport.Services.Import
 {
+    /// <summary>
+    /// Import movies
+    /// </summary>
     public sealed class ImportMovieService : IImportService
     {
         /// <summary>
@@ -67,17 +70,35 @@ namespace PopcornExport.Services.Import
                 {
                     // Deserialize a document to a movie
                     var movie = BsonSerializer.Deserialize<MovieBson>(document);
-                    movie.BackgroundImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/background/{movie.BackgroundImage.Split('/').Last()}", movie.BackgroundImage);
-                    movie.SmallCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/small/{movie.SmallCoverImage.Split('/').Last()}", movie.SmallCoverImage);
-                    movie.MediumCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/medium/{movie.MediumCoverImage.Split('/').Last()}", movie.MediumCoverImage);
-                    movie.LargeCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/large/{movie.LargeCoverImage.Split('/').Last()}", movie.LargeCoverImage);
-                    movie.MediumScreenshotImage1 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/1/{movie.MediumScreenshotImage1.Split('/').Last()}", movie.MediumScreenshotImage1);
-                    movie.MediumScreenshotImage2 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/2/{movie.MediumScreenshotImage2.Split('/').Last()}", movie.MediumScreenshotImage2);
-                    movie.MediumScreenshotImage3 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/3/{movie.MediumScreenshotImage3.Split('/').Last()}", movie.MediumScreenshotImage3);
-                    movie.LargeScreenshotImage1 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/1/{movie.LargeScreenshotImage1.Split('/').Last()}", movie.LargeScreenshotImage1);
-                    movie.LargeScreenshotImage2 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/2/{movie.LargeScreenshotImage2.Split('/').Last()}", movie.LargeScreenshotImage2);
-                    movie.LargeScreenshotImage3 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/3/{movie.LargeScreenshotImage3.Split('/').Last()}", movie.LargeScreenshotImage3);
+                    if (!string.IsNullOrEmpty(movie.BackgroundImage))
+                        movie.BackgroundImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/background/{movie.BackgroundImage.Split('/').Last()}", movie.BackgroundImage);
 
+                    if (!string.IsNullOrEmpty(movie.SmallCoverImage))
+                        movie.SmallCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/small/{movie.SmallCoverImage.Split('/').Last()}", movie.SmallCoverImage);
+
+                    if (!string.IsNullOrEmpty(movie.MediumCoverImage))
+                        movie.MediumCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/medium/{movie.MediumCoverImage.Split('/').Last()}", movie.MediumCoverImage);
+
+                    if (!string.IsNullOrEmpty(movie.LargeCoverImage))
+                        movie.LargeCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/large/{movie.LargeCoverImage.Split('/').Last()}", movie.LargeCoverImage);
+
+                    if (!string.IsNullOrEmpty(movie.MediumScreenshotImage1))
+                        movie.MediumScreenshotImage1 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/1/{movie.MediumScreenshotImage1.Split('/').Last()}", movie.MediumScreenshotImage1);
+
+                    if (!string.IsNullOrEmpty(movie.MediumScreenshotImage2))
+                        movie.MediumScreenshotImage2 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/2/{movie.MediumScreenshotImage2.Split('/').Last()}", movie.MediumScreenshotImage2);
+
+                    if (!string.IsNullOrEmpty(movie.MediumScreenshotImage3))
+                        movie.MediumScreenshotImage3 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/3/{movie.MediumScreenshotImage3.Split('/').Last()}", movie.MediumScreenshotImage3);
+
+                    if (!string.IsNullOrEmpty(movie.LargeScreenshotImage1))
+                        movie.LargeScreenshotImage1 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/1/{movie.LargeScreenshotImage1.Split('/').Last()}", movie.LargeScreenshotImage1);
+
+                    if (!string.IsNullOrEmpty(movie.LargeScreenshotImage2))
+                        movie.LargeScreenshotImage2 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/2/{movie.LargeScreenshotImage2.Split('/').Last()}", movie.LargeScreenshotImage2);
+
+                    if (!string.IsNullOrEmpty(movie.LargeScreenshotImage3))
+                        movie.LargeScreenshotImage3 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/3/{movie.LargeScreenshotImage3.Split('/').Last()}", movie.LargeScreenshotImage3);
 
                     foreach (var torrent in movie.Torrents)
                     {
@@ -139,8 +160,8 @@ namespace PopcornExport.Services.Import
                     updatedmovies++;
                     Console.WriteLine(Environment.NewLine);
                     Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                    Console.ForegroundColor = ConsoleColor.DarkYellow;
-                    Console.Write("  UPDATED  ");
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write("  UPDATED MOVIE ");
 
                     // Sum up
                     Console.ResetColor();

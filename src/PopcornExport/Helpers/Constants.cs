@@ -44,5 +44,10 @@
         /// Application Insights key used for logging
         /// </summary>
         public const string ApplicationInsightsKey = "SECRET";
+
+        /// <summary>
+        /// Azure Sotrage assets folder
+        /// </summary>
+        public const string AssetsFolder = "assets";
     }
 }

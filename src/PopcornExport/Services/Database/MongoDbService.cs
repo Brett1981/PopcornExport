@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using MongoDB.Bson;
+﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using PopcornExport.Helpers;
 using System.Security.Authentication;
@@ -20,13 +19,9 @@ namespace PopcornExport.Services.Database
         /// <summary>
         /// Establish a connection to database
         /// </summary>
-        public MongoDbService()
+        /// <param name="connectionString">MongoDb connection string</param>
+        public MongoDbService(string connectionString)
         {
-            var builder = new ConfigurationBuilder()
-                .AddJsonFile("appsettings.json");
-            var configuration = builder.Build();
-            var connectionString = configuration["mongoConnection"];
-
             var settings = MongoClientSettings.FromUrl(
                 new MongoUrl(connectionString)
             );

@@ -12,7 +12,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Newtonsoft.Json;
 using PopcornExport.Models.Movie;
 
@@ -153,7 +152,7 @@ namespace PopcornExport.Services.Export
         /// </summary>
         /// <param name="json">Json to convert</param>
         /// <param name="export">BsonDocument to update</param>
-        private void ConvertJsonToBsonDocument(string json, List<BsonDocument> export)
+        private void ConvertJsonToBsonDocument(string json, ICollection<BsonDocument> export)
         {
             BsonDocument document;
             // Try to parse a document
