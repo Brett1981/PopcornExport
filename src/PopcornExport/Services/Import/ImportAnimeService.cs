@@ -41,7 +41,8 @@ namespace PopcornExport.Services.Import
         /// <param name="mongoDbService">MongoDb service</param>
         /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportAnimeService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService, ILoggingService loggingService)
+        public ImportAnimeService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService,
+            ILoggingService loggingService)
         {
             _mongoDbService = mongoDbService;
             _loggingService = loggingService;
@@ -62,7 +63,7 @@ namespace PopcornExport.Services.Import
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var watch = new Stopwatch();
-            var updatedanimes = 0;
+            var updatedAnimes = 0;
 
             foreach (var document in documents)
             {
@@ -71,14 +72,35 @@ namespace PopcornExport.Services.Import
                     // Deserialize a document to an anime
                     var anime = BsonSerializer.Deserialize<AnimeBson>(document);
 
-                    if (!string.IsNullOrEmpty(anime.Images.Banner))
-                        anime.Images.Banner = await _assetsService.UploadFile($@"images/{anime.MalId}/banner/{anime.Images.Banner.Split('/').Last()}", anime.Images.Banner);
+                    var tasks = new List<Task>
+                    {
+                        Task.Run(async () =>
+                        {
+                            if (!string.IsNullOrEmpty(anime.Images.Banner))
+                                anime.Images.Banner =
+                                    await _assetsService.UploadFile(
+                                        $@"images/{anime.MalId}/banner/{anime.Images.Banner.Split('/').Last()}",
+                                        anime.Images.Banner);
+                        }),
+                        Task.Run(async () =>
+                        {
+                            if (!string.IsNullOrEmpty(anime.Images.Fanart))
+                                anime.Images.Fanart =
+                                    await _assetsService.UploadFile(
+                                        $@"images/{anime.MalId}/fanart/{anime.Images.Fanart.Split('/').Last()}",
+                                        anime.Images.Fanart);
+                        }),
+                        Task.Run(async () =>
+                        {
+                            if (!string.IsNullOrEmpty(anime.Images.Poster))
+                                anime.Images.Poster =
+                                    await _assetsService.UploadFile(
+                                        $@"images/{anime.MalId}/poster/{anime.Images.Poster.Split('/').Last()}",
+                                        anime.Images.Poster);
+                        })
+                    };
 
-                    if (!string.IsNullOrEmpty(anime.Images.Fanart))
-                        anime.Images.Fanart = await _assetsService.UploadFile($@"images/{anime.MalId}/fanart/{anime.Images.Fanart.Split('/').Last()}", anime.Images.Fanart);
-
-                    if (!string.IsNullOrEmpty(anime.Images.Poster))
-                        anime.Images.Poster = await _assetsService.UploadFile($@"images/{anime.MalId}/poster/{anime.Images.Poster.Split('/').Last()}", anime.Images.Poster);
+                    await Task.WhenAll(tasks);
 
                     // Set filter to search an anime in database
                     var filter = Builders<BsonDocument>.Filter.Eq("mal_id", anime.MalId);
@@ -101,7 +123,7 @@ namespace PopcornExport.Services.Import
                         .Set("rating", anime.Rating);
 
                     // If an anime does not exist in database, create it
-                    var upsert = new FindOneAndUpdateOptions<BsonDocument>()
+                    var upsert = new FindOneAndUpdateOptions<BsonDocument>
                     {
                         IsUpsert = true
                     };
@@ -114,7 +136,7 @@ namespace PopcornExport.Services.Import
                     // Update anime
                     await collectionMovies.FindOneAndUpdateAsync(filter, update, upsert);
                     watch.Stop();
-                    updatedanimes++;
+                    updatedAnimes++;
                     Console.WriteLine(Environment.NewLine);
                     Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
                     Console.ForegroundColor = ConsoleColor.Blue;
@@ -124,7 +146,7 @@ namespace PopcornExport.Services.Import
                     Console.ResetColor();
                     Console.Write($"{anime.Title} in {watch.ElapsedMilliseconds} ms.");
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write($"  {updatedanimes}/{documents.Count}");
+                    Console.Write($"  {updatedAnimes}/{documents.Count}");
                     Console.ResetColor();
                 }
                 catch (Exception ex)

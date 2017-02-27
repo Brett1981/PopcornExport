@@ -10,7 +10,7 @@ namespace PopcornExport.Models.Episode
         public TorrentShowNodeJson Torrents { get; set; }
 
         [JsonProperty("watched")]
-        public WatchedJson watched { get; set; }
+        public WatchedJson Watched { get; set; }
 
         [JsonProperty("first_aired")]
         public long FirstAired { get; set; }

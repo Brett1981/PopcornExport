@@ -41,7 +41,8 @@ namespace PopcornExport.Services.Import
         /// <param name="mongoDbService">MongoDb service</param>
         /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportShowService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService, ILoggingService loggingService)
+        public ImportShowService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService,
+            ILoggingService loggingService)
         {
             _mongoDbService = mongoDbService;
             _assetsService = assetsService;
@@ -71,14 +72,37 @@ namespace PopcornExport.Services.Import
                     // Deserialize a document to a show
                     var show = BsonSerializer.Deserialize<ShowBson>(document);
 
-                    if(!string.IsNullOrEmpty(show.Images.Banner))
-                        show.Images.Banner = await _assetsService.UploadFile($@"images/{show.ImdbId}/banner/{show.Images.Banner.Split('/').Last()}", show.Images.Banner);
+                    var tasks = new List<Task>
+                    {
+                        Task.Run(async () =>
+                        {
+                            if (!string.IsNullOrEmpty(show.Images.Banner))
+                                show.Images.Banner =
+                                    await _assetsService.UploadFile(
+                                        $@"images/{show.ImdbId}/banner/{show.Images.Banner.Split('/').Last()}",
+                                        show.Images.Banner);
+                        }),
+                        Task.Run(async () =>
+                        {
 
-                    if (!string.IsNullOrEmpty(show.Images.Fanart))
-                        show.Images.Fanart = await _assetsService.UploadFile($@"images/{show.ImdbId}/fanart/{show.Images.Fanart.Split('/').Last()}", show.Images.Fanart);
+                            if (!string.IsNullOrEmpty(show.Images.Fanart))
+                                show.Images.Fanart =
+                                    await _assetsService.UploadFile(
+                                        $@"images/{show.ImdbId}/fanart/{show.Images.Fanart.Split('/').Last()}",
+                                        show.Images.Fanart);
+                        }),
+                        Task.Run(async () =>
+                        {
 
-                    if (!string.IsNullOrEmpty(show.Images.Poster))
-                        show.Images.Poster = await _assetsService.UploadFile($@"images/{show.ImdbId}/poster/{show.Images.Poster.Split('/').Last()}", show.Images.Poster);
+                            if (!string.IsNullOrEmpty(show.Images.Poster))
+                                show.Images.Poster =
+                                    await _assetsService.UploadFile(
+                                        $@"images/{show.ImdbId}/poster/{show.Images.Poster.Split('/').Last()}",
+                                        show.Images.Poster);
+                        })
+                    };
+
+                    await Task.WhenAll(tasks);
 
                     // Set filter to search a show in database
                     var filter = Builders<BsonDocument>.Filter.Eq("imdb_id", show.ImdbId);
