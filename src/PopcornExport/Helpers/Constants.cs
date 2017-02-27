@@ -44,5 +44,10 @@
         /// Azure Sotrage assets folder
         /// </summary>
         public const string AssetsFolder = "assets";
+
+        /// <summary>
+        /// Tmdb Api key
+        /// </summary>
+        public const string TmdbClientApiKey = "SECRET";
     }
 }

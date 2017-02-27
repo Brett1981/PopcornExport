@@ -12,6 +12,9 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using PopcornExport.Services.Assets;
+using TMDbLib.Client;
+using TMDbLib.Objects.General;
+using TMDbLib.Objects.Movies;
 
 namespace PopcornExport.Services.Import
 {
@@ -41,7 +44,8 @@ namespace PopcornExport.Services.Import
         /// <param name="mongoDbService">MongoDb service</param>
         /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportMovieService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService, ILoggingService loggingService)
+        public ImportMovieService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService,
+            ILoggingService loggingService)
         {
             _mongoDbService = mongoDbService;
             _loggingService = loggingService;
@@ -64,41 +68,96 @@ namespace PopcornExport.Services.Import
             var watch = new Stopwatch();
             var updatedmovies = 0;
 
+            var tmdbClient = new TMDbClient(Constants.TmdbClientApiKey);
+            tmdbClient.GetConfig();
+
             foreach (var document in documents)
             {
                 try
                 {
                     // Deserialize a document to a movie
                     var movie = BsonSerializer.Deserialize<MovieBson>(document);
+                    var tmdbMovie = await tmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images);
+
+                    var backdrop = GetImagePathFromTmdb(tmdbClient,
+                        tmdbMovie.Images.Backdrops.Aggregate(
+                            (image1, image2) => image1.VoteAverage > image2.VoteAverage ? image1 : image2));
+
+                    if (!string.IsNullOrEmpty(backdrop))
+                        movie.BackdropImage =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/backdrop/{backdrop.Split('/').Last()}",
+                                backdrop);
+
+                    var poster = GetImagePathFromTmdb(tmdbClient,
+                        tmdbMovie.Images.Posters.Aggregate(
+                            (image1, image2) => image1.VoteAverage > image2.VoteAverage ? image1 : image2));
+
+                    if (!string.IsNullOrEmpty(poster))
+                        movie.PosterImage =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/poster/{poster.Split('/').Last()}",
+                                poster);
+
                     if (!string.IsNullOrEmpty(movie.BackgroundImage))
-                        movie.BackgroundImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/background/{movie.BackgroundImage.Split('/').Last()}", movie.BackgroundImage);
+                        movie.BackgroundImage =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/background/{movie.BackgroundImage.Split('/').Last()}",
+                                movie.BackgroundImage);
 
                     if (!string.IsNullOrEmpty(movie.SmallCoverImage))
-                        movie.SmallCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/small/{movie.SmallCoverImage.Split('/').Last()}", movie.SmallCoverImage);
+                        movie.SmallCoverImage =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/cover/small/{movie.SmallCoverImage.Split('/').Last()}",
+                                movie.SmallCoverImage);
 
                     if (!string.IsNullOrEmpty(movie.MediumCoverImage))
-                        movie.MediumCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/medium/{movie.MediumCoverImage.Split('/').Last()}", movie.MediumCoverImage);
+                        movie.MediumCoverImage =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/cover/medium/{movie.MediumCoverImage.Split('/').Last()}",
+                                movie.MediumCoverImage);
 
                     if (!string.IsNullOrEmpty(movie.LargeCoverImage))
-                        movie.LargeCoverImage = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/cover/large/{movie.LargeCoverImage.Split('/').Last()}", movie.LargeCoverImage);
+                        movie.LargeCoverImage =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/cover/large/{movie.LargeCoverImage.Split('/').Last()}",
+                                movie.LargeCoverImage);
 
                     if (!string.IsNullOrEmpty(movie.MediumScreenshotImage1))
-                        movie.MediumScreenshotImage1 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/1/{movie.MediumScreenshotImage1.Split('/').Last()}", movie.MediumScreenshotImage1);
+                        movie.MediumScreenshotImage1 =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/screenshot/medium/1/{movie.MediumScreenshotImage1.Split('/')
+                                    .Last()}", movie.MediumScreenshotImage1);
 
                     if (!string.IsNullOrEmpty(movie.MediumScreenshotImage2))
-                        movie.MediumScreenshotImage2 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/2/{movie.MediumScreenshotImage2.Split('/').Last()}", movie.MediumScreenshotImage2);
+                        movie.MediumScreenshotImage2 =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/screenshot/medium/2/{movie.MediumScreenshotImage2.Split('/')
+                                    .Last()}", movie.MediumScreenshotImage2);
 
                     if (!string.IsNullOrEmpty(movie.MediumScreenshotImage3))
-                        movie.MediumScreenshotImage3 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/medium/3/{movie.MediumScreenshotImage3.Split('/').Last()}", movie.MediumScreenshotImage3);
+                        movie.MediumScreenshotImage3 =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/screenshot/medium/3/{movie.MediumScreenshotImage3.Split('/')
+                                    .Last()}", movie.MediumScreenshotImage3);
 
                     if (!string.IsNullOrEmpty(movie.LargeScreenshotImage1))
-                        movie.LargeScreenshotImage1 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/1/{movie.LargeScreenshotImage1.Split('/').Last()}", movie.LargeScreenshotImage1);
+                        movie.LargeScreenshotImage1 =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/screenshot/large/1/{movie.LargeScreenshotImage1.Split('/')
+                                    .Last()}", movie.LargeScreenshotImage1);
 
                     if (!string.IsNullOrEmpty(movie.LargeScreenshotImage2))
-                        movie.LargeScreenshotImage2 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/2/{movie.LargeScreenshotImage2.Split('/').Last()}", movie.LargeScreenshotImage2);
+                        movie.LargeScreenshotImage2 =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/screenshot/large/2/{movie.LargeScreenshotImage2.Split('/')
+                                    .Last()}", movie.LargeScreenshotImage2);
 
                     if (!string.IsNullOrEmpty(movie.LargeScreenshotImage3))
-                        movie.LargeScreenshotImage3 = await _assetsService.UploadFile($@"images/{movie.ImdbCode}/screenshot/large/3/{movie.LargeScreenshotImage3.Split('/').Last()}", movie.LargeScreenshotImage3);
+                        movie.LargeScreenshotImage3 =
+                            await _assetsService.UploadFile(
+                                $@"images/{movie.ImdbCode}/screenshot/large/3/{movie.LargeScreenshotImage3.Split('/')
+                                    .Last()}", movie.LargeScreenshotImage3);
 
                     foreach (var torrent in movie.Torrents)
                     {
@@ -133,6 +192,8 @@ namespace PopcornExport.Services.Import
                         .Set("date_uploaded", movie.DateUploaded)
                         .Set("date_uploaded_unix", movie.DateUploadedUnix)
                         .Set("background_image", movie.BackgroundImage)
+                        .Set("backdrop_image", movie.BackdropImage)
+                        .Set("poster_image", movie.PosterImage)
                         .Set("small_cover_image", movie.SmallCoverImage)
                         .Set("medium_cover_image", movie.MediumCoverImage)
                         .Set("large_cover_image", movie.LargeCoverImage)
@@ -186,6 +247,17 @@ namespace PopcornExport.Services.Import
                 $@"Import movies ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
+        }
+
+        /// <summary>
+        /// Retrieve an image from Tmdb
+        /// </summary>
+        /// <param name="client"><see cref="TMDbClient"/></param>
+        /// <param name="image">Image to retrieve</param>
+        /// <returns></returns>
+        private string GetImagePathFromTmdb(TMDbClient client, ImageData image)
+        {
+            return client.GetImageUrl("original", image.FilePath).AbsoluteUri;
         }
     }
 }

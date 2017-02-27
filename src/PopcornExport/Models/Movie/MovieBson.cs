@@ -105,6 +105,14 @@ namespace PopcornExport.Models.Movie
         [DataMember]
         [BsonElement("date_uploaded_unix")]
         public int DateUploadedUnix { get; set; }
+        
+        [DataMember]
+        [BsonElement("poster_image")]
+        public string PosterImage { get; set; }
+
+        [DataMember]
+        [BsonElement("backdrop_image")]
+        public string BackdropImage { get; set; }
 
         [DataMember]
         [BsonElement("background_image")]
