@@ -2,7 +2,6 @@
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using PopcornExport.Helpers;
-using PopcornExport.Models.Show;
 using PopcornExport.Services.Database;
 using PopcornExport.Services.Logging;
 using System;
@@ -11,6 +10,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using PopcornExport.Models.Show;
 using PopcornExport.Services.Assets;
 
 namespace PopcornExport.Services.Import
@@ -69,7 +69,7 @@ namespace PopcornExport.Services.Import
                 try
                 {
                     // Deserialize a document to a show
-                    var show = BsonSerializer.Deserialize<ShowModel>(document);
+                    var show = BsonSerializer.Deserialize<ShowBson>(document);
 
                     if(!string.IsNullOrEmpty(show.Images.Banner))
                         show.Images.Banner = await _assetsService.UploadFile($@"images/{show.ImdbId}/banner/{show.Images.Banner.Split('/').Last()}", show.Images.Banner);

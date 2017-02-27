@@ -10,7 +10,7 @@ namespace PopcornExport.Models.Anime
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class AnimeModel
+    public class AnimeBson
     {
         [DataMember]
         [BsonElement("mal_id")]
@@ -50,7 +50,7 @@ namespace PopcornExport.Models.Anime
 
         [DataMember]
         [BsonElement("last_updated")]
-        public double LastUpdated { get; set; }
+        public long LastUpdated { get; set; }
 
         [DataMember]
         [BsonElement("num_seasons")]
@@ -58,7 +58,7 @@ namespace PopcornExport.Models.Anime
 
         [DataMember]
         [BsonElement("episodes")]
-        public List<EpisodeAnimeModel> Episodes { get; set; }
+        public List<EpisodeAnimeBson> Episodes { get; set; }
 
         [DataMember]
         [BsonElement("genres")]
@@ -66,10 +66,10 @@ namespace PopcornExport.Models.Anime
 
         [DataMember]
         [BsonElement("images")]
-        public ImageModel Images { get; set; }
+        public ImageBson Images { get; set; }
 
         [DataMember]
         [BsonElement("rating")]
-        public RatingModel Rating { get; set; }
+        public RatingBson Rating { get; set; }
     }
 }

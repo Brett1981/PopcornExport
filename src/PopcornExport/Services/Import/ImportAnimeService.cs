@@ -2,7 +2,6 @@
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using PopcornExport.Helpers;
-using PopcornExport.Models.Anime;
 using PopcornExport.Services.Database;
 using PopcornExport.Services.Logging;
 using System;
@@ -11,6 +10,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using PopcornExport.Models.Anime;
 using PopcornExport.Services.Assets;
 
 namespace PopcornExport.Services.Import
@@ -69,7 +69,7 @@ namespace PopcornExport.Services.Import
                 try
                 {
                     // Deserialize a document to an anime
-                    var anime = BsonSerializer.Deserialize<AnimeModel>(document);
+                    var anime = BsonSerializer.Deserialize<AnimeBson>(document);
 
                     if (!string.IsNullOrEmpty(anime.Images.Banner))
                         anime.Images.Banner = await _assetsService.UploadFile($@"images/{anime.MalId}/banner/{anime.Images.Banner.Split('/').Last()}", anime.Images.Banner);

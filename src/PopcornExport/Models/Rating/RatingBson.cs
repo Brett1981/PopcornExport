@@ -9,7 +9,7 @@ namespace PopcornExport.Models.Rating
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class RatingModel
+    public class RatingBson
     {
         [DataMember]
         [BsonElement("percentage")]

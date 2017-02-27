@@ -1,30 +1,25 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using PopcornExport.Models.Watched;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
-using PopcornExport.Models.Torrent;
+using System.Threading.Tasks;
 using PopcornExport.Models.Torrent.Show;
 
 namespace PopcornExport.Models.Episode
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class EpisodeShowModel
+    public class EpisodeAnimeBson
     {
         [DataMember]
         [BsonElement("torrents")]
-        public TorrentShowNode Torrents { get; set; }
+        public TorrentShowNodeBson Torrents { get; set; }
 
         [DataMember]
         [BsonElement("watched")]
-        public WatchedModel watched { get; set; }
-
-        [DataMember]
-        [BsonElement("first_aired")]
-        public double FirstAired { get; set; }
-
-        [DataMember]
-        [BsonElement("date_based")]
-        public bool DateBased { get; set; }
+        public WatchedBson watched { get; set; }
 
         [DataMember]
         [BsonElement("overview")]
@@ -44,6 +39,6 @@ namespace PopcornExport.Models.Episode
 
         [DataMember]
         [BsonElement("tvdb_id")]
-        public int? TvdbId { get; set; }
+        public string TvdbId { get; set; }
     }
 }

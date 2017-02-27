@@ -10,7 +10,7 @@ namespace PopcornExport.Models.Show
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class ShowModel
+    public class ShowBson
     {
         [DataMember]
         [BsonElement("imdb_id")]
@@ -66,7 +66,7 @@ namespace PopcornExport.Models.Show
 
         [DataMember]
         [BsonElement("last_updated")]
-        public double LastUpdated { get; set; }
+        public long LastUpdated { get; set; }
 
         [DataMember]
         [BsonElement("__v")]
@@ -74,7 +74,7 @@ namespace PopcornExport.Models.Show
 
         [DataMember]
         [BsonElement("episodes")]
-        public List<EpisodeShowModel> Episodes { get; set; }
+        public List<EpisodeShowBson> Episodes { get; set; }
 
         [DataMember]
         [BsonElement("genres")]
@@ -82,10 +82,10 @@ namespace PopcornExport.Models.Show
 
         [DataMember]
         [BsonElement("images")]
-        public ImageModel Images { get; set; }
+        public ImageBson Images { get; set; }
 
         [DataMember]
         [BsonElement("rating")]
-        public RatingModel Rating { get; set; }
+        public RatingBson Rating { get; set; }
     }
 }

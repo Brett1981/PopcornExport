@@ -1,19 +1,19 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
-using Newtonsoft.Json;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
-namespace PopcornExport.Models.Watched
+namespace PopcornExport.Models.Genre
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class WatchedModel
+    public class GenreBson
     {
         [DataMember]
-        [BsonElement("watched")]
-        public bool Watched { get; set; }
+        [BsonElement]
+        public BsonArray Name { get; set; }
     }
 }

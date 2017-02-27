@@ -7,15 +7,23 @@ namespace PopcornExport.Models.Episode
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class EpisodeAnimeModel
+    public class EpisodeShowBson
     {
         [DataMember]
         [BsonElement("torrents")]
-        public TorrentShowNode Torrents { get; set; }
+        public TorrentShowNodeBson Torrents { get; set; }
 
         [DataMember]
         [BsonElement("watched")]
-        public WatchedModel watched { get; set; }
+        public WatchedBson watched { get; set; }
+
+        [DataMember]
+        [BsonElement("first_aired")]
+        public long FirstAired { get; set; }
+
+        [DataMember]
+        [BsonElement("date_based")]
+        public bool DateBased { get; set; }
 
         [DataMember]
         [BsonElement("overview")]
@@ -35,6 +43,6 @@ namespace PopcornExport.Models.Episode
 
         [DataMember]
         [BsonElement("tvdb_id")]
-        public string TvdbId { get; set; }
+        public int? TvdbId { get; set; }
     }
 }
