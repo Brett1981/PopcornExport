@@ -16,6 +16,11 @@
         public const string YtsApiUrl = "https://yts.ag/api/v2/";
 
         /// <summary>
+        /// Kitsu Api for animes
+        /// </summary>
+        public const string KitsuApiUrl = "https://kitsu.io/api/edge/anime/";
+
+        /// <summary>
         /// MongoDb Database to use as export
         /// </summary>
         public const string MongoDbName = "popcorn";

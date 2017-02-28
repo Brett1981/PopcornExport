@@ -120,7 +120,7 @@ namespace PopcornExport.Services.Export
                                     {
                                         _loggingService.Telemetry.TrackException(ex);
                                     }
-                                }, 10, false);
+                                });
                             }
                         }
                     } while (movieFound);

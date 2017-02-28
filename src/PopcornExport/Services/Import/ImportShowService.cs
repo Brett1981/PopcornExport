@@ -64,47 +64,17 @@ namespace PopcornExport.Services.Import
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedShows = 0;
-            await documents.ParallelForEachAsync(async document => 
+            await documents.ParallelForEachAsync(async document =>
             {
                 try
                 {
                     var watch = new Stopwatch();
                     watch.Start();
-                                        
+
                     // Deserialize a document to a show
                     var show = BsonSerializer.Deserialize<ShowBson>(document);
 
-                    var tasks = new List<Task>
-                    {
-                        Task.Run(async () =>
-                        {
-                            if (!string.IsNullOrEmpty(show.Images.Banner))
-                                show.Images.Banner =
-                                    await _assetsService.UploadFile(
-                                        $@"images/{show.ImdbId}/banner/{show.Images.Banner.Split('/').Last()}",
-                                        show.Images.Banner);
-                        }),
-                        Task.Run(async () =>
-                        {
-
-                            if (!string.IsNullOrEmpty(show.Images.Fanart))
-                                show.Images.Fanart =
-                                    await _assetsService.UploadFile(
-                                        $@"images/{show.ImdbId}/fanart/{show.Images.Fanart.Split('/').Last()}",
-                                        show.Images.Fanart);
-                        }),
-                        Task.Run(async () =>
-                        {
-
-                            if (!string.IsNullOrEmpty(show.Images.Poster))
-                                show.Images.Poster =
-                                    await _assetsService.UploadFile(
-                                        $@"images/{show.ImdbId}/poster/{show.Images.Poster.Split('/').Last()}",
-                                        show.Images.Poster);
-                        })
-                    };
-
-                    await Task.WhenAll(tasks);
+                    await RetrieveAssets(show);
 
                     // Set filter to search a show in database
                     var filter = Builders<BsonDocument>.Filter.Eq("imdb_id", show.ImdbId);
@@ -143,13 +113,14 @@ namespace PopcornExport.Services.Import
                     watch.Stop();
                     updatedShows++;
                     Console.WriteLine(Environment.NewLine);
-                    Console.WriteLine($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED SHOW {show.Title} in {watch.ElapsedMilliseconds} ms. {updatedShows}/{documents.Count}");
+                    Console.WriteLine(
+                        $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED SHOW {show.Title} in {watch.ElapsedMilliseconds} ms. {updatedShows}/{documents.Count}");
                 }
                 catch (Exception ex)
                 {
                     _loggingService.Telemetry.TrackException(ex);
                 }
-            }, 10, false);
+            });
 
             // Finish
             Console.WriteLine(Environment.NewLine);
@@ -159,6 +130,44 @@ namespace PopcornExport.Services.Import
                 $@"Import shows ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
+        }
+
+        /// <summary>
+        /// Retrieve images for the provided show
+        /// </summary>
+        /// <param name="show">Show to process</param>
+        /// <returns><see cref="Task"/></returns>
+        private async Task RetrieveAssets(ShowBson show)
+        {
+            var tasks = new List<Task>
+            {
+                Task.Run(async () =>
+                {
+                    if (!string.IsNullOrEmpty(show.Images.Banner))
+                        show.Images.Banner =
+                            await _assetsService.UploadFile(
+                                $@"images/{show.ImdbId}/banner/{show.Images.Banner.Split('/').Last()}",
+                                show.Images.Banner);
+                }),
+                Task.Run(async () =>
+                {
+                    if (!string.IsNullOrEmpty(show.Images.Fanart))
+                        show.Images.Fanart =
+                            await _assetsService.UploadFile(
+                                $@"images/{show.ImdbId}/fanart/{show.Images.Fanart.Split('/').Last()}",
+                                show.Images.Fanart);
+                }),
+                Task.Run(async () =>
+                {
+                    if (!string.IsNullOrEmpty(show.Images.Poster))
+                        show.Images.Poster =
+                            await _assetsService.UploadFile(
+                                $@"images/{show.ImdbId}/poster/{show.Images.Poster.Split('/').Last()}",
+                                show.Images.Poster);
+                })
+            };
+
+            await Task.WhenAll(tasks);
         }
     }
 }
