@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using PopcornExport.Models.Watched;
 using System.Runtime.Serialization;
+using MongoDB.Bson;
 using PopcornExport.Models.Torrent.Show;
 
 namespace PopcornExport.Models.Episode
@@ -18,6 +19,7 @@ namespace PopcornExport.Models.Episode
         public WatchedBson watched { get; set; }
 
         [DataMember]
+        [BsonRepresentation(BsonType.Double)]
         [BsonElement("first_aired")]
         public long FirstAired { get; set; }
 

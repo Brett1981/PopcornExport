@@ -49,7 +49,7 @@ namespace PopcornExport.Models.Anime
         public IEnumerable<string> Genres { get; set; }
 
         [JsonProperty("images")]
-        public ImageShowJson Images { get; set; }
+        public ImageAnimeJson Images { get; set; }
 
         [JsonProperty("rating")]
         public RatingJson Rating { get; set; }

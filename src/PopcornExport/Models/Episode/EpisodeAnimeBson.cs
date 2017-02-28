@@ -19,7 +19,7 @@ namespace PopcornExport.Models.Episode
 
         [DataMember]
         [BsonElement("watched")]
-        public WatchedBson watched { get; set; }
+        public WatchedBson Watched { get; set; }
 
         [DataMember]
         [BsonElement("overview")]

@@ -65,6 +65,7 @@ namespace PopcornExport.Models.Show
         public int NumSeasons { get; set; }
 
         [DataMember]
+        [BsonRepresentation(BsonType.Double)]
         [BsonElement("last_updated")]
         public long LastUpdated { get; set; }
 
