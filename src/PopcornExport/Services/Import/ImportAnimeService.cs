@@ -152,7 +152,7 @@ namespace PopcornExport.Services.Import
                         if (animeKitsu.Attributes.CoverImage != null)
                         {
                             anime.Images.Cover = new AnimeKitsuImage();
-                            if (animeKitsu.Attributes.CoverImage.Tiny != null)
+                            if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.CoverImage.Tiny))
                             {
                                 var tinyCover = string.Concat(animeKitsu.Attributes.CoverImage.Tiny
                                     .Split(
@@ -164,7 +164,7 @@ namespace PopcornExport.Services.Import
                                         animeKitsu.Attributes.CoverImage.Tiny);
                             }
 
-                            if (animeKitsu.Attributes.CoverImage.Small != null)
+                            if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.CoverImage.Small))
                             {
                                 var smallCover = string.Concat(animeKitsu.Attributes.CoverImage.Small
                                     .Split(
@@ -176,7 +176,7 @@ namespace PopcornExport.Services.Import
                                         animeKitsu.Attributes.CoverImage.Small);
                             }
 
-                            if (animeKitsu.Attributes.CoverImage.Medium != null)
+                            if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.CoverImage.Medium))
                             {
                                 var mediumCover = string.Concat(animeKitsu.Attributes.CoverImage.Medium
                                     .Split(
@@ -188,7 +188,7 @@ namespace PopcornExport.Services.Import
                                         animeKitsu.Attributes.CoverImage.Medium);
                             }
 
-                            if (animeKitsu.Attributes.CoverImage.Large != null)
+                            if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.CoverImage.Large))
                             {
                                 var largeCover = string.Concat(animeKitsu.Attributes.CoverImage.Large
                                     .Split(
@@ -200,7 +200,7 @@ namespace PopcornExport.Services.Import
                                         animeKitsu.Attributes.CoverImage.Large);
                             }
 
-                            if (animeKitsu.Attributes.CoverImage.Original != null)
+                            if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.CoverImage.Original))
                             {
                                 var originalCover = string.Concat(animeKitsu.Attributes.CoverImage.Original
                                     .Split(
@@ -218,7 +218,7 @@ namespace PopcornExport.Services.Import
                         if (animeKitsu.Attributes.PosterImage != null)
                         {
                             anime.Images.Poster = new AnimeKitsuImage();
-                            if (animeKitsu.Attributes.PosterImage.Tiny != null)
+                            if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.PosterImage.Tiny))
                             {
                                 var tinyPoster = string.Concat(animeKitsu.Attributes.PosterImage.Tiny
                                     .Split(
@@ -230,7 +230,7 @@ namespace PopcornExport.Services.Import
                                         animeKitsu.Attributes.PosterImage.Tiny);
                             }
 
-                            if (animeKitsu.Attributes.PosterImage.Small != null)
+                            if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.PosterImage.Small))
                             {
                                 var smallPoster = string.Concat(animeKitsu.Attributes.PosterImage.Small
                                     .Split(
@@ -242,7 +242,7 @@ namespace PopcornExport.Services.Import
                                         animeKitsu.Attributes.PosterImage.Small);
                             }
 
-                            if (animeKitsu.Attributes.PosterImage.Medium != null)
+                            if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.PosterImage.Medium))
                             {
                                 var mediumPoster = string.Concat(animeKitsu.Attributes.PosterImage.Medium
                                     .Split(
@@ -254,7 +254,7 @@ namespace PopcornExport.Services.Import
                                         animeKitsu.Attributes.PosterImage.Medium);
                             }
 
-                            if (animeKitsu.Attributes.PosterImage.Large != null)
+                            if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.PosterImage.Large))
                             {
                                 var largePoster = string.Concat(animeKitsu.Attributes.PosterImage.Large
                                     .Split(
@@ -266,7 +266,7 @@ namespace PopcornExport.Services.Import
                                         animeKitsu.Attributes.PosterImage.Large);
                             }
 
-                            if (animeKitsu.Attributes.PosterImage.Original != null)
+                            if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.PosterImage.Original))
                             {
                                 var originalPoster = string.Concat(animeKitsu.Attributes.PosterImage.Original
                                     .Split(

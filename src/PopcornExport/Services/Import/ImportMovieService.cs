@@ -198,7 +198,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(movie.BackgroundImage))
+                    if (!string.IsNullOrWhiteSpace(movie.BackgroundImage))
                     {
                         movie.BackgroundImage =
                             await _assetsService.UploadFile(
@@ -208,7 +208,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(movie.SmallCoverImage))
+                    if (!string.IsNullOrWhiteSpace(movie.SmallCoverImage))
                     {
                         movie.SmallCoverImage =
                             await _assetsService.UploadFile(
@@ -218,7 +218,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(movie.MediumCoverImage))
+                    if (!string.IsNullOrWhiteSpace(movie.MediumCoverImage))
                     {
                         movie.MediumCoverImage =
                             await _assetsService.UploadFile(
@@ -229,7 +229,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(movie.LargeCoverImage))
+                    if (!string.IsNullOrWhiteSpace(movie.LargeCoverImage))
                     {
                         movie.LargeCoverImage =
                             await _assetsService.UploadFile(
@@ -239,7 +239,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(movie.MediumScreenshotImage1))
+                    if (!string.IsNullOrWhiteSpace(movie.MediumScreenshotImage1))
                     {
                         movie.MediumScreenshotImage1 =
                             await _assetsService.UploadFile(
@@ -250,7 +250,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(movie.MediumScreenshotImage2))
+                    if (!string.IsNullOrWhiteSpace(movie.MediumScreenshotImage2))
                     {
                         movie.MediumScreenshotImage2 =
                             await _assetsService.UploadFile(
@@ -261,7 +261,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(movie.MediumScreenshotImage3))
+                    if (!string.IsNullOrWhiteSpace(movie.MediumScreenshotImage3))
                     {
                         movie.MediumScreenshotImage3 =
                             await _assetsService.UploadFile(
@@ -272,7 +272,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(movie.LargeScreenshotImage1))
+                    if (!string.IsNullOrWhiteSpace(movie.LargeScreenshotImage1))
                     {
                         movie.LargeScreenshotImage1 =
                             await _assetsService.UploadFile(
@@ -283,7 +283,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(movie.LargeScreenshotImage2))
+                    if (!string.IsNullOrWhiteSpace(movie.LargeScreenshotImage2))
                     {
                         movie.LargeScreenshotImage2 =
                             await _assetsService.UploadFile(
@@ -294,7 +294,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(movie.LargeScreenshotImage3))
+                    if (!string.IsNullOrWhiteSpace(movie.LargeScreenshotImage3))
                     {
                         movie.LargeScreenshotImage3 =
                             await _assetsService.UploadFile(
@@ -322,7 +322,7 @@ namespace PopcornExport.Services.Import
                     {
                         foreach (var cast in movie.Cast)
                         {
-                            if (cast.SmallImage != null)
+                            if (!string.IsNullOrWhiteSpace(cast.SmallImage))
                             {
                                 cast.SmallImage = await _assetsService.UploadFile(
                                     $@"images/{movie.ImdbCode}/cast/{cast.ImdbCode}/{cast.SmallImage.Split

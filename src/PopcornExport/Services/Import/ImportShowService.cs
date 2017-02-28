@@ -143,7 +143,7 @@ namespace PopcornExport.Services.Import
             {
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(show.Images.Banner))
+                    if (!string.IsNullOrWhiteSpace(show.Images.Banner))
                         show.Images.Banner =
                             await _assetsService.UploadFile(
                                 $@"images/{show.ImdbId}/banner/{show.Images.Banner.Split('/').Last()}",
@@ -151,7 +151,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(show.Images.Fanart))
+                    if (!string.IsNullOrWhiteSpace(show.Images.Fanart))
                         show.Images.Fanart =
                             await _assetsService.UploadFile(
                                 $@"images/{show.ImdbId}/fanart/{show.Images.Fanart.Split('/').Last()}",
@@ -159,7 +159,7 @@ namespace PopcornExport.Services.Import
                 }),
                 Task.Run(async () =>
                 {
-                    if (!string.IsNullOrEmpty(show.Images.Poster))
+                    if (!string.IsNullOrWhiteSpace(show.Images.Poster))
                         show.Images.Poster =
                             await _assetsService.UploadFile(
                                 $@"images/{show.ImdbId}/poster/{show.Images.Poster.Split('/').Last()}",
