@@ -70,6 +70,8 @@ namespace PopcornExport.Services.Import
                 try
                 {
                     var watch = new Stopwatch();
+                    watch.Start();
+                    
                     // Deserialize a document to an anime
                     var anime = BsonSerializer.Deserialize<AnimeBson>(document);
 
@@ -132,17 +134,12 @@ namespace PopcornExport.Services.Import
                     // Retrieve animes from database
                     var collectionMovies = _mongoDbService.GetCollection(Constants.AnimeCollectionName);
 
-                    watch.Start();
-
                     // Update anime
                     await collectionMovies.FindOneAndUpdateAsync(filter, update, upsert);
                     watch.Stop();
                     updatedAnimes++;
                     Console.WriteLine(Environment.NewLine);
-                    Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                    Console.Write("  UPDATED ANIME ");
-                    Console.Write($"{anime.Title} in {watch.ElapsedMilliseconds} ms.");
-                    Console.Write($"  {updatedAnimes}/{documents.Count}");
+                    Console.WriteLine($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED ANIME {anime.Title} in {watch.ElapsedMilliseconds} ms. {updatedAnimes}/{documents.Count}");
                 }
                 catch (Exception ex)
                 {

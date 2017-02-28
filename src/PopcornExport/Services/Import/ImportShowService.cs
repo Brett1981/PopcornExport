@@ -70,6 +70,8 @@ namespace PopcornExport.Services.Import
                 try
                 {
                     var watch = new Stopwatch();
+                    watch.Start();
+                                        
                     // Deserialize a document to a show
                     var show = BsonSerializer.Deserialize<ShowBson>(document);
 
@@ -138,17 +140,12 @@ namespace PopcornExport.Services.Import
                     // Retrieve shows from database
                     var collectionShows = _mongoDbService.GetCollection(Constants.ShowsCollectionName);
 
-                    watch.Start();
-
                     // Update show
                     await collectionShows.FindOneAndUpdateAsync(filter, update, upsert);
                     watch.Stop();
                     updatedshows++;
                     Console.WriteLine(Environment.NewLine);
-                    Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                    Console.Write("  UPDATED SHOW ");
-                    Console.Write($"{show.Title} in {watch.ElapsedMilliseconds} ms.");
-                    Console.Write($"  {updatedshows}/{documents.Count}");
+                    Console.WriteLine($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED SHOW {show.Title} in {watch.ElapsedMilliseconds} ms. {updatedshows}/{documents.Count}");
                 }
                 catch (Exception ex)
                 {

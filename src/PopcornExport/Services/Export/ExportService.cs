@@ -14,6 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using PopcornExport.Models.Movie;
+using System.Collections.Async;
 
 namespace PopcornExport.Services.Export
 {
@@ -99,7 +100,7 @@ namespace PopcornExport.Services.Export
                             {
                                 movieFound = response.Data.Data.Movies.Any();
                                 page++;
-                                foreach (var movie in response.Data.Data.Movies)
+                                await response.Data.Data.Movies.ParallelForEachAsync(async movie => 
                                 {
                                     try 
                                     {
@@ -112,7 +113,7 @@ namespace PopcornExport.Services.Export
                                     {
                                         _loggingService.Telemetry.TrackException(ex);
                                     }
-                                }
+                                }, 50, false);
                             }
                         }
                     } while (movieFound);

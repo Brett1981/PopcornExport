@@ -65,7 +65,6 @@ namespace PopcornExport.Services.Import
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-            var watch = new Stopwatch();
             var updatedmovies = 0;
 
             var tmdbClient = new TMDbClient(Constants.TmdbClientApiKey);
@@ -75,6 +74,9 @@ namespace PopcornExport.Services.Import
             {
                 try
                 {
+                    var watch = new Stopwatch();
+                    watch.Start();
+                    
                     // Deserialize a document to a movie
                     var movie = BsonSerializer.Deserialize<MovieBson>(document);
                     var tmdbMovie = await tmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images);
@@ -272,23 +274,12 @@ namespace PopcornExport.Services.Import
                     // Retrieve movies from database
                     var collectionMovies = _mongoDbService.GetCollection(Constants.MoviesCollectionName);
 
-                    watch.Restart();
-
                     // Update movie
                     await collectionMovies.FindOneAndUpdateAsync(filter, update, upsert);
                     watch.Stop();
                     updatedmovies++;
                     Console.WriteLine(Environment.NewLine);
-                    Console.Write($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}");
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.Write("  UPDATED MOVIE ");
-
-                    // Sum up
-                    Console.ResetColor();
-                    Console.Write($"{movie.Title} in {watch.ElapsedMilliseconds} ms.");
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write($"  {updatedmovies}/{documents.Count}");
-                    Console.ResetColor();
+                    Console.WriteLine($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED MOVIE {movie.Title} in {watch.ElapsedMilliseconds} ms. {updatedmovies}/{documents.Count}");
                 }
                 catch (Exception ex)
                 {
@@ -298,9 +289,7 @@ namespace PopcornExport.Services.Import
 
             // Finish
             Console.WriteLine(Environment.NewLine);
-            Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Done processing movies.");
-            Console.ResetColor();
 
             var loggingTraceEnd =
                 $@"Import movies ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
