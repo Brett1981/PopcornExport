@@ -1,5 +1,4 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
-using PopcornExport.Models.Watched;
 using System.Runtime.Serialization;
 using MongoDB.Bson;
 using PopcornExport.Models.Torrent.Show;
@@ -13,10 +12,6 @@ namespace PopcornExport.Models.Episode
         [DataMember]
         [BsonElement("torrents")]
         public TorrentShowNodeBson Torrents { get; set; }
-
-        [DataMember]
-        [BsonElement("watched")]
-        public WatchedBson watched { get; set; }
 
         [DataMember]
         [BsonRepresentation(BsonType.Double)]

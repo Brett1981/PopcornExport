@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using PopcornExport.Models.Torrent.Show;
-using PopcornExport.Models.Watched;
 
 namespace PopcornExport.Models.Episode
 {
@@ -12,9 +7,6 @@ namespace PopcornExport.Models.Episode
     {
         [JsonProperty("torrents")]
         public TorrentShowNodeJson Torrents { get; set; }
-
-        [JsonProperty("watched")]
-        public WatchedJson Watched { get; set; }
 
         [JsonProperty("overview")]
         public string Overview { get; set; }
