@@ -311,7 +311,7 @@ namespace PopcornExport.Services.Import
                         {
                             torrent.Url =
                                 await _assetsService.UploadFile(
-                                    $@"torrents/{movie.ImdbCode}/{movie.ImdbCode}.torrent",
+                                    $@"torrents/{movie.ImdbCode}/{torrent.Quality}/{movie.ImdbCode}.torrent",
                                     torrent.Url);
                         }
                     }
