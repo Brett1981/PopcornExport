@@ -33,9 +33,6 @@ namespace PopcornExport.Models.Anime
         [JsonProperty("type")]
         public string Type { get; set; }
 
-        [JsonProperty("__v")]
-        public int V { get; set; }
-
         [JsonProperty("last_updated")]
         public long LastUpdated { get; set; }
 

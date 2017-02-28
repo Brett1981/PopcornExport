@@ -70,10 +70,6 @@ namespace PopcornExport.Models.Show
         public long LastUpdated { get; set; }
 
         [DataMember]
-        [BsonElement("__v")]
-        public int V { get; set; }
-
-        [DataMember]
         [BsonElement("episodes")]
         public List<EpisodeShowBson> Episodes { get; set; }
 

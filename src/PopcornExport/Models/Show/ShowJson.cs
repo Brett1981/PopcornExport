@@ -50,9 +50,6 @@ namespace PopcornExport.Models.Show
         [JsonProperty("last_updated")]
         public long LastUpdated { get; set; }
 
-        [JsonProperty("__v")]
-        public int V { get; set; }
-
         [JsonProperty("episodes")]
         public List<EpisodeShowJson> Episodes { get; set; }
 

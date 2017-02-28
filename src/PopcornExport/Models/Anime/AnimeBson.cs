@@ -45,10 +45,6 @@ namespace PopcornExport.Models.Anime
         public string Type { get; set; }
 
         [DataMember]
-        [BsonElement("__v")]
-        public int V { get; set; }
-
-        [DataMember]
         [BsonRepresentation(BsonType.Double)]
         [BsonElement("last_updated")]
         public long LastUpdated { get; set; }

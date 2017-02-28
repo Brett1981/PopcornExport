@@ -236,7 +236,6 @@ namespace PopcornExport.Services.Import
                         .Set("status", anime.Status)
                         .Set("type", anime.Type)
                         .Set("last_updated", anime.LastUpdated)
-                        .Set("__v", anime.V)
                         .Set("num_seasons", anime.NumSeasons)
                         .Set("episodes", anime.Episodes)
                         .Set("genres", anime.Genres)

@@ -124,7 +124,6 @@ namespace PopcornExport.Services.Import
                         .Set("status", show.Status)
                         .Set("num_seasons", show.NumSeasons)
                         .Set("last_updated", show.LastUpdated)
-                        .Set("__v", show.V)
                         .Set("episodes", show.Episodes)
                         .Set("genres", show.Genres)
                         .Set("images", show.Images)
