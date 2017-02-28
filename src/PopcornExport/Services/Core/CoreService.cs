@@ -67,7 +67,9 @@ namespace PopcornExport.Services.Core
                         CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-                var exports = new[] {ExportType.Anime, ExportType.Movies, ExportType.Shows};
+                Console.WriteLine(loggingTraceBegin);
+
+                var exports = new[] {ExportType.Movies, ExportType.Shows, ExportType.Anime};
 
                 // Process each export type in parallel
                 var tasks = exports.Select(async export =>

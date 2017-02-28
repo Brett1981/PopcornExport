@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using PopcornExport.Models.Movie;
 using System.Collections.Async;
+using System.Collections.Concurrent;
 
 namespace PopcornExport.Services.Export
 {
@@ -51,7 +52,7 @@ namespace PopcornExport.Services.Export
                         "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-                var export = new List<BsonDocument>();
+                var export = new ConcurrentBag<BsonDocument>();
                 if (exportType == ExportType.Anime || exportType == ExportType.Shows)
                 {
                     using (var client = new RestClient(Constants.OriginalPopcornApi))
@@ -92,13 +93,13 @@ namespace PopcornExport.Services.Export
                             var moviesByPageRequest = GetMoviesByPageRequest(page);
                             // Execute request
                             var response = await client.Execute<MovieShortJsonNode>(moviesByPageRequest);
-                            if (response?.Data?.Data?.Movies == null)
+                            if (response?.Data?.Data?.Movies == null || !response.Data.Data.Movies.Any())
                             {
                                 movieFound = false;
                             }
                             else
                             {
-                                movieFound = response.Data.Data.Movies.Any();
+                                movieFound = true;
                                 page++;
                                 await response.Data.Data.Movies.ParallelForEachAsync(async movie => 
                                 {
@@ -124,7 +125,7 @@ namespace PopcornExport.Services.Export
                         "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
 
-                return export;
+                return export.ToList();
 
             }
             catch (Exception ex)
@@ -168,7 +169,7 @@ namespace PopcornExport.Services.Export
         /// </summary>
         /// <param name="json">Json to convert</param>
         /// <param name="export">BsonDocument to update</param>
-        private void ConvertJsonToBsonDocument(string json, ICollection<BsonDocument> export)
+        private void ConvertJsonToBsonDocument(string json, ConcurrentBag<BsonDocument> export)
         {
             BsonDocument document;
             // Try to parse a document
