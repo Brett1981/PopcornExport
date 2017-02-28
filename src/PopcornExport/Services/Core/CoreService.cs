@@ -71,9 +71,7 @@ namespace PopcornExport.Services.Core
                 Console.WriteLine(loggingTraceBegin);
 
                 var exports = new[] {ExportType.Movies, ExportType.Shows, ExportType.Anime};
-
-                // Process each export type in parallel
-                await exports.ParallelForEachAsync(async export =>
+                foreach(var export in exports)
                 {
                     // Load export
                     var documents = await _exportService.LoadExport(export);
@@ -100,7 +98,7 @@ namespace PopcornExport.Services.Core
                         default:
                             throw new NotImplementedException();
                     }
-                });
+                }
 
                 var loggingTraceEnd =
                     $@"Export ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";

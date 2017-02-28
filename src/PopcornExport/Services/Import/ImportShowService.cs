@@ -64,7 +64,7 @@ namespace PopcornExport.Services.Import
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedShows = 0;
-            await documents.ParallelForEachAsync(async document =>
+            foreach (var document in documents)
             {
                 try
                 {
@@ -120,7 +120,7 @@ namespace PopcornExport.Services.Import
                 {
                     _loggingService.Telemetry.TrackException(ex);
                 }
-            });
+            }
 
             // Finish
             Console.WriteLine(Environment.NewLine);
