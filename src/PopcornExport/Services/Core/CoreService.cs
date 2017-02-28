@@ -5,6 +5,7 @@ using PopcornExport.Services.Export;
 using PopcornExport.Services.Import;
 using PopcornExport.Services.Logging;
 using System;
+using System.Collections.Async;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -72,7 +73,7 @@ namespace PopcornExport.Services.Core
                 var exports = new[] {ExportType.Movies, ExportType.Shows, ExportType.Anime};
 
                 // Process each export type in parallel
-                var tasks = exports.Select(async export =>
+                await exports.ParallelForEachAsync(async export =>
                 {
                     // Load export
                     var documents = await _exportService.LoadExport(export);
@@ -100,8 +101,6 @@ namespace PopcornExport.Services.Core
                             throw new NotImplementedException();
                     }
                 });
-
-                await Task.WhenAll(tasks);
 
                 var loggingTraceEnd =
                     $@"Export ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";

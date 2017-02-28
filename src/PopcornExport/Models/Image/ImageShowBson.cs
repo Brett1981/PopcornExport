@@ -9,7 +9,7 @@ namespace PopcornExport.Models.Image
 {
     [BsonIgnoreExtraElements]
     [DataContract]
-    public class ImageBson
+    public class ImageShowBson
     {
         [DataMember]
         [BsonElement("poster")]

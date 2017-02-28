@@ -49,6 +49,7 @@ namespace PopcornExport.Models.Anime
         public int V { get; set; }
 
         [DataMember]
+        [BsonRepresentation(BsonType.Double)]
         [BsonElement("last_updated")]
         public long LastUpdated { get; set; }
 
@@ -66,7 +67,7 @@ namespace PopcornExport.Models.Anime
 
         [DataMember]
         [BsonElement("images")]
-        public ImageBson Images { get; set; }
+        public ImageAnimeBson Images { get; set; }
 
         [DataMember]
         [BsonElement("rating")]

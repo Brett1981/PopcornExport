@@ -65,8 +65,7 @@ namespace PopcornExport.Services.Import
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-            var updatedmovies = 0;
-
+            var updatedMovies = 0;
             var tmdbClient = new TMDbClient(Constants.TmdbClientApiKey);
             tmdbClient.GetConfig();
 
@@ -76,7 +75,7 @@ namespace PopcornExport.Services.Import
                 {
                     var watch = new Stopwatch();
                     watch.Start();
-                    
+
                     // Deserialize a document to a movie
                     var movie = BsonSerializer.Deserialize<MovieBson>(document);
                     var tmdbMovie = await tmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images);
@@ -118,109 +117,137 @@ namespace PopcornExport.Services.Import
                         Task.Run(async () =>
                         {
                             if (!string.IsNullOrEmpty(movie.BackgroundImage))
+                            {
                                 movie.BackgroundImage =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/background/{movie.BackgroundImage.Split('/').Last()}",
                                         movie.BackgroundImage);
+                            }
                         }),
                         Task.Run(async () =>
                         {
                             if (!string.IsNullOrEmpty(movie.SmallCoverImage))
+                            {
                                 movie.SmallCoverImage =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/cover/small/{movie.SmallCoverImage.Split('/').Last()}",
                                         movie.SmallCoverImage);
+                            }
                         }),
                         Task.Run(async () =>
                         {
                             if (!string.IsNullOrEmpty(movie.MediumCoverImage))
+                            {
                                 movie.MediumCoverImage =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/cover/medium/{movie.MediumCoverImage.Split('/')
                                             .Last()}",
                                         movie.MediumCoverImage);
+                            }
                         }),
                         Task.Run(async () =>
                         {
                             if (!string.IsNullOrEmpty(movie.LargeCoverImage))
+                            {
                                 movie.LargeCoverImage =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/cover/large/{movie.LargeCoverImage.Split('/').Last()}",
                                         movie.LargeCoverImage);
+                            }
                         }),
                         Task.Run(async () =>
                         {
                             if (!string.IsNullOrEmpty(movie.MediumScreenshotImage1))
+                            {
                                 movie.MediumScreenshotImage1 =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/screenshot/medium/1/{movie.MediumScreenshotImage1
                                             .Split('/')
                                             .Last()}", movie.MediumScreenshotImage1);
+                            }
                         }),
                         Task.Run(async () =>
                         {
                             if (!string.IsNullOrEmpty(movie.MediumScreenshotImage2))
+                            {
                                 movie.MediumScreenshotImage2 =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/screenshot/medium/2/{movie.MediumScreenshotImage2
                                             .Split('/')
                                             .Last()}", movie.MediumScreenshotImage2);
+                            }
                         }),
                         Task.Run(async () =>
                         {
                             if (!string.IsNullOrEmpty(movie.MediumScreenshotImage3))
+                            {
                                 movie.MediumScreenshotImage3 =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/screenshot/medium/3/{movie.MediumScreenshotImage3
                                             .Split('/')
                                             .Last()}", movie.MediumScreenshotImage3);
+                            }
                         }),
                         Task.Run(async () =>
                         {
                             if (!string.IsNullOrEmpty(movie.LargeScreenshotImage1))
+                            {
                                 movie.LargeScreenshotImage1 =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/screenshot/large/1/{movie.LargeScreenshotImage1.Split
                                             ('/')
                                             .Last()}", movie.LargeScreenshotImage1);
+                            }
                         }),
                         Task.Run(async () =>
                         {
                             if (!string.IsNullOrEmpty(movie.LargeScreenshotImage2))
+                            {
                                 movie.LargeScreenshotImage2 =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/screenshot/large/2/{movie.LargeScreenshotImage2.Split
                                             ('/')
                                             .Last()}", movie.LargeScreenshotImage2);
+                            }
                         }),
                         Task.Run(async () =>
                         {
                             if (!string.IsNullOrEmpty(movie.LargeScreenshotImage3))
+                            {
                                 movie.LargeScreenshotImage3 =
                                     await _assetsService.UploadFile(
                                         $@"images/{movie.ImdbCode}/screenshot/large/3/{movie.LargeScreenshotImage3.Split
                                             ('/')
                                             .Last()}", movie.LargeScreenshotImage3);
-
-                        }),
-                        Task.Run(async () =>
-                        {
-                            foreach (var torrent in movie.Torrents)
-                            {
-                                torrent.Url =
-                                    await _assetsService.UploadFile(
-                                        $@"torrents/{movie.ImdbCode}/{movie.ImdbCode}.torrent",
-                                        torrent.Url);
                             }
                         }),
                         Task.Run(async () =>
                         {
-                            foreach (var cast in movie.Cast)
+                            if (movie.Torrents != null)
                             {
-                                cast.SmallImage = await _assetsService.UploadFile(
-                                        $@"images/{movie.ImdbCode}/cast/{cast.ImdbCode}/{cast.SmallImage.Split
-                                            ('/')
-                                            .Last()}", cast.SmallImage);
+                                foreach (var torrent in movie.Torrents)
+                                {
+                                    torrent.Url =
+                                        await _assetsService.UploadFile(
+                                            $@"torrents/{movie.ImdbCode}/{movie.ImdbCode}.torrent",
+                                            torrent.Url);
+                                }
+                            }
+                        }),
+                        Task.Run(async () =>
+                        {
+                            if (movie.Cast != null)
+                            {
+                                foreach (var cast in movie.Cast)
+                                {
+                                    if (cast.SmallImage != null)
+                                    {
+                                        cast.SmallImage = await _assetsService.UploadFile(
+                                            $@"images/{movie.ImdbCode}/cast/{cast.ImdbCode}/{cast.SmallImage.Split
+                                                ('/')
+                                                .Last()}", cast.SmallImage);
+                                    }
+                                }
                             }
                         })
                     };
@@ -277,9 +304,10 @@ namespace PopcornExport.Services.Import
                     // Update movie
                     await collectionMovies.FindOneAndUpdateAsync(filter, update, upsert);
                     watch.Stop();
-                    updatedmovies++;
+                    updatedMovies++;
                     Console.WriteLine(Environment.NewLine);
-                    Console.WriteLine($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED MOVIE {movie.Title} in {watch.ElapsedMilliseconds} ms. {updatedmovies}/{documents.Count}");
+                    Console.WriteLine(
+                        $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED MOVIE {movie.Title} in {watch.ElapsedMilliseconds} ms. {updatedMovies}/{documents.Count}");
                 }
                 catch (Exception ex)
                 {

@@ -15,6 +15,6 @@ namespace PopcornExport.Services.Export
         /// </summary>
         /// <param name="exportType">Export to load</param>
         /// <returns>Bson documents</returns>
-        Task<List<BsonDocument>> LoadExport(ExportType exportType);
+        Task<IEnumerable<BsonDocument>> LoadExport(ExportType exportType);
     }
 }

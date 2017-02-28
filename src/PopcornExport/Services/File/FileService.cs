@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
@@ -78,12 +79,26 @@ namespace PopcornExport.Services.File
                 var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
                 if (!await blob.ExistsAsync())
                 {
-                    using (var client = new HttpClient
+                    var cookieContainer = new CookieContainer();
+                    using (var handler = new HttpClientHandler { CookieContainer = cookieContainer })
+                    using (var client = new HttpClient(handler)
                     {
-                        Timeout = TimeSpan.FromSeconds(1)
+                        Timeout = TimeSpan.FromSeconds(2)
                     })
                     using (var request = new HttpRequestMessage(HttpMethod.Get, url))
                     {
+                        if (url.Contains("yts"))
+                        {
+                            // Sometimes YTS requires an authentication to access movies. Here is an already authenticated cookie valid until December 2017
+                            cookieContainer.Add(new Uri(url),
+                                new Cookie("PHPSESSID", "ncrmefe4s79la9d2mba0n538o6", "/", "yts.ag"));
+                            cookieContainer.Add(new Uri(url),
+                                new Cookie("__cfduid", "d6c81b283d74b436fec66f02bcb99c04d1481020053", "/", ".yts.ag"));
+                            cookieContainer.Add(new Uri(url), new Cookie("bgb2", "1", "/", "yts.ag"));
+                            cookieContainer.Add(new Uri(url),
+                                new Cookie("uhh", "60a8c98fd72e7a79b731f1ea09a5d09d", "/", ".yts.ag"));
+                            cookieContainer.Add(new Uri(url), new Cookie("uid", "2188423", "/", ".yts.ag"));
+                        }
                         using (var response = await client.SendAsync(request))
                         {
                             response.EnsureSuccessStatusCode();

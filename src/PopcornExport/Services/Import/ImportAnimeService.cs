@@ -13,6 +13,10 @@ using System.Threading.Tasks;
 using PopcornExport.Models.Anime;
 using PopcornExport.Services.Assets;
 using System.Collections.Async;
+using Newtonsoft.Json;
+using PopcornExport.Models.Image;
+using RestSharp.Portable;
+using RestSharp.Portable.HttpClient;
 
 namespace PopcornExport.Services.Import
 {
@@ -65,45 +69,159 @@ namespace PopcornExport.Services.Import
 
             var updatedAnimes = 0;
 
-            await documents.ParallelForEachAsync(async document => 
+            await documents.ParallelForEachAsync(async document =>
             {
                 try
                 {
                     var watch = new Stopwatch();
                     watch.Start();
-                    
                     // Deserialize a document to an anime
                     var anime = BsonSerializer.Deserialize<AnimeBson>(document);
 
-                    var tasks = new List<Task>
+                    using (var client = new RestClient("https://kitsu.io/api/edge/anime/"))
                     {
-                        Task.Run(async () =>
+                        var request = new RestRequest("{segment}", Method.GET);
+                        request.AddUrlSegment("segment", $"{document["_id"]}");
+                        var response = await client.Execute(request);
+                        var animeKitsu = JsonConvert.DeserializeObject<AnimeKitsuWrapperJson>(response.Content).Anime;
+                        var tasks = new List<Task>
                         {
-                            if (!string.IsNullOrEmpty(anime.Images.Banner))
-                                anime.Images.Banner =
-                                    await _assetsService.UploadFile(
-                                        $@"images/{anime.MalId}/banner/{anime.Images.Banner.Split('/').Last()}",
-                                        anime.Images.Banner);
-                        }),
-                        Task.Run(async () =>
-                        {
-                            if (!string.IsNullOrEmpty(anime.Images.Fanart))
-                                anime.Images.Fanart =
-                                    await _assetsService.UploadFile(
-                                        $@"images/{anime.MalId}/fanart/{anime.Images.Fanart.Split('/').Last()}",
-                                        anime.Images.Fanart);
-                        }),
-                        Task.Run(async () =>
-                        {
-                            if (!string.IsNullOrEmpty(anime.Images.Poster))
-                                anime.Images.Poster =
-                                    await _assetsService.UploadFile(
-                                        $@"images/{anime.MalId}/poster/{anime.Images.Poster.Split('/').Last()}",
-                                        anime.Images.Poster);
-                        })
-                    };
+                            Task.Run(async () =>
+                            {
+                                if (animeKitsu.Attributes.CoverImage != null)
+                                {
+                                    anime.Images.Cover = new AnimeKitsuImage();
+                                    if (animeKitsu.Attributes.CoverImage.Tiny != null)
+                                    {
+                                        var tinyCover = string.Concat(animeKitsu.Attributes.CoverImage.Tiny
+                                            .Split(
+                                                '/').Last().TakeWhile(a => a != '?'));
 
-                    await Task.WhenAll(tasks);
+                                        anime.Images.Cover.Tiny =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{anime.MalId}/cover/tiny/{tinyCover}",
+                                                animeKitsu.Attributes.CoverImage.Tiny);
+                                    }
+
+                                    if (animeKitsu.Attributes.CoverImage.Small != null)
+                                    {
+                                        var smallCover = string.Concat(animeKitsu.Attributes.CoverImage.Small
+                                            .Split(
+                                                '/').Last().TakeWhile(a => a != '?'));
+
+                                        anime.Images.Cover.Small =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{anime.MalId}/cover/small/{smallCover}",
+                                                animeKitsu.Attributes.CoverImage.Small);
+                                    }
+
+                                    if (animeKitsu.Attributes.CoverImage.Medium != null)
+                                    {
+                                        var mediumCover = string.Concat(animeKitsu.Attributes.CoverImage.Medium
+                                            .Split(
+                                                '/').Last().TakeWhile(a => a != '?'));
+
+                                        anime.Images.Cover.Medium =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{anime.MalId}/cover/medium/{mediumCover}",
+                                                animeKitsu.Attributes.CoverImage.Medium);
+                                    }
+
+                                    if (animeKitsu.Attributes.CoverImage.Large != null)
+                                    {
+                                        var largeCover = string.Concat(animeKitsu.Attributes.CoverImage.Large
+                                            .Split(
+                                                '/').Last().TakeWhile(a => a != '?'));
+
+                                        anime.Images.Cover.Large =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{anime.MalId}/cover/large/{largeCover}",
+                                                animeKitsu.Attributes.CoverImage.Large);
+                                    }
+
+                                    if (animeKitsu.Attributes.CoverImage.Original != null)
+                                    {
+                                        var originalCover = string.Concat(animeKitsu.Attributes.CoverImage.Original
+                                            .Split(
+                                                '/').Last().TakeWhile(a => a != '?'));
+
+                                        anime.Images.Cover.Original =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{anime.MalId}/cover/original/{originalCover}",
+                                                animeKitsu.Attributes.CoverImage.Original);
+                                    }
+                                }
+                            }),
+                            Task.Run(async () =>
+                            {
+                                if (animeKitsu.Attributes.PosterImage != null)
+                                {
+                                    anime.Images.Poster = new AnimeKitsuImage();
+                                    if (animeKitsu.Attributes.PosterImage.Tiny != null)
+                                    {
+                                        var tinyPoster = string.Concat(animeKitsu.Attributes.PosterImage.Tiny
+                                            .Split(
+                                                '/').Last().TakeWhile(a => a != '?'));
+
+                                        anime.Images.Poster.Tiny =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{anime.MalId}/poster/tiny/{tinyPoster}",
+                                                animeKitsu.Attributes.PosterImage.Tiny);
+                                    }
+
+                                    if (animeKitsu.Attributes.PosterImage.Small != null)
+                                    {
+                                        var smallPoster = string.Concat(animeKitsu.Attributes.PosterImage.Small
+                                            .Split(
+                                                '/').Last().TakeWhile(a => a != '?'));
+
+                                        anime.Images.Poster.Small =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{anime.MalId}/poster/small/{smallPoster}",
+                                                animeKitsu.Attributes.PosterImage.Small);
+                                    }
+
+                                    if (animeKitsu.Attributes.PosterImage.Medium != null)
+                                    {
+                                        var mediumPoster = string.Concat(animeKitsu.Attributes.PosterImage.Medium
+                                            .Split(
+                                                '/').Last().TakeWhile(a => a != '?'));
+
+                                        anime.Images.Poster.Medium =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{anime.MalId}/poster/medium/{mediumPoster}",
+                                                animeKitsu.Attributes.PosterImage.Medium);
+                                    }
+
+                                    if (animeKitsu.Attributes.PosterImage.Large != null)
+                                    {
+                                        var largePoster = string.Concat(animeKitsu.Attributes.PosterImage.Large
+                                            .Split(
+                                                '/').Last().TakeWhile(a => a != '?'));
+
+                                        anime.Images.Poster.Large =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{anime.MalId}/poster/large/{largePoster}",
+                                                animeKitsu.Attributes.PosterImage.Large);
+                                    }
+
+                                    if (animeKitsu.Attributes.PosterImage.Original != null)
+                                    {
+                                        var originalPoster = string.Concat(animeKitsu.Attributes.PosterImage.Original
+                                            .Split(
+                                                '/').Last().TakeWhile(a => a != '?'));
+
+                                        anime.Images.Poster.Original =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{anime.MalId}/poster/original/{originalPoster}",
+                                                animeKitsu.Attributes.PosterImage.Original);
+                                    }
+                                }
+                            })
+                        };
+
+                        await Task.WhenAll(tasks);
+                    }
 
                     // Set filter to search an anime in database
                     var filter = Builders<BsonDocument>.Filter.Eq("mal_id", anime.MalId);
@@ -139,7 +257,8 @@ namespace PopcornExport.Services.Import
                     watch.Stop();
                     updatedAnimes++;
                     Console.WriteLine(Environment.NewLine);
-                    Console.WriteLine($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED ANIME {anime.Title} in {watch.ElapsedMilliseconds} ms. {updatedAnimes}/{documents.Count}");
+                    Console.WriteLine(
+                        $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED ANIME {anime.Title} in {watch.ElapsedMilliseconds} ms. {updatedAnimes}/{documents.Count}");
                 }
                 catch (Exception ex)
                 {

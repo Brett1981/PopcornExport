@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace PopcornExport.Models.Image
 {
-    public class ImageJson
+    public class ImageShowJson
     {
         [JsonProperty("poster")]
         public string Poster { get; set; }

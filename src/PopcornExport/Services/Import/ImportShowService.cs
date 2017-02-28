@@ -63,8 +63,7 @@ namespace PopcornExport.Services.Import
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-            var updatedshows = 0;
-
+            var updatedShows = 0;
             await documents.ParallelForEachAsync(async document => 
             {
                 try
@@ -132,7 +131,7 @@ namespace PopcornExport.Services.Import
                         .Set("rating", show.Rating);
 
                     // If a show does not exist in database, create it
-                    var upsert = new FindOneAndUpdateOptions<BsonDocument>()
+                    var upsert = new FindOneAndUpdateOptions<BsonDocument>
                     {
                         IsUpsert = true
                     };
@@ -143,9 +142,9 @@ namespace PopcornExport.Services.Import
                     // Update show
                     await collectionShows.FindOneAndUpdateAsync(filter, update, upsert);
                     watch.Stop();
-                    updatedshows++;
+                    updatedShows++;
                     Console.WriteLine(Environment.NewLine);
-                    Console.WriteLine($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED SHOW {show.Title} in {watch.ElapsedMilliseconds} ms. {updatedshows}/{documents.Count}");
+                    Console.WriteLine($"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED SHOW {show.Title} in {watch.ElapsedMilliseconds} ms. {updatedShows}/{documents.Count}");
                 }
                 catch (Exception ex)
                 {

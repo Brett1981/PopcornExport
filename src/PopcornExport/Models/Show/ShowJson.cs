@@ -60,7 +60,7 @@ namespace PopcornExport.Models.Show
         public IEnumerable<string> Genres { get; set; }
 
         [JsonProperty("images")]
-        public ImageJson Images { get; set; }
+        public ImageShowJson Images { get; set; }
 
         [JsonProperty("rating")]
         public RatingJson Rating { get; set; }

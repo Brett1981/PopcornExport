@@ -43,8 +43,10 @@ namespace PopcornExport.Services.Export
         /// </summary>
         /// <param name="exportType">Export to load</param>
         /// <returns>Bson documents</returns>
-        public async Task<List<BsonDocument>> LoadExport(ExportType exportType)
+        public async Task<IEnumerable<BsonDocument>> LoadExport(ExportType exportType)
         {
+            var export = new ConcurrentBag<BsonDocument>();
+
             try
             {
                 var loggingTraceBegin =
@@ -52,7 +54,6 @@ namespace PopcornExport.Services.Export
                         "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-                var export = new ConcurrentBag<BsonDocument>();
                 if (exportType == ExportType.Anime || exportType == ExportType.Shows)
                 {
                     using (var client = new RestClient(Constants.OriginalPopcornApi))
@@ -101,20 +102,25 @@ namespace PopcornExport.Services.Export
                             {
                                 movieFound = true;
                                 page++;
-                                await response.Data.Data.Movies.ParallelForEachAsync(async movie => 
+                                await response.Data.Data.Movies.ParallelForEachAsync(async movie =>
                                 {
-                                    try 
+                                    try
                                     {
-                                        var movieByIdRequest = GetMovieById(movie.Id);
-                                        var fullMovie = await client.Execute<MovieFullJsonNode>(movieByIdRequest);
-                                        ConvertJsonToBsonDocument(JsonConvert.SerializeObject(fullMovie.Data.Data.Movie),
-                                            export);
+                                        using (var innerClient = new RestClient(Constants.YtsApiUrl))
+                                        {
+                                            var movieByIdRequest = GetMovieById(movie.Id);
+                                            var fullMovie =
+                                                await innerClient.Execute<MovieFullJsonNode>(movieByIdRequest);
+                                            ConvertJsonToBsonDocument(
+                                                JsonConvert.SerializeObject(fullMovie.Data.Data.Movie),
+                                                export);
+                                        }
                                     }
-                                    catch(Exception ex)
+                                    catch (Exception ex)
                                     {
                                         _loggingService.Telemetry.TrackException(ex);
                                     }
-                                }, 50, false);
+                                }, 10, false);
                             }
                         }
                     } while (movieFound);
@@ -125,13 +131,13 @@ namespace PopcornExport.Services.Export
                         "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
 
-                return export.ToList();
+                return export;
 
             }
             catch (Exception ex)
             {
                 _loggingService.Telemetry.TrackException(ex);
-                return null;
+                return export;
             }
         }
 
@@ -168,7 +174,7 @@ namespace PopcornExport.Services.Export
         /// Convert json to BsonDocument
         /// </summary>
         /// <param name="json">Json to convert</param>
-        /// <param name="export">BsonDocument to update</param>
+        /// <param name="export">Bag of <see cref="BsonDocument"/> to update</param>
         private void ConvertJsonToBsonDocument(string json, ConcurrentBag<BsonDocument> export)
         {
             BsonDocument document;

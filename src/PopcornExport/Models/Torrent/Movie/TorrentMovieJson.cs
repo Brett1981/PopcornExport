@@ -27,7 +27,7 @@ namespace PopcornExport.Models.Torrent.Movie
         public string Size { get; set; }
 
         [JsonProperty("size_bytes")]
-        public long SizeBytes { get; set; }
+        public long? SizeBytes { get; set; }
 
         [JsonProperty("date_uploaded")]
         public string DateUploaded { get; set; }

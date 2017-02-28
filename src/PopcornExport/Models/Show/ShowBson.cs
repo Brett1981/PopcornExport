@@ -82,7 +82,7 @@ namespace PopcornExport.Models.Show
 
         [DataMember]
         [BsonElement("images")]
-        public ImageBson Images { get; set; }
+        public ImageShowBson Images { get; set; }
 
         [DataMember]
         [BsonElement("rating")]
