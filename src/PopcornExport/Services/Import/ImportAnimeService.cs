@@ -68,7 +68,6 @@ namespace PopcornExport.Services.Import
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedAnimes = 0;
-
             await documents.ParallelForEachAsync(async document =>
             {
                 try

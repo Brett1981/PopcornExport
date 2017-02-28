@@ -78,9 +78,8 @@ namespace PopcornExport.Services.Import
 
                     // Deserialize a document to a movie
                     var movie = BsonSerializer.Deserialize<MovieBson>(document);
-                    var tmdbMovie = await tmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images);
 
-                    await RetrieveAssets(tmdbMovie, tmdbClient, movie);
+                    await RetrieveAssets(tmdbClient, movie);
 
                     // Set filter to search a movie in database
                     var filter = Builders<BsonDocument>.Filter.Eq("imdb_code", movie.ImdbCode);
@@ -156,12 +155,13 @@ namespace PopcornExport.Services.Import
         /// <summary>
         /// Retrieve assets for the provided movie
         /// </summary>
-        /// <param name="tmdbMovie">Movie from Tmdb</param>
         /// <param name="tmdbClient"><see cref="TMDbClient"/></param>
         /// <param name="movie">Movie to update</param>
         /// <returns></returns>
-        private async Task RetrieveAssets(Movie tmdbMovie, TMDbClient tmdbClient, MovieBson movie)
+        private async Task RetrieveAssets(TMDbClient tmdbClient, MovieBson movie)
         {
+            var tmdbMovie = await tmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images);
+
             var tasks = new List<Task>
             {
                 Task.Run(async () =>
