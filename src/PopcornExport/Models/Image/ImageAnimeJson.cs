@@ -7,12 +7,6 @@ namespace PopcornExport.Models.Image
 {
     public class ImageAnimeJson
     {
-        [JsonProperty("poster")]
-        public string OriginalPoster { get; set; }
-
-        [JsonProperty("cover")]
-        public string OriginalCover { get; set; }
-
         [JsonProperty("poster_kitsu")]
         public ImageAnimeTypeJson Poster { get; set; }
 
