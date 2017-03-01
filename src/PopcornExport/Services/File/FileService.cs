@@ -39,7 +39,7 @@ namespace PopcornExport.Services.File
         public FileService(string accountName, string storageConnectionString)
         {
             _storageAccount = new CloudStorageAccount(new StorageCredentials(accountName, storageConnectionString),
-                false);
+                true);
         }
 
         /// <summary>
