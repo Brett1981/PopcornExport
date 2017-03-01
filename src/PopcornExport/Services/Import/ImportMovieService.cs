@@ -135,6 +135,11 @@ namespace PopcornExport.Services.Import
                     Console.WriteLine(Environment.NewLine);
                     Console.WriteLine(
                         $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED MOVIE {movie.Title} in {watch.ElapsedMilliseconds} ms. {updatedMovies}/{documents.Count}");
+                    if (watch.ElapsedMilliseconds < 1000)
+                    {
+                        // Avoid Azure DocumentDb throttling (limited RU/s)
+                        await Task.Delay(1000 - Convert.ToInt32(watch.ElapsedMilliseconds));
+                    }
                 }
                 catch (Exception ex)
                 {
