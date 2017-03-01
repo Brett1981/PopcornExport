@@ -69,15 +69,16 @@ namespace PopcornExport.Services.File
         /// <param name="fileName">File name</param>
         /// <param name="url">Url of the file</param>
         /// <param name="type"><see cref="ExportType"/></param>
+        /// <param name="forceReplace">Force replacing an existing file</param>
         /// <returns>Uri of the uploaded file</returns>
-        public async Task<string> UploadFileFromUrlToAzureStorage(string fileName, string url, ExportType type)
+        public async Task<string> UploadFileFromUrlToAzureStorage(string fileName, string url, ExportType type, bool forceReplace = false)
         {
             try
             {
                 if (!_initialized) throw new Exception("Service is not initialized");
 
                 var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
-                if (!await blob.ExistsAsync())
+                if (forceReplace || !await blob.ExistsAsync())
                 {
                     var cookieContainer = new CookieContainer();
                     using (var handler = new HttpClientHandler { CookieContainer = cookieContainer })

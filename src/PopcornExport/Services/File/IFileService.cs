@@ -23,7 +23,8 @@ namespace PopcornExport.Services.File
         /// <param name="fileName">File name</param>
         /// <param name="url">Url of the file</param>
         /// <param name="type"><see cref="ExportType"/></param>
+        /// <param name="forceReplace">Force replacing an existing file</param>
         /// <returns>Uri of the uploaded file</returns>
-        Task<string> UploadFileFromUrlToAzureStorage(string fileName, string url, ExportType type);
+        Task<string> UploadFileFromUrlToAzureStorage(string fileName, string url, ExportType type, bool forceReplace = false);
     }
 }

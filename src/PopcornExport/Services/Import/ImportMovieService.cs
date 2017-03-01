@@ -177,7 +177,7 @@ namespace PopcornExport.Services.Import
                         movie.BackdropImage =
                             await _assetsService.UploadFile(
                                 $@"images/{movie.ImdbCode}/backdrop/{backdrop.Split('/').Last()}",
-                                backdrop);
+                                backdrop, true);
                     }
                 }),
                 Task.Run(async () =>

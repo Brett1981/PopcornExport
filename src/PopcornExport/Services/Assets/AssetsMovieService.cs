@@ -23,7 +23,14 @@ namespace PopcornExport.Services.Assets
             _fileService = fileService;
         }
 
-        public async Task<string> UploadFile(string fileName, string fileUrl)
+        /// <summary>
+        /// Upload a file to Azure Storage
+        /// </summary>
+        /// <param name="fileName">File name</param>
+        /// <param name="fileUrl">File url</param>
+        /// <param name="forceReplace">Force replacing an existing file</param>
+        /// <returns>Upload file path</returns>
+        public async Task<string> UploadFile(string fileName, string fileUrl, bool forceReplace = false)
         {
             try
             {
@@ -31,7 +38,7 @@ namespace PopcornExport.Services.Assets
                 if (Uri.TryCreate(fileUrl, UriKind.Absolute, out result))
                 {
                     return
-                        await _fileService.UploadFileFromUrlToAzureStorage(fileName, fileUrl, ExportType.Movies);
+                        await _fileService.UploadFileFromUrlToAzureStorage(fileName, fileUrl, ExportType.Movies, forceReplace);
                 }
                 else
                 {
