@@ -171,7 +171,7 @@ namespace PopcornExport.Services.Import
                         var backdrop = GetImagePathFromTmdb(tmdbClient,
                             tmdbMovie.Images.Backdrops.Aggregate(
                                 (image1, image2) =>
-                                    image1 != null && image2 != null && image1.VoteAverage < image2.VoteAverage
+                                    image1 != null && image2 != null && image1.Width < image2.Width
                                         ? image2
                                         : image1));
                         movie.BackdropImage =
