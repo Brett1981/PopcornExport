@@ -113,10 +113,8 @@ namespace PopcornExport.Services.File
                         }
                     }
                 }
-                else
-                {
-                    return blob.Uri.AbsoluteUri;
-                }
+
+                return blob.Uri.AbsoluteUri;
             }
             catch (Exception)
             {
