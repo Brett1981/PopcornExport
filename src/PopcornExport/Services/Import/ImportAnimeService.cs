@@ -1,8 +1,4 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
-using PopcornExport.Helpers;
-using PopcornExport.Services.Database;
+﻿using PopcornExport.Helpers;
 using PopcornExport.Services.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,11 +6,14 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Azure.Documents.Client;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using PopcornExport.Models.Anime;
 using PopcornExport.Services.Assets;
-using System.Collections.Async;
 using Newtonsoft.Json;
 using PopcornExport.Models.Image;
+using PopcornExport.Services.Database;
 using RestSharp.Portable;
 using RestSharp.Portable.HttpClient;
 
@@ -31,9 +30,9 @@ namespace PopcornExport.Services.Import
         private readonly ILoggingService _loggingService;
 
         /// <summary>
-        /// MongoDb service
+        /// DocumentDb service
         /// </summary>
-        private readonly IMongoDbService<BsonDocument> _mongoDbService;
+        private readonly IDocumentDbService _documentDbService;
 
         /// <summary>
         /// Assets service
@@ -41,15 +40,15 @@ namespace PopcornExport.Services.Import
         private readonly IAssetsService _assetsService;
 
         /// <summary>
-        /// Instanciate a <see cref="ImportAnimeService"/>
+        /// Constructor
         /// </summary>
-        /// <param name="mongoDbService">MongoDb service</param>
+        /// <param name="documentDbService">MongoDb service</param>
         /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportAnimeService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService,
+        public ImportAnimeService(IDocumentDbService documentDbService, IAssetsService assetsService,
             ILoggingService loggingService)
         {
-            _mongoDbService = mongoDbService;
+            _documentDbService = documentDbService;
             _loggingService = loggingService;
             _assetsService = assetsService;
         }
@@ -68,61 +67,35 @@ namespace PopcornExport.Services.Import
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedAnimes = 0;
-            foreach(var document in documents)
+            using (var client = _documentDbService.Client)
             {
-                try
+                foreach (var document in documents)
                 {
-                    var watch = new Stopwatch();
-                    watch.Start();
-                    // Deserialize a document to an anime
-                    var anime = BsonSerializer.Deserialize<AnimeBson>(document);
-
-                    await RetrieveAssets(document, anime);
-
-                    // Set filter to search an anime in database
-                    var filter = Builders<BsonDocument>.Filter.Eq("mal_id", anime.MalId);
-
-                    // Set udpate builder to update an anime
-                    var update = Builders<BsonDocument>.Update.Set("mal_id", anime.MalId)
-                        .Set("title", anime.Title)
-                        .Set("year", anime.Year)
-                        .Set("slug", anime.Slug)
-                        .Set("synopsis", anime.Synopsis)
-                        .Set("runtime", anime.Runtime)
-                        .Set("status", anime.Status)
-                        .Set("type", anime.Type)
-                        .Set("last_updated", anime.LastUpdated)
-                        .Set("num_seasons", anime.NumSeasons)
-                        .Set("episodes", anime.Episodes)
-                        .Set("genres", anime.Genres)
-                        .Set("images", anime.Images)
-                        .Set("rating", anime.Rating);
-
-                    // If an anime does not exist in database, create it
-                    var upsert = new FindOneAndUpdateOptions<BsonDocument>
+                    try
                     {
-                        IsUpsert = true
-                    };
+                        var watch = new Stopwatch();
+                        watch.Start();
+                        // Deserialize a document to an anime
+                        var anime =
+                            JsonConvert.DeserializeObject<AnimeJson>(
+                                BsonSerializer.Deserialize<AnimeBson>(document).ToJson());
 
-                    // Retrieve animes from database
-                    var collectionMovies = _mongoDbService.GetCollection(Constants.AnimeCollectionName);
+                        await RetrieveAssets(document, anime);
+                        
+                        await client.UpsertDocumentAsync(
+                            UriFactory.CreateDocumentCollectionUri(Constants.DatabaseName, Constants.AnimeCollectionName),
+                            anime);
 
-                    // Update anime
-                    await collectionMovies.FindOneAndUpdateAsync(filter, update, upsert);
-                    watch.Stop();
-                    updatedAnimes++;
-                    Console.WriteLine(Environment.NewLine);
-                    Console.WriteLine(
-                        $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED ANIME {anime.Title} in {watch.ElapsedMilliseconds} ms. {updatedAnimes}/{documents.Count}");
-                    if (watch.ElapsedMilliseconds < 1000)
-                    {
-                        // Avoid Azure DocumentDb throttling (limited RU/s)
-                        await Task.Delay(1000 - Convert.ToInt32(watch.ElapsedMilliseconds));
+                        watch.Stop();
+                        updatedAnimes++;
+                        Console.WriteLine(Environment.NewLine);
+                        Console.WriteLine(
+                            $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED ANIME {anime.Title} in {watch.ElapsedMilliseconds} ms. {updatedAnimes}/{documents.Count}");
                     }
-                }
-                catch (Exception ex)
-                {
-                    _loggingService.Telemetry.TrackException(ex);
+                    catch (Exception ex)
+                    {
+                        _loggingService.Telemetry.TrackException(ex);
+                    }
                 }
             }
 
@@ -142,7 +115,7 @@ namespace PopcornExport.Services.Import
         /// <param name="document"><see cref="BsonDocument"/> to update</param>
         /// <param name="anime">Anime to process</param>
         /// <returns></returns>
-        private async Task RetrieveAssets(BsonDocument document, AnimeBson anime)
+        private async Task RetrieveAssets(BsonDocument document, AnimeJson anime)
         {
             using (var client = new RestClient(Constants.KitsuApiUrl))
             {
@@ -156,7 +129,7 @@ namespace PopcornExport.Services.Import
                     {
                         if (animeKitsu.Attributes.CoverImage != null)
                         {
-                            anime.Images.Cover = new AnimeKitsuImage();
+                            anime.Images.Cover = new ImageAnimeTypeJson();
                             if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.CoverImage.Tiny))
                             {
                                 var tinyCover = string.Concat(animeKitsu.Attributes.CoverImage.Tiny
@@ -222,7 +195,7 @@ namespace PopcornExport.Services.Import
                     {
                         if (animeKitsu.Attributes.PosterImage != null)
                         {
-                            anime.Images.Poster = new AnimeKitsuImage();
+                            anime.Images.Poster = new ImageAnimeTypeJson();
                             if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.PosterImage.Tiny))
                             {
                                 var tinyPoster = string.Concat(animeKitsu.Attributes.PosterImage.Tiny

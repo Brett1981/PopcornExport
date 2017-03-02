@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Bson;
 using PopcornExport.Services.Core;
 using PopcornExport.Services.Database;
 using PopcornExport.Services.File;
@@ -25,8 +24,10 @@ namespace PopcornExport
 
             // add the framework services
             var services = new ServiceCollection()
-                .AddTransient<IMongoDbService<BsonDocument>>(
-                    e => new MongoDbService<BsonDocument>(configuration["MongoDb:ConnectionString"]))
+                .AddTransient<IDocumentDbService>(
+                    e =>
+                        new DocumentDbService(configuration["DocumentDB:EndpointUri"],
+                            configuration["DocumentDB:PrimaryKey"]))
                 .AddTransient<IFileService>(
                     e =>
                     {

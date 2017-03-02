@@ -1,6 +1,5 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
 using PopcornExport.Helpers;
 using PopcornExport.Services.Database;
 using PopcornExport.Services.Logging;
@@ -12,7 +11,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using PopcornExport.Models.Show;
 using PopcornExport.Services.Assets;
-using System.Collections.Async;
+using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 
 namespace PopcornExport.Services.Import
 {
@@ -27,9 +27,9 @@ namespace PopcornExport.Services.Import
         private readonly ILoggingService _loggingService;
 
         /// <summary>
-        /// MongoDb service
+        /// DocumentDb service
         /// </summary>
-        private readonly IMongoDbService<BsonDocument> _mongoDbService;
+        private readonly IDocumentDbService _documentDbService;
 
         /// <summary>
         /// Assets service
@@ -39,13 +39,13 @@ namespace PopcornExport.Services.Import
         /// <summary>
         /// Instanciate a <see cref="ImportShowService"/>
         /// </summary>
-        /// <param name="mongoDbService">MongoDb service</param>
+        /// <param name="documentDbService">MongoDb service</param>
         /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportShowService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService,
+        public ImportShowService(IDocumentDbService documentDbService, IAssetsService assetsService,
             ILoggingService loggingService)
         {
-            _mongoDbService = mongoDbService;
+            _documentDbService = documentDbService;
             _assetsService = assetsService;
             _loggingService = loggingService;
         }
@@ -64,66 +64,36 @@ namespace PopcornExport.Services.Import
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedShows = 0;
-            foreach (var document in documents)
+            using (var client = _documentDbService.Client)
             {
-                try
+                foreach (var document in documents)
                 {
-                    var watch = new Stopwatch();
-                    watch.Start();
-
-                    // Deserialize a document to a show
-                    var show = BsonSerializer.Deserialize<ShowBson>(document);
-
-                    await RetrieveAssets(show);
-
-                    // Set filter to search a show in database
-                    var filter = Builders<BsonDocument>.Filter.Eq("imdb_id", show.ImdbId);
-
-                    // Set udpate builder to update a show
-                    var update = Builders<BsonDocument>.Update.Set("imdb_id", show.ImdbId)
-                        .Set("tvdb_id", show.TvdbId)
-                        .Set("title", show.Title)
-                        .Set("year", show.Year)
-                        .Set("slug", show.Slug)
-                        .Set("synopsis", show.Synopsis)
-                        .Set("runtime", show.Runtime)
-                        .Set("country", show.Country)
-                        .Set("network", show.Network)
-                        .Set("air_day", show.AirDay)
-                        .Set("air_time", show.AirTime)
-                        .Set("status", show.Status)
-                        .Set("num_seasons", show.NumSeasons)
-                        .Set("last_updated", show.LastUpdated)
-                        .Set("episodes", show.Episodes)
-                        .Set("genres", show.Genres)
-                        .Set("images", show.Images)
-                        .Set("rating", show.Rating);
-
-                    // If a show does not exist in database, create it
-                    var upsert = new FindOneAndUpdateOptions<BsonDocument>
+                    try
                     {
-                        IsUpsert = true
-                    };
+                        var watch = new Stopwatch();
+                        watch.Start();
 
-                    // Retrieve shows from database
-                    var collectionShows = _mongoDbService.GetCollection(Constants.ShowsCollectionName);
+                        // Deserialize a document to a show
+                        var show =
+                            JsonConvert.DeserializeObject<ShowJson>(
+                                BsonSerializer.Deserialize<ShowBson>(document).ToJson());
 
-                    // Update show
-                    await collectionShows.FindOneAndUpdateAsync(filter, update, upsert);
-                    watch.Stop();
-                    updatedShows++;
-                    Console.WriteLine(Environment.NewLine);
-                    Console.WriteLine(
-                        $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED SHOW {show.Title} in {watch.ElapsedMilliseconds} ms. {updatedShows}/{documents.Count}");
-                    if (watch.ElapsedMilliseconds < 1000)
-                    {
-                        // Avoid Azure DocumentDb throttling (limited RU/s)
-                        await Task.Delay(1000 - Convert.ToInt32(watch.ElapsedMilliseconds));
+                        await RetrieveAssets(show);
+
+                        await client.UpsertDocumentAsync(
+                            UriFactory.CreateDocumentCollectionUri(Constants.DatabaseName, Constants.ShowsCollectionName),
+                            show);
+
+                        watch.Stop();
+                        updatedShows++;
+                        Console.WriteLine(Environment.NewLine);
+                        Console.WriteLine(
+                            $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED SHOW {show.Title} in {watch.ElapsedMilliseconds} ms. {updatedShows}/{documents.Count}");
                     }
-                }
-                catch (Exception ex)
-                {
-                    _loggingService.Telemetry.TrackException(ex);
+                    catch (Exception ex)
+                    {
+                        _loggingService.Telemetry.TrackException(ex);
+                    }
                 }
             }
 
@@ -142,7 +112,7 @@ namespace PopcornExport.Services.Import
         /// </summary>
         /// <param name="show">Show to process</param>
         /// <returns><see cref="Task"/></returns>
-        private async Task RetrieveAssets(ShowBson show)
+        private async Task RetrieveAssets(ShowJson show)
         {
             var tasks = new List<Task>
             {

@@ -1,13 +1,10 @@
-﻿using MongoDB.Bson;
-using PopcornExport.Models.Export;
+﻿using PopcornExport.Models.Export;
 using PopcornExport.Services.Database;
 using PopcornExport.Services.Export;
 using PopcornExport.Services.Import;
 using PopcornExport.Services.Logging;
 using System;
-using System.Collections.Async;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using PopcornExport.Services.Assets;
 using PopcornExport.Services.File;
@@ -27,7 +24,7 @@ namespace PopcornExport.Services.Core
         /// <summary>
         /// MongoDb service
         /// </summary>
-        private readonly IMongoDbService<BsonDocument> _mongoDbService;
+        private readonly IDocumentDbService _documentDbService;
 
         /// <summary>
         /// The logging service
@@ -43,15 +40,15 @@ namespace PopcornExport.Services.Core
         /// Core service
         /// </summary>
         /// <param name="exportService">Export service</param>
-        /// <param name="mongoDbService">MongoDb service</param>
+        /// <param name="documentDbService">MongoDb service</param>
         /// <param name="loggingService">Logging service</param>
         /// <param name="fileService">The file service</param>
-        public CoreService(IExportService exportService, IMongoDbService<BsonDocument> mongoDbService,
+        public CoreService(IExportService exportService, IDocumentDbService documentDbService,
             ILoggingService loggingService, IFileService fileService)
         {
             _exportService = exportService;
             _loggingService = loggingService;
-            _mongoDbService = mongoDbService;
+            _documentDbService = documentDbService;
             _fileService = fileService;
         }
 
@@ -70,8 +67,9 @@ namespace PopcornExport.Services.Core
 
                 Console.WriteLine(loggingTraceBegin);
 
-                var exports = new[] {ExportType.Movies, ExportType.Shows, ExportType.Anime};
-                foreach(var export in exports)
+                await _documentDbService.Init();
+                var exports = new[] {ExportType.Shows, ExportType.Anime, ExportType.Movies};
+                foreach (var export in exports)
                 {
                     // Load export
                     var documents = await _exportService.LoadExport(export);
@@ -81,17 +79,20 @@ namespace PopcornExport.Services.Core
                     switch (export)
                     {
                         case ExportType.Anime:
-                            importService = new ImportAnimeService(_mongoDbService, new AssetsAnimeService(_fileService),
+                            importService = new ImportAnimeService(_documentDbService,
+                                new AssetsAnimeService(_fileService),
                                 _loggingService);
                             await importService.Import(documents);
                             break;
                         case ExportType.Shows:
-                            importService = new ImportShowService(_mongoDbService, new AssetsShowService(_fileService),
+                            importService = new ImportShowService(_documentDbService,
+                                new AssetsShowService(_fileService),
                                 _loggingService);
                             await importService.Import(documents);
                             break;
                         case ExportType.Movies:
-                            importService = new ImportMovieService(_mongoDbService, new AssetsMovieService(_fileService),
+                            importService = new ImportMovieService(_documentDbService,
+                                new AssetsMovieService(_fileService),
                                 _loggingService);
                             await importService.Import(documents);
                             break;

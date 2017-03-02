@@ -1,6 +1,5 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
 using PopcornExport.Helpers;
 using PopcornExport.Models.Movie;
 using PopcornExport.Services.Database;
@@ -11,6 +10,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Azure.Documents.Client;
+using Newtonsoft.Json;
 using PopcornExport.Services.Assets;
 using TMDbLib.Client;
 using TMDbLib.Objects.General;
@@ -29,9 +30,9 @@ namespace PopcornExport.Services.Import
         private readonly ILoggingService _loggingService;
 
         /// <summary>
-        /// MongoDb service
+        /// DocumentDb service
         /// </summary>
-        private readonly IMongoDbService<BsonDocument> _mongoDbService;
+        private readonly IDocumentDbService _documentDbService;
 
         /// <summary>
         /// Assets service
@@ -41,13 +42,13 @@ namespace PopcornExport.Services.Import
         /// <summary>
         /// Instanciate a <see cref="ImportMovieService"/>
         /// </summary>
-        /// <param name="mongoDbService">MongoDb service</param>
+        /// <param name="documentDbService">MongoDb service</param>
         /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportMovieService(IMongoDbService<BsonDocument> mongoDbService, IAssetsService assetsService,
+        public ImportMovieService(IDocumentDbService documentDbService, IAssetsService assetsService,
             ILoggingService loggingService)
         {
-            _mongoDbService = mongoDbService;
+            _documentDbService = documentDbService;
             _loggingService = loggingService;
             _assetsService = assetsService;
         }
@@ -68,82 +69,37 @@ namespace PopcornExport.Services.Import
             var updatedMovies = 0;
             var tmdbClient = new TMDbClient(Constants.TmdbClientApiKey);
             tmdbClient.GetConfig();
-
-            foreach (var document in documents)
+            using (var client = _documentDbService.Client)
             {
-                try
+                foreach (var document in documents)
                 {
-                    var watch = new Stopwatch();
-                    watch.Start();
-
-                    // Deserialize a document to a movie
-                    var movie = BsonSerializer.Deserialize<MovieBson>(document);
-
-                    await RetrieveAssets(tmdbClient, movie);
-
-                    // Set filter to search a movie in database
-                    var filter = Builders<BsonDocument>.Filter.Eq("imdb_code", movie.ImdbCode);
-
-                    // Set udpate builder to update a movie
-                    var update = Builders<BsonDocument>.Update.Set("imdb_code", movie.ImdbCode)
-                        .Set("url", movie.Url)
-                        .Set("imdb_code", movie.ImdbCode)
-                        .Set("title", movie.Title)
-                        .Set("title_long", movie.TitleLong)
-                        .Set("year", movie.Year)
-                        .Set("slug", movie.Slug)
-                        .Set("rating", movie.Rating)
-                        .Set("runtime", movie.Runtime)
-                        .Set("genres", movie.Genres)
-                        .Set("language", movie.Language)
-                        .Set("mpa_rating", movie.MpaRating)
-                        .Set("download_count", movie.DownloadCount)
-                        .Set("like_count", movie.LikeCount)
-                        .Set("description_intro", movie.DescriptionIntro)
-                        .Set("description_full", movie.DescriptionFull)
-                        .Set("yt_trailer_code", movie.YtTrailerCode)
-                        .Set("cast", movie.Cast)
-                        .Set("torrents", movie.Torrents)
-                        .Set("date_uploaded", movie.DateUploaded)
-                        .Set("date_uploaded_unix", movie.DateUploadedUnix)
-                        .Set("background_image", movie.BackgroundImage)
-                        .Set("backdrop_image", movie.BackdropImage)
-                        .Set("poster_image", movie.PosterImage)
-                        .Set("small_cover_image", movie.SmallCoverImage)
-                        .Set("medium_cover_image", movie.MediumCoverImage)
-                        .Set("large_cover_image", movie.LargeCoverImage)
-                        .Set("medium_screenshot_image1", movie.MediumScreenshotImage1)
-                        .Set("medium_screenshot_image2", movie.MediumScreenshotImage2)
-                        .Set("medium_screenshot_image3", movie.MediumScreenshotImage3)
-                        .Set("large_screenshot_image1", movie.LargeScreenshotImage1)
-                        .Set("large_screenshot_image2", movie.LargeScreenshotImage2)
-                        .Set("large_screenshot_image3", movie.LargeScreenshotImage3);
-
-                    // If a movie does not exist in database, create it
-                    var upsert = new FindOneAndUpdateOptions<BsonDocument>
+                    try
                     {
-                        IsUpsert = true
-                    };
+                        var watch = new Stopwatch();
+                        watch.Start();
 
-                    // Retrieve movies from database
-                    var collectionMovies = _mongoDbService.GetCollection(Constants.MoviesCollectionName);
+                        // Deserialize a document to a movie
+                        var movie =
+                            JsonConvert.DeserializeObject<MovieJson>(
+                                BsonSerializer.Deserialize<MovieBson>(document).ToJson());
 
-                    // Update movie
-                    await collectionMovies.FindOneAndUpdateAsync(filter, update, upsert);
-                    watch.Stop();
-                    updatedMovies++;
-                    Console.WriteLine(Environment.NewLine);
-                    Console.WriteLine(
-                        $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED MOVIE {movie.Title} in {watch.ElapsedMilliseconds} ms. {updatedMovies}/{documents.Count}");
-                    if (watch.ElapsedMilliseconds < 1000)
-                    {
-                        // Avoid Azure DocumentDb throttling (limited RU/s)
-                        await Task.Delay(1000 - Convert.ToInt32(watch.ElapsedMilliseconds));
+                        await RetrieveAssets(tmdbClient, movie);
+
+                        await client.UpsertDocumentAsync(
+                            UriFactory.CreateDocumentCollectionUri(Constants.DatabaseName,
+                                Constants.MoviesCollectionName),
+                            movie);
+
+                        watch.Stop();
+                        updatedMovies++;
+                        Console.WriteLine(Environment.NewLine);
+                        Console.WriteLine(
+                            $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED MOVIE {movie.Title} in {watch.ElapsedMilliseconds} ms. {updatedMovies}/{documents.Count}");
                     }
-                }
-                catch (Exception ex)
-                {
-                    _loggingService.Telemetry.TrackException(ex);
+                    catch (Exception ex)
+                    {
+                        _loggingService.Telemetry.TrackException(ex);
+                    }
                 }
             }
 
@@ -163,7 +119,7 @@ namespace PopcornExport.Services.Import
         /// <param name="tmdbClient"><see cref="TMDbClient"/></param>
         /// <param name="movie">Movie to update</param>
         /// <returns></returns>
-        private async Task RetrieveAssets(TMDbClient tmdbClient, MovieBson movie)
+        private async Task RetrieveAssets(TMDbClient tmdbClient, MovieJson movie)
         {
             var tmdbMovie = await tmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images);
 

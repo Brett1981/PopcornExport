@@ -23,7 +23,7 @@
         /// <summary>
         /// MongoDb Database to use as export
         /// </summary>
-        public const string MongoDbName = "popcorn";
+        public const string DatabaseName = "popcorn";
 
         /// <summary>
         /// Shows collection name
