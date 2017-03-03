@@ -117,21 +117,21 @@ namespace PopcornExport.Services.Import
                                         Seeds = episode.Torrents.Torrent_0?.Seeds,
                                         Provider = episode.Torrents.Torrent_0?.Provider
                                     },
-                                    Torrent1080P = new Torrent
+                                    Torrent1080p = new Torrent
                                     {
                                         Url = episode.Torrents.Torrent_1080p?.Url,
                                         Peers = episode.Torrents.Torrent_1080p?.Peers,
                                         Seeds = episode.Torrents.Torrent_1080p?.Seeds,
                                         Provider = episode.Torrents.Torrent_1080p?.Provider
                                     },
-                                    Torrent480P = new Torrent
+                                    Torrent480p = new Torrent
                                     {
                                         Url = episode.Torrents.Torrent_480p?.Url,
                                         Peers = episode.Torrents.Torrent_480p?.Peers,
                                         Seeds = episode.Torrents.Torrent_480p?.Seeds,
                                         Provider = episode.Torrents.Torrent_480p?.Provider
                                     },
-                                    Torrent720P = new Torrent
+                                    Torrent720p = new Torrent
                                     {
                                         Url = episode.Torrents.Torrent_720p?.Url,
                                         Peers = episode.Torrents.Torrent_720p?.Peers,
@@ -149,7 +149,7 @@ namespace PopcornExport.Services.Import
                             Network = showJson.Network
                         };
 
-                        await context.Shows.AddAsync(show);
+                        context.ShowSet.Add(show);
                         await context.SaveChangesAsync();
                         watch.Stop();
                         updatedShows++;

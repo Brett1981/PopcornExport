@@ -81,19 +81,19 @@ namespace PopcornExport.Services.Import
                             {
                                 Poster = new ImageAnime
                                 {
-                                    Medium = animeJson.Images.Poster.Medium,
-                                    Large = animeJson.Images.Poster.Large,
-                                    Tiny = animeJson.Images.Poster.Tiny,
-                                    Original = animeJson.Images.Poster.Original,
-                                    Small = animeJson.Images.Poster.Small
+                                    Medium = animeJson.Images.Poster?.Medium,
+                                    Large = animeJson.Images.Poster?.Large,
+                                    Tiny = animeJson.Images.Poster?.Tiny,
+                                    Original = animeJson.Images.Poster?.Original,
+                                    Small = animeJson.Images.Poster?.Small
                                 },
                                 Cover = new ImageAnime
                                 {
-                                    Medium = animeJson.Images.Cover.Medium,
-                                    Large = animeJson.Images.Cover.Large,
-                                    Tiny = animeJson.Images.Cover.Tiny,
-                                    Original = animeJson.Images.Cover.Original,
-                                    Small = animeJson.Images.Cover.Small
+                                    Medium = animeJson.Images.Cover?.Medium,
+                                    Large = animeJson.Images.Cover?.Large,
+                                    Tiny = animeJson.Images.Cover?.Tiny,
+                                    Original = animeJson.Images.Cover?.Original,
+                                    Small = animeJson.Images.Cover?.Small
                                 }
                             },
                             Rating = new Rating
@@ -125,21 +125,21 @@ namespace PopcornExport.Services.Import
                                         Seeds = episode.Torrents.Torrent_0?.Seeds,
                                         Provider = episode.Torrents.Torrent_0?.Provider
                                     },
-                                    Torrent1080P = new Torrent
+                                    Torrent1080p = new Torrent
                                     {
                                         Url = episode.Torrents.Torrent_1080p?.Url,
                                         Peers = episode.Torrents.Torrent_1080p?.Peers,
                                         Seeds = episode.Torrents.Torrent_1080p?.Seeds,
                                         Provider = episode.Torrents.Torrent_1080p?.Provider
                                     },
-                                    Torrent480P = new Torrent
+                                    Torrent480p = new Torrent
                                     {
                                         Url = episode.Torrents.Torrent_480p?.Url,
                                         Peers = episode.Torrents.Torrent_480p?.Peers,
                                         Seeds = episode.Torrents.Torrent_480p?.Seeds,
                                         Provider = episode.Torrents.Torrent_480p?.Provider
                                     },
-                                    Torrent720P = new Torrent
+                                    Torrent720p = new Torrent
                                     {
                                         Url = episode.Torrents.Torrent_720p?.Url,
                                         Peers = episode.Torrents.Torrent_720p?.Peers,
@@ -159,7 +159,7 @@ namespace PopcornExport.Services.Import
                             Type = animeJson.Type
                         };
 
-                        await context.Animes.AddAsync(anime);
+                        context.AnimeSet.Add(anime);
                         await context.SaveChangesAsync();
                         watch.Stop();
                         updatedAnimes++;

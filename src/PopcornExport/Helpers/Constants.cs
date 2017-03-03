@@ -23,7 +23,7 @@
         /// <summary>
         /// Application Insights key used for logging
         /// </summary>
-        public const string ApplicationInsightsKey = "SECRET";
+        public const string ApplicationInsightsKey = "3705b885-bcf3-4189-a668-12055839640e";
 
         /// <summary>
         /// Azure Sotrage assets folder
@@ -33,6 +33,6 @@
         /// <summary>
         /// Tmdb Api key
         /// </summary>
-        public const string TmdbClientApiKey = "SECRET";
+        public const string TmdbClientApiKey = "a21fe922d3bac6654e93450e9a18af1c";
     }
 }

@@ -8,7 +8,7 @@ using PopcornExport.Database;
 namespace PopcornExport.Migrations
 {
     [DbContext(typeof(PopcornContext))]
-    [Migration("20170303102727_Initial")]
+    [Migration("20170303160950_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -19,10 +19,10 @@ namespace PopcornExport.Migrations
 
             modelBuilder.Entity("PopcornExport.Database.Anime", b =>
                 {
-                    b.Property<int>("AnimeId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("ImagesCollectionImageAnimeId");
+                    b.Property<int?>("ImagesId");
 
                     b.Property<long>("LastUpdated");
 
@@ -46,18 +46,18 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Year");
 
-                    b.HasKey("AnimeId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("ImagesCollectionImageAnimeId");
+                    b.HasIndex("ImagesId");
 
                     b.HasIndex("RatingId");
 
-                    b.ToTable("Animes");
+                    b.ToTable("AnimeSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.Cast", b =>
                 {
-                    b.Property<int>("CastId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("CharacterName");
@@ -70,34 +70,34 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("SmallImage");
 
-                    b.HasKey("CastId");
+                    b.HasKey("Id");
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("Cast");
+                    b.ToTable("CastSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.CollectionImageAnime", b =>
                 {
-                    b.Property<int>("CollectionImageAnimeId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("CoverImageAnimeId");
+                    b.Property<int?>("CoverId");
 
-                    b.Property<int?>("PosterImageAnimeId");
+                    b.Property<int?>("PosterId");
 
-                    b.HasKey("CollectionImageAnimeId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("CoverImageAnimeId");
+                    b.HasIndex("CoverId");
 
-                    b.HasIndex("PosterImageAnimeId");
+                    b.HasIndex("PosterId");
 
-                    b.ToTable("CollectionImageAnime");
+                    b.ToTable("CollectionImageAnimeSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.EpisodeAnime", b =>
                 {
-                    b.Property<int>("EpisodeAnimeId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<int?>("AnimeId");
@@ -110,22 +110,22 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Title");
 
-                    b.Property<int?>("TorrentsTorrentNodeId");
+                    b.Property<int?>("TorrentsId");
 
                     b.Property<string>("TvdbId");
 
-                    b.HasKey("EpisodeAnimeId");
+                    b.HasKey("Id");
 
                     b.HasIndex("AnimeId");
 
-                    b.HasIndex("TorrentsTorrentNodeId");
+                    b.HasIndex("TorrentsId");
 
-                    b.ToTable("EpisodeAnime");
+                    b.ToTable("EpisodeAnimeSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.EpisodeShow", b =>
                 {
-                    b.Property<int>("EpisodeShowId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<bool>("DateBased");
@@ -142,22 +142,22 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Title");
 
-                    b.Property<int?>("TorrentsTorrentNodeId");
+                    b.Property<int?>("TorrentsId");
 
                     b.Property<int?>("TvdbId");
 
-                    b.HasKey("EpisodeShowId");
+                    b.HasKey("Id");
 
                     b.HasIndex("ShowId");
 
-                    b.HasIndex("TorrentsTorrentNodeId");
+                    b.HasIndex("TorrentsId");
 
-                    b.ToTable("EpisodeShow");
+                    b.ToTable("EpisodeShowSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.Genre", b =>
                 {
-                    b.Property<int>("GenreId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<int?>("AnimeId");
@@ -168,7 +168,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<int?>("ShowId");
 
-                    b.HasKey("GenreId");
+                    b.HasKey("Id");
 
                     b.HasIndex("AnimeId");
 
@@ -176,12 +176,12 @@ namespace PopcornExport.Migrations
 
                     b.HasIndex("ShowId");
 
-                    b.ToTable("Genre");
+                    b.ToTable("GenreSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.ImageAnime", b =>
                 {
-                    b.Property<int>("ImageAnimeId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("Large");
@@ -194,14 +194,14 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Tiny");
 
-                    b.HasKey("ImageAnimeId");
+                    b.HasKey("Id");
 
-                    b.ToTable("ImageAnime");
+                    b.ToTable("ImageAnimeSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.ImageShow", b =>
                 {
-                    b.Property<int>("ImageShowId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("Banner");
@@ -210,14 +210,14 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Poster");
 
-                    b.HasKey("ImageShowId");
+                    b.HasKey("Id");
 
-                    b.ToTable("ImageShow");
+                    b.ToTable("ImageShowSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.Movie", b =>
                 {
-                    b.Property<int>("MovieId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("BackdropImage");
@@ -278,14 +278,14 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("YtTrailerCode");
 
-                    b.HasKey("MovieId");
+                    b.HasKey("Id");
 
-                    b.ToTable("Movies");
+                    b.ToTable("MovieSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.Rating", b =>
                 {
-                    b.Property<int>("RatingId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<int>("Hated");
@@ -298,14 +298,14 @@ namespace PopcornExport.Migrations
 
                     b.Property<int>("Watching");
 
-                    b.HasKey("RatingId");
+                    b.HasKey("Id");
 
-                    b.ToTable("Rating");
+                    b.ToTable("RatingSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.Show", b =>
                 {
-                    b.Property<int>("ShowId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("AirDay");
@@ -314,7 +314,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Country");
 
-                    b.Property<int?>("ImageShowId");
+                    b.Property<int?>("ImagesId");
 
                     b.Property<string>("ImdbId");
 
@@ -340,18 +340,18 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Year");
 
-                    b.HasKey("ShowId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("ImageShowId");
+                    b.HasIndex("ImagesId");
 
                     b.HasIndex("RatingId");
 
-                    b.ToTable("Shows");
+                    b.ToTable("ShowSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.Torrent", b =>
                 {
-                    b.Property<int>("TorrentId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<int?>("Peers");
@@ -362,14 +362,14 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Url");
 
-                    b.HasKey("TorrentId");
+                    b.HasKey("Id");
 
-                    b.ToTable("Torrent");
+                    b.ToTable("TorrentSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.TorrentMovie", b =>
                 {
-                    b.Property<int>("TorrentMovieId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<string>("DateUploaded");
@@ -378,7 +378,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Hash");
 
-                    b.Property<int?>("MovieId");
+                    b.Property<int>("MovieId");
 
                     b.Property<int>("Peers");
 
@@ -392,44 +392,44 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Url");
 
-                    b.HasKey("TorrentMovieId");
+                    b.HasKey("Id");
 
                     b.HasIndex("MovieId");
 
-                    b.ToTable("TorrentMovie");
+                    b.ToTable("TorrentMovieSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.TorrentNode", b =>
                 {
-                    b.Property<int>("TorrentNodeId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("Torrent0TorrentId");
+                    b.Property<int?>("Torrent0Id");
 
-                    b.Property<int?>("Torrent1080PTorrentId");
+                    b.Property<int?>("Torrent1080pId");
 
-                    b.Property<int?>("Torrent480PTorrentId");
+                    b.Property<int?>("Torrent480pId");
 
-                    b.Property<int?>("Torrent720PTorrentId");
+                    b.Property<int?>("Torrent720pId");
 
-                    b.HasKey("TorrentNodeId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("Torrent0TorrentId");
+                    b.HasIndex("Torrent0Id");
 
-                    b.HasIndex("Torrent1080PTorrentId");
+                    b.HasIndex("Torrent1080pId");
 
-                    b.HasIndex("Torrent480PTorrentId");
+                    b.HasIndex("Torrent480pId");
 
-                    b.HasIndex("Torrent720PTorrentId");
+                    b.HasIndex("Torrent720pId");
 
-                    b.ToTable("TorrentNode");
+                    b.ToTable("TorrentNodeSet");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.Anime", b =>
                 {
                     b.HasOne("PopcornExport.Database.CollectionImageAnime", "Images")
                         .WithMany()
-                        .HasForeignKey("ImagesCollectionImageAnimeId");
+                        .HasForeignKey("ImagesId");
 
                     b.HasOne("PopcornExport.Database.Rating", "Rating")
                         .WithMany()
@@ -439,7 +439,7 @@ namespace PopcornExport.Migrations
             modelBuilder.Entity("PopcornExport.Database.Cast", b =>
                 {
                     b.HasOne("PopcornExport.Database.Movie")
-                        .WithMany("Casts")
+                        .WithMany("Cast")
                         .HasForeignKey("MovieId");
                 });
 
@@ -447,11 +447,11 @@ namespace PopcornExport.Migrations
                 {
                     b.HasOne("PopcornExport.Database.ImageAnime", "Cover")
                         .WithMany()
-                        .HasForeignKey("CoverImageAnimeId");
+                        .HasForeignKey("CoverId");
 
                     b.HasOne("PopcornExport.Database.ImageAnime", "Poster")
                         .WithMany()
-                        .HasForeignKey("PosterImageAnimeId");
+                        .HasForeignKey("PosterId");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.EpisodeAnime", b =>
@@ -462,7 +462,7 @@ namespace PopcornExport.Migrations
 
                     b.HasOne("PopcornExport.Database.TorrentNode", "Torrents")
                         .WithMany()
-                        .HasForeignKey("TorrentsTorrentNodeId");
+                        .HasForeignKey("TorrentsId");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.EpisodeShow", b =>
@@ -473,7 +473,7 @@ namespace PopcornExport.Migrations
 
                     b.HasOne("PopcornExport.Database.TorrentNode", "Torrents")
                         .WithMany()
-                        .HasForeignKey("TorrentsTorrentNodeId");
+                        .HasForeignKey("TorrentsId");
                 });
 
             modelBuilder.Entity("PopcornExport.Database.Genre", b =>
@@ -495,7 +495,7 @@ namespace PopcornExport.Migrations
                 {
                     b.HasOne("PopcornExport.Database.ImageShow", "Images")
                         .WithMany()
-                        .HasForeignKey("ImageShowId");
+                        .HasForeignKey("ImagesId");
 
                     b.HasOne("PopcornExport.Database.Rating", "Rating")
                         .WithMany()
@@ -506,26 +506,27 @@ namespace PopcornExport.Migrations
                 {
                     b.HasOne("PopcornExport.Database.Movie")
                         .WithMany("Torrents")
-                        .HasForeignKey("MovieId");
+                        .HasForeignKey("MovieId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("PopcornExport.Database.TorrentNode", b =>
                 {
                     b.HasOne("PopcornExport.Database.Torrent", "Torrent0")
                         .WithMany()
-                        .HasForeignKey("Torrent0TorrentId");
+                        .HasForeignKey("Torrent0Id");
 
-                    b.HasOne("PopcornExport.Database.Torrent", "Torrent1080P")
+                    b.HasOne("PopcornExport.Database.Torrent", "Torrent1080p")
                         .WithMany()
-                        .HasForeignKey("Torrent1080PTorrentId");
+                        .HasForeignKey("Torrent1080pId");
 
-                    b.HasOne("PopcornExport.Database.Torrent", "Torrent480P")
+                    b.HasOne("PopcornExport.Database.Torrent", "Torrent480p")
                         .WithMany()
-                        .HasForeignKey("Torrent480PTorrentId");
+                        .HasForeignKey("Torrent480pId");
 
-                    b.HasOne("PopcornExport.Database.Torrent", "Torrent720P")
+                    b.HasOne("PopcornExport.Database.Torrent", "Torrent720p")
                         .WithMany()
-                        .HasForeignKey("Torrent720PTorrentId");
+                        .HasForeignKey("Torrent720pId");
                 });
         }
     }

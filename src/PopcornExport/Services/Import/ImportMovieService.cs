@@ -114,12 +114,12 @@ namespace PopcornExport.Services.Import
                             LikeCount = movieJson.LikeCount,
                             PosterImage = movieJson.PosterImage,
                             DescriptionFull = movieJson.DescriptionFull,
-                            Casts = movieJson.Cast.Select(cast => new Database.Cast
+                            Cast = movieJson.Cast?.Select(cast => new Database.Cast
                             {
-                                ImdbCode = cast.ImdbCode,
-                                SmallImage = cast.SmallImage,
-                                CharacterName = cast.CharacterName,
-                                Name = cast.Name
+                                ImdbCode = cast?.ImdbCode,
+                                SmallImage = cast?.SmallImage,
+                                CharacterName = cast?.CharacterName,
+                                Name = cast?.Name
                             }).ToList(),
                             Genres = movieJson.Genres.Select(genre => new Database.Genre
                             {
@@ -134,7 +134,7 @@ namespace PopcornExport.Services.Import
                             Title = movieJson.Title
                         };
 
-                        await context.Movies.AddAsync(movie);
+                        context.MovieSet.Add(movie);
                         await context.SaveChangesAsync();
                         watch.Stop();
                         updatedMovies++;

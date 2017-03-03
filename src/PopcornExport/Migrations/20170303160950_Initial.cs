@@ -10,10 +10,10 @@ namespace PopcornExport.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "ImageAnime",
+                name: "ImageAnimeSet",
                 columns: table => new
                 {
-                    ImageAnimeId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     Large = table.Column<string>(nullable: true),
                     Medium = table.Column<string>(nullable: true),
@@ -23,14 +23,14 @@ namespace PopcornExport.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ImageAnime", x => x.ImageAnimeId);
+                    table.PrimaryKey("PK_ImageAnimeSet", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ImageShow",
+                name: "ImageShowSet",
                 columns: table => new
                 {
-                    ImageShowId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     Banner = table.Column<string>(nullable: true),
                     Fanart = table.Column<string>(nullable: true),
@@ -38,14 +38,14 @@ namespace PopcornExport.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ImageShow", x => x.ImageShowId);
+                    table.PrimaryKey("PK_ImageShowSet", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Movies",
+                name: "MovieSet",
                 columns: table => new
                 {
-                    MovieId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     BackdropImage = table.Column<string>(nullable: true),
                     BackgroundImage = table.Column<string>(nullable: true),
@@ -79,14 +79,14 @@ namespace PopcornExport.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Movies", x => x.MovieId);
+                    table.PrimaryKey("PK_MovieSet", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Rating",
+                name: "RatingSet",
                 columns: table => new
                 {
-                    RatingId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     Hated = table.Column<int>(nullable: false),
                     Loved = table.Column<int>(nullable: false),
@@ -96,14 +96,14 @@ namespace PopcornExport.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Rating", x => x.RatingId);
+                    table.PrimaryKey("PK_RatingSet", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Torrent",
+                name: "TorrentSet",
                 columns: table => new
                 {
-                    TorrentId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     Peers = table.Column<int>(nullable: true),
                     Provider = table.Column<string>(nullable: true),
@@ -112,40 +112,40 @@ namespace PopcornExport.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Torrent", x => x.TorrentId);
+                    table.PrimaryKey("PK_TorrentSet", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "CollectionImageAnime",
+                name: "CollectionImageAnimeSet",
                 columns: table => new
                 {
-                    CollectionImageAnimeId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    CoverImageAnimeId = table.Column<int>(nullable: true),
-                    PosterImageAnimeId = table.Column<int>(nullable: true)
+                    CoverId = table.Column<int>(nullable: true),
+                    PosterId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CollectionImageAnime", x => x.CollectionImageAnimeId);
+                    table.PrimaryKey("PK_CollectionImageAnimeSet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CollectionImageAnime_ImageAnime_CoverImageAnimeId",
-                        column: x => x.CoverImageAnimeId,
-                        principalTable: "ImageAnime",
-                        principalColumn: "ImageAnimeId",
+                        name: "FK_CollectionImageAnimeSet_ImageAnimeSet_CoverId",
+                        column: x => x.CoverId,
+                        principalTable: "ImageAnimeSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_CollectionImageAnime_ImageAnime_PosterImageAnimeId",
-                        column: x => x.PosterImageAnimeId,
-                        principalTable: "ImageAnime",
-                        principalColumn: "ImageAnimeId",
+                        name: "FK_CollectionImageAnimeSet_ImageAnimeSet_PosterId",
+                        column: x => x.PosterId,
+                        principalTable: "ImageAnimeSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Cast",
+                name: "CastSet",
                 columns: table => new
                 {
-                    CastId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     CharacterName = table.Column<string>(nullable: true),
                     ImdbCode = table.Column<string>(nullable: true),
@@ -155,25 +155,25 @@ namespace PopcornExport.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Cast", x => x.CastId);
+                    table.PrimaryKey("PK_CastSet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Cast_Movies_MovieId",
+                        name: "FK_CastSet_MovieSet_MovieId",
                         column: x => x.MovieId,
-                        principalTable: "Movies",
-                        principalColumn: "MovieId",
+                        principalTable: "MovieSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "TorrentMovie",
+                name: "TorrentMovieSet",
                 columns: table => new
                 {
-                    TorrentMovieId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DateUploaded = table.Column<string>(nullable: true),
                     DateUploadedUnix = table.Column<int>(nullable: false),
                     Hash = table.Column<string>(nullable: true),
-                    MovieId = table.Column<int>(nullable: true),
+                    MovieId = table.Column<int>(nullable: false),
                     Peers = table.Column<int>(nullable: false),
                     Quality = table.Column<string>(nullable: true),
                     Seeds = table.Column<int>(nullable: false),
@@ -183,25 +183,25 @@ namespace PopcornExport.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TorrentMovie", x => x.TorrentMovieId);
+                    table.PrimaryKey("PK_TorrentMovieSet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TorrentMovie_Movies_MovieId",
+                        name: "FK_TorrentMovieSet_MovieSet_MovieId",
                         column: x => x.MovieId,
-                        principalTable: "Movies",
-                        principalColumn: "MovieId",
-                        onDelete: ReferentialAction.Restrict);
+                        principalTable: "MovieSet",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Shows",
+                name: "ShowSet",
                 columns: table => new
                 {
-                    ShowId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     AirDay = table.Column<string>(nullable: true),
                     AirTime = table.Column<string>(nullable: true),
                     Country = table.Column<string>(nullable: true),
-                    ImageShowId = table.Column<int>(nullable: true),
+                    ImagesId = table.Column<int>(nullable: true),
                     ImdbId = table.Column<string>(nullable: true),
                     LastUpdated = table.Column<long>(nullable: false),
                     Network = table.Column<string>(nullable: true),
@@ -217,68 +217,68 @@ namespace PopcornExport.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Shows", x => x.ShowId);
+                    table.PrimaryKey("PK_ShowSet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Shows_ImageShow_ImageShowId",
-                        column: x => x.ImageShowId,
-                        principalTable: "ImageShow",
-                        principalColumn: "ImageShowId",
+                        name: "FK_ShowSet_ImageShowSet_ImagesId",
+                        column: x => x.ImagesId,
+                        principalTable: "ImageShowSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Shows_Rating_RatingId",
+                        name: "FK_ShowSet_RatingSet_RatingId",
                         column: x => x.RatingId,
-                        principalTable: "Rating",
-                        principalColumn: "RatingId",
+                        principalTable: "RatingSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "TorrentNode",
+                name: "TorrentNodeSet",
                 columns: table => new
                 {
-                    TorrentNodeId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Torrent0TorrentId = table.Column<int>(nullable: true),
-                    Torrent1080PTorrentId = table.Column<int>(nullable: true),
-                    Torrent480PTorrentId = table.Column<int>(nullable: true),
-                    Torrent720PTorrentId = table.Column<int>(nullable: true)
+                    Torrent0Id = table.Column<int>(nullable: true),
+                    Torrent1080pId = table.Column<int>(nullable: true),
+                    Torrent480pId = table.Column<int>(nullable: true),
+                    Torrent720pId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TorrentNode", x => x.TorrentNodeId);
+                    table.PrimaryKey("PK_TorrentNodeSet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TorrentNode_Torrent_Torrent0TorrentId",
-                        column: x => x.Torrent0TorrentId,
-                        principalTable: "Torrent",
-                        principalColumn: "TorrentId",
+                        name: "FK_TorrentNodeSet_TorrentSet_Torrent0Id",
+                        column: x => x.Torrent0Id,
+                        principalTable: "TorrentSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_TorrentNode_Torrent_Torrent1080PTorrentId",
-                        column: x => x.Torrent1080PTorrentId,
-                        principalTable: "Torrent",
-                        principalColumn: "TorrentId",
+                        name: "FK_TorrentNodeSet_TorrentSet_Torrent1080pId",
+                        column: x => x.Torrent1080pId,
+                        principalTable: "TorrentSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_TorrentNode_Torrent_Torrent480PTorrentId",
-                        column: x => x.Torrent480PTorrentId,
-                        principalTable: "Torrent",
-                        principalColumn: "TorrentId",
+                        name: "FK_TorrentNodeSet_TorrentSet_Torrent480pId",
+                        column: x => x.Torrent480pId,
+                        principalTable: "TorrentSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_TorrentNode_Torrent_Torrent720PTorrentId",
-                        column: x => x.Torrent720PTorrentId,
-                        principalTable: "Torrent",
-                        principalColumn: "TorrentId",
+                        name: "FK_TorrentNodeSet_TorrentSet_Torrent720pId",
+                        column: x => x.Torrent720pId,
+                        principalTable: "TorrentSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Animes",
+                name: "AnimeSet",
                 columns: table => new
                 {
-                    AnimeId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    ImagesCollectionImageAnimeId = table.Column<int>(nullable: true),
+                    ImagesId = table.Column<int>(nullable: true),
                     LastUpdated = table.Column<long>(nullable: false),
                     MalId = table.Column<string>(nullable: true),
                     NumSeasons = table.Column<int>(nullable: false),
@@ -293,26 +293,26 @@ namespace PopcornExport.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Animes", x => x.AnimeId);
+                    table.PrimaryKey("PK_AnimeSet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Animes_CollectionImageAnime_ImagesCollectionImageAnimeId",
-                        column: x => x.ImagesCollectionImageAnimeId,
-                        principalTable: "CollectionImageAnime",
-                        principalColumn: "CollectionImageAnimeId",
+                        name: "FK_AnimeSet_CollectionImageAnimeSet_ImagesId",
+                        column: x => x.ImagesId,
+                        principalTable: "CollectionImageAnimeSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Animes_Rating_RatingId",
+                        name: "FK_AnimeSet_RatingSet_RatingId",
                         column: x => x.RatingId,
-                        principalTable: "Rating",
-                        principalColumn: "RatingId",
+                        principalTable: "RatingSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "EpisodeShow",
+                name: "EpisodeShowSet",
                 columns: table => new
                 {
-                    EpisodeShowId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     DateBased = table.Column<bool>(nullable: false),
                     EpisodeNumber = table.Column<int>(nullable: false),
@@ -321,62 +321,62 @@ namespace PopcornExport.Migrations
                     Season = table.Column<int>(nullable: false),
                     ShowId = table.Column<int>(nullable: true),
                     Title = table.Column<string>(nullable: true),
-                    TorrentsTorrentNodeId = table.Column<int>(nullable: true),
+                    TorrentsId = table.Column<int>(nullable: true),
                     TvdbId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_EpisodeShow", x => x.EpisodeShowId);
+                    table.PrimaryKey("PK_EpisodeShowSet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_EpisodeShow_Shows_ShowId",
+                        name: "FK_EpisodeShowSet_ShowSet_ShowId",
                         column: x => x.ShowId,
-                        principalTable: "Shows",
-                        principalColumn: "ShowId",
+                        principalTable: "ShowSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_EpisodeShow_TorrentNode_TorrentsTorrentNodeId",
-                        column: x => x.TorrentsTorrentNodeId,
-                        principalTable: "TorrentNode",
-                        principalColumn: "TorrentNodeId",
+                        name: "FK_EpisodeShowSet_TorrentNodeSet_TorrentsId",
+                        column: x => x.TorrentsId,
+                        principalTable: "TorrentNodeSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "EpisodeAnime",
+                name: "EpisodeAnimeSet",
                 columns: table => new
                 {
-                    EpisodeAnimeId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     AnimeId = table.Column<int>(nullable: true),
                     EpisodeNumber = table.Column<int>(nullable: false),
                     Overview = table.Column<string>(nullable: true),
                     Season = table.Column<int>(nullable: false),
                     Title = table.Column<string>(nullable: true),
-                    TorrentsTorrentNodeId = table.Column<int>(nullable: true),
+                    TorrentsId = table.Column<int>(nullable: true),
                     TvdbId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_EpisodeAnime", x => x.EpisodeAnimeId);
+                    table.PrimaryKey("PK_EpisodeAnimeSet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_EpisodeAnime_Animes_AnimeId",
+                        name: "FK_EpisodeAnimeSet_AnimeSet_AnimeId",
                         column: x => x.AnimeId,
-                        principalTable: "Animes",
-                        principalColumn: "AnimeId",
+                        principalTable: "AnimeSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_EpisodeAnime_TorrentNode_TorrentsTorrentNodeId",
-                        column: x => x.TorrentsTorrentNodeId,
-                        principalTable: "TorrentNode",
-                        principalColumn: "TorrentNodeId",
+                        name: "FK_EpisodeAnimeSet_TorrentNodeSet_TorrentsId",
+                        column: x => x.TorrentsId,
+                        principalTable: "TorrentNodeSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Genre",
+                name: "GenreSet",
                 columns: table => new
                 {
-                    GenreId = table.Column<int>(nullable: false)
+                    Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     AnimeId = table.Column<int>(nullable: true),
                     MovieId = table.Column<int>(nullable: true),
@@ -385,166 +385,166 @@ namespace PopcornExport.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Genre", x => x.GenreId);
+                    table.PrimaryKey("PK_GenreSet", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Genre_Animes_AnimeId",
+                        name: "FK_GenreSet_AnimeSet_AnimeId",
                         column: x => x.AnimeId,
-                        principalTable: "Animes",
-                        principalColumn: "AnimeId",
+                        principalTable: "AnimeSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Genre_Movies_MovieId",
+                        name: "FK_GenreSet_MovieSet_MovieId",
                         column: x => x.MovieId,
-                        principalTable: "Movies",
-                        principalColumn: "MovieId",
+                        principalTable: "MovieSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Genre_Shows_ShowId",
+                        name: "FK_GenreSet_ShowSet_ShowId",
                         column: x => x.ShowId,
-                        principalTable: "Shows",
-                        principalColumn: "ShowId",
+                        principalTable: "ShowSet",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Animes_ImagesCollectionImageAnimeId",
-                table: "Animes",
-                column: "ImagesCollectionImageAnimeId");
+                name: "IX_AnimeSet_ImagesId",
+                table: "AnimeSet",
+                column: "ImagesId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Animes_RatingId",
-                table: "Animes",
+                name: "IX_AnimeSet_RatingId",
+                table: "AnimeSet",
                 column: "RatingId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Cast_MovieId",
-                table: "Cast",
+                name: "IX_CastSet_MovieId",
+                table: "CastSet",
                 column: "MovieId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CollectionImageAnime_CoverImageAnimeId",
-                table: "CollectionImageAnime",
-                column: "CoverImageAnimeId");
+                name: "IX_CollectionImageAnimeSet_CoverId",
+                table: "CollectionImageAnimeSet",
+                column: "CoverId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CollectionImageAnime_PosterImageAnimeId",
-                table: "CollectionImageAnime",
-                column: "PosterImageAnimeId");
+                name: "IX_CollectionImageAnimeSet_PosterId",
+                table: "CollectionImageAnimeSet",
+                column: "PosterId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EpisodeAnime_AnimeId",
-                table: "EpisodeAnime",
+                name: "IX_EpisodeAnimeSet_AnimeId",
+                table: "EpisodeAnimeSet",
                 column: "AnimeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EpisodeAnime_TorrentsTorrentNodeId",
-                table: "EpisodeAnime",
-                column: "TorrentsTorrentNodeId");
+                name: "IX_EpisodeAnimeSet_TorrentsId",
+                table: "EpisodeAnimeSet",
+                column: "TorrentsId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EpisodeShow_ShowId",
-                table: "EpisodeShow",
+                name: "IX_EpisodeShowSet_ShowId",
+                table: "EpisodeShowSet",
                 column: "ShowId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EpisodeShow_TorrentsTorrentNodeId",
-                table: "EpisodeShow",
-                column: "TorrentsTorrentNodeId");
+                name: "IX_EpisodeShowSet_TorrentsId",
+                table: "EpisodeShowSet",
+                column: "TorrentsId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Genre_AnimeId",
-                table: "Genre",
+                name: "IX_GenreSet_AnimeId",
+                table: "GenreSet",
                 column: "AnimeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Genre_MovieId",
-                table: "Genre",
+                name: "IX_GenreSet_MovieId",
+                table: "GenreSet",
                 column: "MovieId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Genre_ShowId",
-                table: "Genre",
+                name: "IX_GenreSet_ShowId",
+                table: "GenreSet",
                 column: "ShowId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Shows_ImageShowId",
-                table: "Shows",
-                column: "ImageShowId");
+                name: "IX_ShowSet_ImagesId",
+                table: "ShowSet",
+                column: "ImagesId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Shows_RatingId",
-                table: "Shows",
+                name: "IX_ShowSet_RatingId",
+                table: "ShowSet",
                 column: "RatingId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TorrentMovie_MovieId",
-                table: "TorrentMovie",
+                name: "IX_TorrentMovieSet_MovieId",
+                table: "TorrentMovieSet",
                 column: "MovieId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TorrentNode_Torrent0TorrentId",
-                table: "TorrentNode",
-                column: "Torrent0TorrentId");
+                name: "IX_TorrentNodeSet_Torrent0Id",
+                table: "TorrentNodeSet",
+                column: "Torrent0Id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TorrentNode_Torrent1080PTorrentId",
-                table: "TorrentNode",
-                column: "Torrent1080PTorrentId");
+                name: "IX_TorrentNodeSet_Torrent1080pId",
+                table: "TorrentNodeSet",
+                column: "Torrent1080pId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TorrentNode_Torrent480PTorrentId",
-                table: "TorrentNode",
-                column: "Torrent480PTorrentId");
+                name: "IX_TorrentNodeSet_Torrent480pId",
+                table: "TorrentNodeSet",
+                column: "Torrent480pId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TorrentNode_Torrent720PTorrentId",
-                table: "TorrentNode",
-                column: "Torrent720PTorrentId");
+                name: "IX_TorrentNodeSet_Torrent720pId",
+                table: "TorrentNodeSet",
+                column: "Torrent720pId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Cast");
+                name: "CastSet");
 
             migrationBuilder.DropTable(
-                name: "EpisodeAnime");
+                name: "EpisodeAnimeSet");
 
             migrationBuilder.DropTable(
-                name: "EpisodeShow");
+                name: "EpisodeShowSet");
 
             migrationBuilder.DropTable(
-                name: "Genre");
+                name: "GenreSet");
 
             migrationBuilder.DropTable(
-                name: "TorrentMovie");
+                name: "TorrentMovieSet");
 
             migrationBuilder.DropTable(
-                name: "TorrentNode");
+                name: "TorrentNodeSet");
 
             migrationBuilder.DropTable(
-                name: "Animes");
+                name: "AnimeSet");
 
             migrationBuilder.DropTable(
-                name: "Shows");
+                name: "ShowSet");
 
             migrationBuilder.DropTable(
-                name: "Movies");
+                name: "MovieSet");
 
             migrationBuilder.DropTable(
-                name: "Torrent");
+                name: "TorrentSet");
 
             migrationBuilder.DropTable(
-                name: "CollectionImageAnime");
+                name: "CollectionImageAnimeSet");
 
             migrationBuilder.DropTable(
-                name: "ImageShow");
+                name: "ImageShowSet");
 
             migrationBuilder.DropTable(
-                name: "Rating");
+                name: "RatingSet");
 
             migrationBuilder.DropTable(
-                name: "ImageAnime");
+                name: "ImageAnimeSet");
         }
     }
 }
