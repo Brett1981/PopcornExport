@@ -16,6 +16,7 @@ using PopcornExport.Database;
 using PopcornExport.Models.Image;
 using RestSharp.Portable;
 using RestSharp.Portable.HttpClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace PopcornExport.Services.Import
 {
@@ -159,8 +160,13 @@ namespace PopcornExport.Services.Import
                             Type = animeJson.Type
                         };
 
-                        context.AnimeSet.Add(anime);
-                        await context.SaveChangesAsync();
+                        var existingEntity = await context.AnimeSet.FirstOrDefaultAsync(a => a.MalId == anime.MalId);
+                        if (existingEntity == null)
+                        {
+                            context.AnimeSet.Add(anime);
+                            await context.SaveChangesAsync();
+                        }
+
                         watch.Stop();
                         updatedAnimes++;
                         Console.WriteLine(Environment.NewLine);

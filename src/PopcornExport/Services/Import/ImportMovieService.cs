@@ -16,6 +16,7 @@ using PopcornExport.Services.Assets;
 using TMDbLib.Client;
 using TMDbLib.Objects.General;
 using TMDbLib.Objects.Movies;
+using Microsoft.EntityFrameworkCore;
 
 namespace PopcornExport.Services.Import
 {
@@ -134,8 +135,13 @@ namespace PopcornExport.Services.Import
                             Title = movieJson.Title
                         };
 
-                        context.MovieSet.Add(movie);
-                        await context.SaveChangesAsync();
+                        var existingEntity = await context.MovieSet.FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
+                        if (existingEntity == null)
+                        {
+                            context.MovieSet.Add(movie);
+                            await context.SaveChangesAsync();
+                        }
+
                         watch.Stop();
                         updatedMovies++;
                         Console.WriteLine(Environment.NewLine);

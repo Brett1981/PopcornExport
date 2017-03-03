@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using PopcornExport.Models.Show;
 using PopcornExport.Services.Assets;
@@ -149,8 +150,13 @@ namespace PopcornExport.Services.Import
                             Network = showJson.Network
                         };
 
-                        context.ShowSet.Add(show);
-                        await context.SaveChangesAsync();
+                        var existingEntity = await context.ShowSet.FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId);
+                        if (existingEntity == null)
+                        {
+                            context.ShowSet.Add(show);
+                            await context.SaveChangesAsync();
+                        }
+
                         watch.Stop();
                         updatedShows++;
                         Console.WriteLine(Environment.NewLine);
