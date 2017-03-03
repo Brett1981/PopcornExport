@@ -2,7 +2,6 @@
 using MongoDB.Bson.Serialization;
 using PopcornExport.Helpers;
 using PopcornExport.Models.Movie;
-using PopcornExport.Services.Database;
 using PopcornExport.Services.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,8 +9,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Azure.Documents.Client;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Newtonsoft.Json;
+using PopcornExport.Database;
 using PopcornExport.Services.Assets;
 using TMDbLib.Client;
 using TMDbLib.Objects.General;
@@ -30,25 +30,18 @@ namespace PopcornExport.Services.Import
         private readonly ILoggingService _loggingService;
 
         /// <summary>
-        /// DocumentDb service
-        /// </summary>
-        private readonly IDocumentDbService _documentDbService;
-
-        /// <summary>
         /// Assets service
         /// </summary>
         private readonly IAssetsService _assetsService;
 
         /// <summary>
-        /// Instanciate a <see cref="ImportMovieService"/>
+        /// Constructor
         /// </summary>
-        /// <param name="documentDbService">MongoDb service</param>
         /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportMovieService(IDocumentDbService documentDbService, IAssetsService assetsService,
+        public ImportMovieService(IAssetsService assetsService,
             ILoggingService loggingService)
         {
-            _documentDbService = documentDbService;
             _loggingService = loggingService;
             _assetsService = assetsService;
         }
@@ -69,7 +62,7 @@ namespace PopcornExport.Services.Import
             var updatedMovies = 0;
             var tmdbClient = new TMDbClient(Constants.TmdbClientApiKey);
             tmdbClient.GetConfig();
-            using (var client = _documentDbService.Client)
+            using (var context = new PopcornContextFactory().Create(new DbContextFactoryOptions()))
             {
                 foreach (var document in documents)
                 {
@@ -79,17 +72,70 @@ namespace PopcornExport.Services.Import
                         watch.Start();
 
                         // Deserialize a document to a movie
-                        var movie =
+                        var movieJson =
                             JsonConvert.DeserializeObject<MovieJson>(
                                 BsonSerializer.Deserialize<MovieBson>(document).ToJson());
 
-                        await RetrieveAssets(tmdbClient, movie);
+                        await RetrieveAssets(tmdbClient, movieJson);
 
-                        await client.UpsertDocumentAsync(
-                            UriFactory.CreateDocumentCollectionUri(Constants.DatabaseName,
-                                Constants.MoviesCollectionName),
-                            movie);
+                        var movie = new Database.Movie
+                        {
+                            ImdbCode = movieJson.ImdbCode,
+                            LargeCoverImage = movieJson.LargeCoverImage,
+                            SmallCoverImage = movieJson.SmallCoverImage,
+                            BackgroundImage = movieJson.BackgroundImage,
+                            LargeScreenshotImage1 = movieJson.LargeScreenshotImage1,
+                            MediumCoverImage = movieJson.MediumCoverImage,
+                            Url = movieJson.Url,
+                            MediumScreenshotImage1 = movieJson.MediumScreenshotImage1,
+                            BackdropImage = movieJson.BackdropImage,
+                            Torrents = movieJson.Torrents.Select(torrent => new TorrentMovie
+                            {
+                                Url = torrent.Url,
+                                DateUploaded = torrent.DateUploaded,
+                                DateUploadedUnix = torrent.DateUploadedUnix,
+                                Quality = torrent.Quality,
+                                Hash = torrent.Hash,
+                                Peers = torrent.Peers,
+                                Seeds = torrent.Seeds,
+                                Size = torrent.Size,
+                                SizeBytes = torrent.SizeBytes
+                            }).ToList(),
+                            DateUploaded = movieJson.DateUploaded,
+                            DateUploadedUnix = movieJson.DateUploadedUnix,
+                            DownloadCount = movieJson.DownloadCount,
+                            MpaRating = movieJson.MpaRating,
+                            Runtime = movieJson.Runtime,
+                            YtTrailerCode = movieJson.YtTrailerCode,
+                            DescriptionIntro = movieJson.DescriptionIntro,
+                            TitleLong = movieJson.TitleLong,
+                            Rating = movieJson.Rating,
+                            Year = movieJson.Year,
+                            LikeCount = movieJson.LikeCount,
+                            PosterImage = movieJson.PosterImage,
+                            DescriptionFull = movieJson.DescriptionFull,
+                            Casts = movieJson.Cast.Select(cast => new Database.Cast
+                            {
+                                ImdbCode = cast.ImdbCode,
+                                SmallImage = cast.SmallImage,
+                                CharacterName = cast.CharacterName,
+                                Name = cast.Name
+                            }).ToList(),
+                            Genres = movieJson.Genres.Select(genre => new Database.Genre
+                            {
+                                Name = genre
+                            }).ToList(),
+                            Language = movieJson.Language,
+                            LargeScreenshotImage2 = movieJson.LargeScreenshotImage2,
+                            LargeScreenshotImage3 = movieJson.LargeScreenshotImage3,
+                            MediumScreenshotImage2 = movieJson.MediumScreenshotImage2,
+                            MediumScreenshotImage3 = movieJson.MediumScreenshotImage3,
+                            Slug = movieJson.Slug,
+                            Title = movieJson.Title
+                        };
 
+                        await context.Movies.AddAsync(movie);
+                        await context.SaveChangesAsync();
                         watch.Stop();
                         updatedMovies++;
                         Console.WriteLine(Environment.NewLine);

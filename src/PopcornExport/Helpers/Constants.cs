@@ -21,26 +21,6 @@
         public const string KitsuApiUrl = "https://kitsu.io/api/edge/anime/";
 
         /// <summary>
-        /// MongoDb Database to use as export
-        /// </summary>
-        public const string DatabaseName = "popcorn";
-
-        /// <summary>
-        /// Shows collection name
-        /// </summary>
-        public const string ShowsCollectionName = "shows";
-
-        /// <summary>
-        /// Anime collection name
-        /// </summary>
-        public const string AnimeCollectionName = "anime";
-
-        /// <summary>
-        /// Movies collection name
-        /// </summary>
-        public const string MoviesCollectionName = "movies";
-
-        /// <summary>
         /// Application Insights key used for logging
         /// </summary>
         public const string ApplicationInsightsKey = "SECRET";

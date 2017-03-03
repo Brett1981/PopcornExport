@@ -1,7 +1,5 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
-using PopcornExport.Helpers;
-using PopcornExport.Services.Database;
 using PopcornExport.Services.Logging;
 using System;
 using System.Collections.Generic;
@@ -9,10 +7,11 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using PopcornExport.Models.Show;
 using PopcornExport.Services.Assets;
-using Microsoft.Azure.Documents.Client;
 using Newtonsoft.Json;
+using PopcornExport.Database;
 
 namespace PopcornExport.Services.Import
 {
@@ -27,27 +26,20 @@ namespace PopcornExport.Services.Import
         private readonly ILoggingService _loggingService;
 
         /// <summary>
-        /// DocumentDb service
-        /// </summary>
-        private readonly IDocumentDbService _documentDbService;
-
-        /// <summary>
         /// Assets service
         /// </summary>
         private readonly IAssetsService _assetsService;
 
         /// <summary>
-        /// Instanciate a <see cref="ImportShowService"/>
+        /// Constructor
         /// </summary>
-        /// <param name="documentDbService">MongoDb service</param>
         /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportShowService(IDocumentDbService documentDbService, IAssetsService assetsService,
+        public ImportShowService(IAssetsService assetsService,
             ILoggingService loggingService)
         {
-            _documentDbService = documentDbService;
-            _assetsService = assetsService;
             _loggingService = loggingService;
+            _assetsService = assetsService;
         }
 
         /// <summary>
@@ -64,7 +56,7 @@ namespace PopcornExport.Services.Import
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedShows = 0;
-            using (var client = _documentDbService.Client)
+            using (var context = new PopcornContextFactory().Create(new DbContextFactoryOptions()))
             {
                 foreach (var document in documents)
                 {
@@ -74,16 +66,91 @@ namespace PopcornExport.Services.Import
                         watch.Start();
 
                         // Deserialize a document to a show
-                        var show =
+                        var showJson =
                             JsonConvert.DeserializeObject<ShowJson>(
                                 BsonSerializer.Deserialize<ShowBson>(document).ToJson());
 
-                        await RetrieveAssets(show);
+                        await RetrieveAssets(showJson);
 
-                        await client.UpsertDocumentAsync(
-                            UriFactory.CreateDocumentCollectionUri(Constants.DatabaseName, Constants.ShowsCollectionName),
-                            show);
+                        var show = new Show
+                        {
+                            Rating = new Rating
+                            {
+                                Watching = showJson.Rating.Watching,
+                                Hated = showJson.Rating.Hated,
+                                Percentage = showJson.Rating.Percentage,
+                                Votes = showJson.Rating.Votes,
+                                Loved = showJson.Rating.Loved
+                            },
+                            Images = new ImageShow
+                            {
+                                Banner = showJson.Images.Banner,
+                                Poster = showJson.Images.Poster,
+                                Fanart = showJson.Images.Fanart
+                            },
+                            ImdbId = showJson.ImdbId,
+                            Title = showJson.Title,
+                            Year = showJson.Year,
+                            Runtime = showJson.Runtime,
+                            Genres = showJson.Genres.Select(genre => new Genre
+                            {
+                                Name = genre
+                            }).ToList(),
+                            Slug = showJson.Slug,
+                            LastUpdated = showJson.LastUpdated,
+                            TvdbId = showJson.TvdbId,
+                            NumSeasons = showJson.NumSeasons,
+                            Status = showJson.Status,
+                            Synopsis = showJson.Synopsis,
+                            Country = showJson.Country,
+                            Episodes = showJson.Episodes.Select(episode => new EpisodeShow
+                            {
+                                Title = episode.Title,
+                                DateBased = episode.DateBased,
+                                TvdbId = episode.TvdbId,
+                                Torrents = new TorrentNode
+                                {
+                                    Torrent0 = new Torrent
+                                    {
+                                        Url = episode.Torrents.Torrent_0?.Url,
+                                        Peers = episode.Torrents.Torrent_0?.Peers,
+                                        Seeds = episode.Torrents.Torrent_0?.Seeds,
+                                        Provider = episode.Torrents.Torrent_0?.Provider
+                                    },
+                                    Torrent1080P = new Torrent
+                                    {
+                                        Url = episode.Torrents.Torrent_1080p?.Url,
+                                        Peers = episode.Torrents.Torrent_1080p?.Peers,
+                                        Seeds = episode.Torrents.Torrent_1080p?.Seeds,
+                                        Provider = episode.Torrents.Torrent_1080p?.Provider
+                                    },
+                                    Torrent480P = new Torrent
+                                    {
+                                        Url = episode.Torrents.Torrent_480p?.Url,
+                                        Peers = episode.Torrents.Torrent_480p?.Peers,
+                                        Seeds = episode.Torrents.Torrent_480p?.Seeds,
+                                        Provider = episode.Torrents.Torrent_480p?.Provider
+                                    },
+                                    Torrent720P = new Torrent
+                                    {
+                                        Url = episode.Torrents.Torrent_720p?.Url,
+                                        Peers = episode.Torrents.Torrent_720p?.Peers,
+                                        Seeds = episode.Torrents.Torrent_720p?.Seeds,
+                                        Provider = episode.Torrents.Torrent_720p?.Provider
+                                    }
+                                },
+                                EpisodeNumber = episode.EpisodeNumber,
+                                Season = episode.Season,
+                                Overview = episode.Overview,
+                                FirstAired = episode.FirstAired
+                            }).ToList(),
+                            AirDay = showJson.AirDay,
+                            AirTime = showJson.AirTime,
+                            Network = showJson.Network
+                        };
 
+                        await context.Shows.AddAsync(show);
+                        await context.SaveChangesAsync();
                         watch.Stop();
                         updatedShows++;
                         Console.WriteLine(Environment.NewLine);

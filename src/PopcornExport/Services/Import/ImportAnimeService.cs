@@ -6,14 +6,14 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Azure.Documents.Client;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using PopcornExport.Models.Anime;
 using PopcornExport.Services.Assets;
 using Newtonsoft.Json;
+using PopcornExport.Database;
 using PopcornExport.Models.Image;
-using PopcornExport.Services.Database;
 using RestSharp.Portable;
 using RestSharp.Portable.HttpClient;
 
@@ -30,11 +30,6 @@ namespace PopcornExport.Services.Import
         private readonly ILoggingService _loggingService;
 
         /// <summary>
-        /// DocumentDb service
-        /// </summary>
-        private readonly IDocumentDbService _documentDbService;
-
-        /// <summary>
         /// Assets service
         /// </summary>
         private readonly IAssetsService _assetsService;
@@ -42,13 +37,11 @@ namespace PopcornExport.Services.Import
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="documentDbService">MongoDb service</param>
         /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        public ImportAnimeService(IDocumentDbService documentDbService, IAssetsService assetsService,
+        public ImportAnimeService(IAssetsService assetsService,
             ILoggingService loggingService)
         {
-            _documentDbService = documentDbService;
             _loggingService = loggingService;
             _assetsService = assetsService;
         }
@@ -67,7 +60,7 @@ namespace PopcornExport.Services.Import
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedAnimes = 0;
-            using (var client = _documentDbService.Client)
+            using (var context = new PopcornContextFactory().Create(new DbContextFactoryOptions()))
             {
                 foreach (var document in documents)
                 {
@@ -76,16 +69,98 @@ namespace PopcornExport.Services.Import
                         var watch = new Stopwatch();
                         watch.Start();
                         // Deserialize a document to an anime
-                        var anime =
+                        var animeJson =
                             JsonConvert.DeserializeObject<AnimeJson>(
                                 BsonSerializer.Deserialize<AnimeBson>(document).ToJson());
 
-                        await RetrieveAssets(document, anime);
-                        
-                        await client.UpsertDocumentAsync(
-                            UriFactory.CreateDocumentCollectionUri(Constants.DatabaseName, Constants.AnimeCollectionName),
-                            anime);
+                        await RetrieveAssets(document, animeJson);
 
+                        var anime = new Anime
+                        {
+                            Images = new CollectionImageAnime
+                            {
+                                Poster = new ImageAnime
+                                {
+                                    Medium = animeJson.Images.Poster.Medium,
+                                    Large = animeJson.Images.Poster.Large,
+                                    Tiny = animeJson.Images.Poster.Tiny,
+                                    Original = animeJson.Images.Poster.Original,
+                                    Small = animeJson.Images.Poster.Small
+                                },
+                                Cover = new ImageAnime
+                                {
+                                    Medium = animeJson.Images.Cover.Medium,
+                                    Large = animeJson.Images.Cover.Large,
+                                    Tiny = animeJson.Images.Cover.Tiny,
+                                    Original = animeJson.Images.Cover.Original,
+                                    Small = animeJson.Images.Cover.Small
+                                }
+                            },
+                            Rating = new Rating
+                            {
+                                Hated = animeJson.Rating.Hated,
+                                Loved = animeJson.Rating.Loved,
+                                Percentage = animeJson.Rating.Percentage,
+                                Votes = animeJson.Rating.Votes,
+                                Watching = animeJson.Rating.Watching
+                            },
+                            Year = animeJson.Year,
+                            Runtime = animeJson.Runtime,
+                            Genres = animeJson.Genres.Select(genre => new Genre
+                            {
+                                Name = genre
+                            }).ToList(),
+                            Slug = animeJson.Slug,
+                            LastUpdated = animeJson.LastUpdated,
+                            Title = animeJson.Title,
+                            MalId = animeJson.MalId,
+                            Episodes = animeJson.Episodes.Select(episode => new EpisodeAnime
+                            {
+                                Torrents = new TorrentNode
+                                {
+                                    Torrent0 = new Torrent
+                                    {
+                                        Url = episode.Torrents.Torrent_0?.Url,
+                                        Peers = episode.Torrents.Torrent_0?.Peers,
+                                        Seeds = episode.Torrents.Torrent_0?.Seeds,
+                                        Provider = episode.Torrents.Torrent_0?.Provider
+                                    },
+                                    Torrent1080P = new Torrent
+                                    {
+                                        Url = episode.Torrents.Torrent_1080p?.Url,
+                                        Peers = episode.Torrents.Torrent_1080p?.Peers,
+                                        Seeds = episode.Torrents.Torrent_1080p?.Seeds,
+                                        Provider = episode.Torrents.Torrent_1080p?.Provider
+                                    },
+                                    Torrent480P = new Torrent
+                                    {
+                                        Url = episode.Torrents.Torrent_480p?.Url,
+                                        Peers = episode.Torrents.Torrent_480p?.Peers,
+                                        Seeds = episode.Torrents.Torrent_480p?.Seeds,
+                                        Provider = episode.Torrents.Torrent_480p?.Provider
+                                    },
+                                    Torrent720P = new Torrent
+                                    {
+                                        Url = episode.Torrents.Torrent_720p?.Url,
+                                        Peers = episode.Torrents.Torrent_720p?.Peers,
+                                        Seeds = episode.Torrents.Torrent_720p?.Seeds,
+                                        Provider = episode.Torrents.Torrent_720p?.Provider
+                                    }
+                                },
+                                EpisodeNumber = episode.EpisodeNumber,
+                                Title = episode.Title,
+                                Overview = episode.Overview,
+                                Season = episode.Season,
+                                TvdbId = episode.TvdbId
+                            }).ToList(),
+                            NumSeasons = animeJson.NumSeasons,
+                            Status = animeJson.Status,
+                            Synopsis = animeJson.Synopsis,
+                            Type = animeJson.Type
+                        };
+
+                        await context.Animes.AddAsync(anime);
+                        await context.SaveChangesAsync();
                         watch.Stop();
                         updatedAnimes++;
                         Console.WriteLine(Environment.NewLine);

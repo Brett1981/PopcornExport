@@ -1,11 +1,11 @@
 ﻿using PopcornExport.Models.Export;
-using PopcornExport.Services.Database;
 using PopcornExport.Services.Export;
 using PopcornExport.Services.Import;
 using PopcornExport.Services.Logging;
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
+using PopcornExport.Database;
 using PopcornExport.Services.Assets;
 using PopcornExport.Services.File;
 
@@ -22,11 +22,6 @@ namespace PopcornExport.Services.Core
         private readonly IExportService _exportService;
 
         /// <summary>
-        /// MongoDb service
-        /// </summary>
-        private readonly IDocumentDbService _documentDbService;
-
-        /// <summary>
         /// The logging service
         /// </summary>
         private readonly ILoggingService _loggingService;
@@ -40,15 +35,12 @@ namespace PopcornExport.Services.Core
         /// Core service
         /// </summary>
         /// <param name="exportService">Export service</param>
-        /// <param name="documentDbService">MongoDb service</param>
         /// <param name="loggingService">Logging service</param>
         /// <param name="fileService">The file service</param>
-        public CoreService(IExportService exportService, IDocumentDbService documentDbService,
-            ILoggingService loggingService, IFileService fileService)
+        public CoreService(IExportService exportService, ILoggingService loggingService, IFileService fileService)
         {
             _exportService = exportService;
             _loggingService = loggingService;
-            _documentDbService = documentDbService;
             _fileService = fileService;
         }
 
@@ -67,7 +59,6 @@ namespace PopcornExport.Services.Core
 
                 Console.WriteLine(loggingTraceBegin);
 
-                await _documentDbService.Init();
                 var exports = new[] {ExportType.Shows, ExportType.Anime, ExportType.Movies};
                 foreach (var export in exports)
                 {
@@ -79,20 +70,17 @@ namespace PopcornExport.Services.Core
                     switch (export)
                     {
                         case ExportType.Anime:
-                            importService = new ImportAnimeService(_documentDbService,
-                                new AssetsAnimeService(_fileService),
+                            importService = new ImportAnimeService(new AssetsAnimeService(_fileService),
                                 _loggingService);
                             await importService.Import(documents);
                             break;
                         case ExportType.Shows:
-                            importService = new ImportShowService(_documentDbService,
-                                new AssetsShowService(_fileService),
+                            importService = new ImportShowService(new AssetsShowService(_fileService),
                                 _loggingService);
                             await importService.Import(documents);
                             break;
                         case ExportType.Movies:
-                            importService = new ImportMovieService(_documentDbService,
-                                new AssetsMovieService(_fileService),
+                            importService = new ImportMovieService(new AssetsMovieService(_fileService),
                                 _loggingService);
                             await importService.Import(documents);
                             break;

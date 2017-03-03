@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PopcornExport.Database;
 using PopcornExport.Services.Core;
-using PopcornExport.Services.Database;
 using PopcornExport.Services.File;
 using StructureMap;
 
@@ -24,10 +25,6 @@ namespace PopcornExport
 
             // add the framework services
             var services = new ServiceCollection()
-                .AddTransient<IDocumentDbService>(
-                    e =>
-                        new DocumentDbService(configuration["DocumentDB:EndpointUri"],
-                            configuration["DocumentDB:PrimaryKey"]))
                 .AddTransient<IFileService>(
                     e =>
                     {
