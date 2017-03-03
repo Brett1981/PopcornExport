@@ -231,7 +231,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("DescriptionIntro");
 
-                    b.Property<string>("DownloadCount");
+                    b.Property<int>("DownloadCount");
 
                     b.Property<string>("ImdbCode");
 
@@ -245,7 +245,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("LargeScreenshotImage3");
 
-                    b.Property<string>("LikeCount");
+                    b.Property<int>("LikeCount");
 
                     b.Property<string>("MediumCoverImage");
 

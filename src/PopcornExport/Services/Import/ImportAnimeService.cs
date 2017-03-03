@@ -71,8 +71,7 @@ namespace PopcornExport.Services.Import
                         watch.Start();
                         // Deserialize a document to an anime
                         var animeJson =
-                            JsonConvert.DeserializeObject<AnimeJson>(
-                                BsonSerializer.Deserialize<AnimeBson>(document).ToJson());
+                            BsonSerializer.Deserialize<AnimeBson>(document);
 
                         await RetrieveAssets(document, animeJson);
 
@@ -109,7 +108,7 @@ namespace PopcornExport.Services.Import
                             Runtime = animeJson.Runtime,
                             Genres = animeJson.Genres.Select(genre => new Genre
                             {
-                                Name = genre
+                                Name = genre.AsString
                             }).ToList(),
                             Slug = animeJson.Slug,
                             LastUpdated = animeJson.LastUpdated,
@@ -196,7 +195,7 @@ namespace PopcornExport.Services.Import
         /// <param name="document"><see cref="BsonDocument"/> to update</param>
         /// <param name="anime">Anime to process</param>
         /// <returns></returns>
-        private async Task RetrieveAssets(BsonDocument document, AnimeJson anime)
+        private async Task RetrieveAssets(BsonDocument document, AnimeBson anime)
         {
             using (var client = new RestClient(Constants.KitsuApiUrl))
             {
@@ -210,7 +209,7 @@ namespace PopcornExport.Services.Import
                     {
                         if (animeKitsu.Attributes.CoverImage != null)
                         {
-                            anime.Images.Cover = new ImageAnimeTypeJson();
+                            anime.Images.Cover = new AnimeKitsuImage();
                             if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.CoverImage.Tiny))
                             {
                                 var tinyCover = string.Concat(animeKitsu.Attributes.CoverImage.Tiny
@@ -276,7 +275,7 @@ namespace PopcornExport.Services.Import
                     {
                         if (animeKitsu.Attributes.PosterImage != null)
                         {
-                            anime.Images.Poster = new ImageAnimeTypeJson();
+                            anime.Images.Poster = new AnimeKitsuImage();
                             if (!string.IsNullOrWhiteSpace(animeKitsu.Attributes.PosterImage.Tiny))
                             {
                                 var tinyPoster = string.Concat(animeKitsu.Attributes.PosterImage.Tiny

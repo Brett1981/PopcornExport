@@ -11,7 +11,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using PopcornExport.Models.Show;
 using PopcornExport.Services.Assets;
-using Newtonsoft.Json;
 using PopcornExport.Database;
 
 namespace PopcornExport.Services.Import
@@ -68,8 +67,7 @@ namespace PopcornExport.Services.Import
 
                         // Deserialize a document to a show
                         var showJson =
-                            JsonConvert.DeserializeObject<ShowJson>(
-                                BsonSerializer.Deserialize<ShowBson>(document).ToJson());
+                            BsonSerializer.Deserialize<ShowBson>(document);
 
                         await RetrieveAssets(showJson);
 
@@ -95,7 +93,7 @@ namespace PopcornExport.Services.Import
                             Runtime = showJson.Runtime,
                             Genres = showJson.Genres.Select(genre => new Genre
                             {
-                                Name = genre
+                                Name = genre.AsString
                             }).ToList(),
                             Slug = showJson.Slug,
                             LastUpdated = showJson.LastUpdated,
@@ -185,7 +183,7 @@ namespace PopcornExport.Services.Import
         /// </summary>
         /// <param name="show">Show to process</param>
         /// <returns><see cref="Task"/></returns>
-        private async Task RetrieveAssets(ShowJson show)
+        private async Task RetrieveAssets(ShowBson show)
         {
             var tasks = new List<Task>
             {

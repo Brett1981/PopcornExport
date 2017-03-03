@@ -8,7 +8,7 @@ using PopcornExport.Database;
 namespace PopcornExport.Migrations
 {
     [DbContext(typeof(PopcornContext))]
-    [Migration("20170303171315_Initial")]
+    [Migration("20170303200656_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -232,7 +232,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("DescriptionIntro");
 
-                    b.Property<string>("DownloadCount");
+                    b.Property<int>("DownloadCount");
 
                     b.Property<string>("ImdbCode");
 
@@ -246,7 +246,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("LargeScreenshotImage3");
 
-                    b.Property<string>("LikeCount");
+                    b.Property<int>("LikeCount");
 
                     b.Property<string>("MediumCoverImage");
 

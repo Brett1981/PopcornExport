@@ -10,7 +10,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Newtonsoft.Json;
 using PopcornExport.Database;
 using PopcornExport.Services.Assets;
 using TMDbLib.Client;
@@ -74,8 +73,7 @@ namespace PopcornExport.Services.Import
 
                         // Deserialize a document to a movie
                         var movieJson =
-                            JsonConvert.DeserializeObject<MovieJson>(
-                                BsonSerializer.Deserialize<MovieBson>(document).ToJson());
+                            BsonSerializer.Deserialize<MovieBson>(document);
 
                         await RetrieveAssets(tmdbClient, movieJson);
 
@@ -104,7 +102,7 @@ namespace PopcornExport.Services.Import
                             }).ToList(),
                             DateUploaded = movieJson.DateUploaded,
                             DateUploadedUnix = movieJson.DateUploadedUnix,
-                            DownloadCount = movieJson.DownloadCount,
+                            DownloadCount = int.Parse(movieJson.DownloadCount),
                             MpaRating = movieJson.MpaRating,
                             Runtime = movieJson.Runtime,
                             YtTrailerCode = movieJson.YtTrailerCode,
@@ -112,7 +110,7 @@ namespace PopcornExport.Services.Import
                             TitleLong = movieJson.TitleLong,
                             Rating = movieJson.Rating,
                             Year = movieJson.Year,
-                            LikeCount = movieJson.LikeCount,
+                            LikeCount = int.Parse(movieJson.LikeCount),
                             PosterImage = movieJson.PosterImage,
                             DescriptionFull = movieJson.DescriptionFull,
                             Cast = movieJson.Cast?.Select(cast => new Database.Cast
@@ -135,7 +133,8 @@ namespace PopcornExport.Services.Import
                             Title = movieJson.Title
                         };
 
-                        var existingEntity = await context.MovieSet.FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
+                        var existingEntity =
+                            await context.MovieSet.FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
                         if (existingEntity == null)
                         {
                             context.MovieSet.Add(movie);
@@ -171,7 +170,7 @@ namespace PopcornExport.Services.Import
         /// <param name="tmdbClient"><see cref="TMDbClient"/></param>
         /// <param name="movie">Movie to update</param>
         /// <returns></returns>
-        private async Task RetrieveAssets(TMDbClient tmdbClient, MovieJson movie)
+        private async Task RetrieveAssets(TMDbClient tmdbClient, MovieBson movie)
         {
             var tmdbMovie = await tmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images);
 

@@ -24,8 +24,8 @@ namespace PopcornExport.Database
         public string Language { get; set; }
         public string MpaRating { get; set; }
         public int Runtime { get; set; }
-        public string DownloadCount { get; set; }
-        public string LikeCount { get; set; }
+        public int DownloadCount { get; set; }
+        public int LikeCount { get; set; }
         public string DescriptionIntro { get; set; }
         public string DescriptionFull { get; set; }
         public string YtTrailerCode { get; set; }
