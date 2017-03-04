@@ -2,6 +2,7 @@
 using MongoDB.Bson.Serialization;
 using PopcornExport.Services.Logging;
 using System;
+using System.Collections.Async;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -148,12 +149,78 @@ namespace PopcornExport.Services.Import
                             Network = showJson.Network
                         };
 
-                        var existingEntity = await context.ShowSet.FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId);
+                        var existingEntity = await context.ShowSet.Include(a => a.Rating)
+                            .Include(a => a.Episodes)
+                            .ThenInclude(episode => episode.Torrents)
+                            .ThenInclude(torrent => torrent.Torrent0)
+                            .Include(a => a.Episodes)
+                            .ThenInclude(episode => episode.Torrents)
+                            .ThenInclude(torrent => torrent.Torrent1080p)
+                            .Include(a => a.Episodes)
+                            .ThenInclude(episode => episode.Torrents)
+                            .ThenInclude(torrent => torrent.Torrent480p)
+                            .Include(a => a.Episodes)
+                            .ThenInclude(episode => episode.Torrents)
+                            .ThenInclude(torrent => torrent.Torrent720p)
+                            .Include(a => a.Genres)
+                            .Include(a => a.Images).FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId);
+
                         if (existingEntity == null)
                         {
                             context.ShowSet.Add(show);
-                            await context.SaveChangesAsync();
                         }
+                        else
+                        {
+                            existingEntity.Rating.Hated = show.Rating.Hated;
+                            existingEntity.Rating.Loved = show.Rating.Loved;
+                            existingEntity.Rating.Percentage = show.Rating.Percentage;
+                            existingEntity.Rating.Votes = show.Rating.Votes;
+                            existingEntity.Rating.Watching = show.Rating.Watching;
+                            existingEntity.AirDay = show.AirDay;
+                            existingEntity.AirTime = show.AirTime;
+                            existingEntity.Status = show.Status;
+                            existingEntity.NumSeasons = show.NumSeasons;
+                            foreach (var episode in existingEntity.Episodes)
+                            {
+                                var updatedEpisode = show.Episodes.FirstOrDefault(a => a.TvdbId == episode.TvdbId);
+                                if (episode.Torrents != null && episode.Torrents.Torrent0 != null &&
+                                    updatedEpisode.Torrents.Torrent0 != null)
+                                {
+                                    episode.Torrents.Torrent0.Peers = updatedEpisode.Torrents.Torrent0.Peers;
+                                    episode.Torrents.Torrent0.Seeds = updatedEpisode.Torrents.Torrent0.Seeds;
+                                }
+
+                                if (episode.Torrents != null && episode.Torrents.Torrent1080p != null &&
+                                    updatedEpisode.Torrents.Torrent1080p != null)
+                                {
+                                    episode.Torrents.Torrent1080p.Peers = updatedEpisode.Torrents.Torrent1080p.Peers;
+                                    episode.Torrents.Torrent1080p.Seeds = updatedEpisode.Torrents.Torrent1080p.Seeds;
+                                }
+
+                                if (episode.Torrents != null && episode.Torrents.Torrent720p != null &&
+                                    updatedEpisode.Torrents.Torrent720p != null)
+                                {
+                                    episode.Torrents.Torrent720p.Peers = updatedEpisode.Torrents.Torrent720p.Peers;
+                                    episode.Torrents.Torrent720p.Seeds = updatedEpisode.Torrents.Torrent720p.Seeds;
+                                }
+
+                                if (episode.Torrents != null && episode.Torrents.Torrent480p != null &&
+                                    updatedEpisode.Torrents.Torrent480p != null)
+                                {
+                                    episode.Torrents.Torrent480p.Peers = updatedEpisode.Torrents.Torrent480p.Peers;
+                                    episode.Torrents.Torrent480p.Seeds = updatedEpisode.Torrents.Torrent480p.Seeds;
+                                }
+                            }
+
+                            var newEpisodes =
+                                show.Episodes.Where(a => existingEntity.Episodes.All(b => b.TvdbId != a.TvdbId));
+                            foreach (var newEpisode in newEpisodes.ToList())
+                            {
+                                show.Episodes.Add(newEpisode);
+                            }
+                        }
+
+                        await context.SaveChangesAsync();
 
                         watch.Stop();
                         updatedShows++;

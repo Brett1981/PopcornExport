@@ -134,12 +134,27 @@ namespace PopcornExport.Services.Import
                         };
 
                         var existingEntity =
-                            await context.MovieSet.FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
+                            await context.MovieSet.Include(a => a.Torrents)
+                                .Include(a => a.Cast)
+                                .Include(a => a.Genres).FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
+
                         if (existingEntity == null)
                         {
                             context.MovieSet.Add(movie);
-                            await context.SaveChangesAsync();
                         }
+                        else
+                        {
+                            foreach (var torrent in existingEntity.Torrents)
+                            {
+                                var updatedTorrent = movie.Torrents.FirstOrDefault(a => a.Quality == torrent.Quality);
+                                torrent.Peers = updatedTorrent.Peers;
+                                torrent.Seeds = updatedTorrent.Seeds;
+                                torrent.Hash = updatedTorrent.Hash;
+                                torrent.Url = updatedTorrent.Url;
+                            }
+                        }
+
+                        await context.SaveChangesAsync();
 
                         watch.Stop();
                         updatedMovies++;

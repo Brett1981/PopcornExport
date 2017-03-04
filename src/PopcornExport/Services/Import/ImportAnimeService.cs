@@ -159,12 +159,76 @@ namespace PopcornExport.Services.Import
                             Type = animeJson.Type
                         };
 
-                        var existingEntity = await context.AnimeSet.FirstOrDefaultAsync(a => a.MalId == anime.MalId);
+                        var existingEntity = await context.AnimeSet.Include(a => a.Rating)
+                            .Include(a => a.Episodes)
+                            .ThenInclude(episode => episode.Torrents)
+                            .ThenInclude(torrent => torrent.Torrent0)
+                            .Include(a => a.Episodes)
+                            .ThenInclude(episode => episode.Torrents)
+                            .ThenInclude(torrent => torrent.Torrent1080p)
+                            .Include(a => a.Episodes)
+                            .ThenInclude(episode => episode.Torrents)
+                            .ThenInclude(torrent => torrent.Torrent480p)
+                            .Include(a => a.Episodes)
+                            .ThenInclude(episode => episode.Torrents)
+                            .ThenInclude(torrent => torrent.Torrent720p)
+                            .Include(a => a.Genres)
+                            .Include(a => a.Images).FirstOrDefaultAsync(a => a.MalId == anime.MalId);
+
                         if (existingEntity == null)
                         {
                             context.AnimeSet.Add(anime);
-                            await context.SaveChangesAsync();
                         }
+                        else
+                        {
+                            existingEntity.Rating.Hated = anime.Rating.Hated;
+                            existingEntity.Rating.Loved = anime.Rating.Loved;
+                            existingEntity.Rating.Percentage = anime.Rating.Percentage;
+                            existingEntity.Rating.Votes = anime.Rating.Votes;
+                            existingEntity.Rating.Watching = anime.Rating.Watching;
+                            existingEntity.Status = anime.Status;
+                            existingEntity.NumSeasons = anime.NumSeasons;
+                            foreach (var episode in existingEntity.Episodes)
+                            {
+                                var updatedEpisode = anime.Episodes.FirstOrDefault(a => a.TvdbId == episode.TvdbId);
+                                if (episode.Torrents != null && episode.Torrents.Torrent0 != null &&
+                                    updatedEpisode.Torrents.Torrent0 != null)
+                                {
+                                    episode.Torrents.Torrent0.Peers = updatedEpisode.Torrents.Torrent0.Peers;
+                                    episode.Torrents.Torrent0.Seeds = updatedEpisode.Torrents.Torrent0.Seeds;
+                                }
+
+                                if (episode.Torrents != null && episode.Torrents.Torrent1080p != null &&
+                                    updatedEpisode.Torrents.Torrent1080p != null)
+                                {
+                                    episode.Torrents.Torrent1080p.Peers = updatedEpisode.Torrents.Torrent1080p.Peers;
+                                    episode.Torrents.Torrent1080p.Seeds = updatedEpisode.Torrents.Torrent1080p.Seeds;
+                                }
+
+                                if (episode.Torrents != null && episode.Torrents.Torrent720p != null &&
+                                    updatedEpisode.Torrents.Torrent720p != null)
+                                {
+                                    episode.Torrents.Torrent720p.Peers = updatedEpisode.Torrents.Torrent720p.Peers;
+                                    episode.Torrents.Torrent720p.Seeds = updatedEpisode.Torrents.Torrent720p.Seeds;
+                                }
+
+                                if (episode.Torrents != null && episode.Torrents.Torrent480p != null &&
+                                    updatedEpisode.Torrents.Torrent480p != null)
+                                {
+                                    episode.Torrents.Torrent480p.Peers = updatedEpisode.Torrents.Torrent480p.Peers;
+                                    episode.Torrents.Torrent480p.Seeds = updatedEpisode.Torrents.Torrent480p.Seeds;
+                                }
+                            }
+
+                            var newEpisodes =
+                                anime.Episodes.Where(a => existingEntity.Episodes.All(b => b.TvdbId != a.TvdbId));
+                            foreach (var newEpisode in newEpisodes)
+                            {
+                                anime.Episodes.Add(newEpisode);
+                            }
+                        }
+
+                        await context.SaveChangesAsync();
 
                         watch.Stop();
                         updatedAnimes++;
