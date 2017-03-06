@@ -1,6 +1,4 @@
-# Popcorn Export
-
-## Usage
+# Usage
 
 This .NET Core console application is made to export all the data from the original Popcorn Time API to a private Azure SQL database.
 
@@ -8,10 +6,18 @@ It is used as an Azure WebJob which is triggered every 24 hours to update data.
 
 # Details
 
+The batch exports movies, shows, animes, images and torrents from [Popcorntime.sh API](https://github.com/popcorn-official/popcorn-api) and imports everything to Azure services.
+
+# Storage
+
 Images and torrent files are stored on Azure Storage.
 
 Data is stored in Azure SQL Server.
 
-## Language and tools
+# Language and tools
 
 Built with .NET Core SDK 1.1 and Visual Studio 2017.
+
+# Screenshots
+
+![Screen1](https://github.com/bbougot/PopcornExport/blob/master/Screenshots/Screen1.png)
