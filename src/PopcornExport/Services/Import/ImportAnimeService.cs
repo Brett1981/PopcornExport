@@ -104,7 +104,7 @@ namespace PopcornExport.Services.Import
                                 Votes = animeJson.Rating.Votes,
                                 Watching = animeJson.Rating.Watching
                             },
-                            Year = animeJson.Year,
+                            Year = int.Parse(animeJson.Year),
                             Runtime = animeJson.Runtime,
                             Genres = animeJson.Genres.Select(genre => new Genre
                             {

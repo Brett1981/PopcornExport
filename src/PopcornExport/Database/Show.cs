@@ -16,7 +16,7 @@ namespace PopcornExport.Database
         public string ImdbId { get; set; }
         public string TvdbId { get; set; }
         public string Title { get; set; }
-        public string Year { get; set; }
+        public int Year { get; set; }
         public string Slug { get; set; }
         public string Synopsis { get; set; }
         public string Runtime { get; set; }

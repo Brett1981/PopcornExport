@@ -213,7 +213,7 @@ namespace PopcornExport.Migrations
                     Synopsis = table.Column<string>(nullable: true),
                     Title = table.Column<string>(nullable: true),
                     TvdbId = table.Column<string>(nullable: true),
-                    Year = table.Column<string>(nullable: true)
+                    Year = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -289,7 +289,7 @@ namespace PopcornExport.Migrations
                     Synopsis = table.Column<string>(nullable: true),
                     Title = table.Column<string>(nullable: true),
                     Type = table.Column<string>(nullable: true),
-                    Year = table.Column<string>(nullable: true)
+                    Year = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {

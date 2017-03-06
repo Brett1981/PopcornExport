@@ -8,7 +8,7 @@ using PopcornExport.Database;
 namespace PopcornExport.Migrations
 {
     [DbContext(typeof(PopcornContext))]
-    [Migration("20170303200656_Initial")]
+    [Migration("20170306103602_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -44,7 +44,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Type");
 
-                    b.Property<string>("Year");
+                    b.Property<int>("Year");
 
                     b.HasKey("Id");
 
@@ -338,7 +338,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("TvdbId");
 
-                    b.Property<string>("Year");
+                    b.Property<int>("Year");
 
                     b.HasKey("Id");
 

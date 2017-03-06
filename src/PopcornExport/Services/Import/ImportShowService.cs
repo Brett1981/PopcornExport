@@ -90,7 +90,7 @@ namespace PopcornExport.Services.Import
                             },
                             ImdbId = showJson.ImdbId,
                             Title = showJson.Title,
-                            Year = showJson.Year,
+                            Year = int.Parse(showJson.Year),
                             Runtime = showJson.Runtime,
                             Genres = showJson.Genres.Select(genre => new Genre
                             {

@@ -43,7 +43,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("Type");
 
-                    b.Property<string>("Year");
+                    b.Property<int>("Year");
 
                     b.HasKey("Id");
 
@@ -337,7 +337,7 @@ namespace PopcornExport.Migrations
 
                     b.Property<string>("TvdbId");
 
-                    b.Property<string>("Year");
+                    b.Property<int>("Year");
 
                     b.HasKey("Id");
 
