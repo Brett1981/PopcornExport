@@ -10,7 +10,7 @@ The batch exports movies, shows, animes, images and torrents from [Popcorntime.s
 
 # Storage
 
-Images and torrent files are stored on Azure Storage.
+Images and torrent files are stored on Azure Blob Storage.
 
 Data is stored in Azure SQL Server.
 
@@ -18,6 +18,6 @@ Data is stored in Azure SQL Server.
 
 Built with .NET Core SDK 1.1 and Visual Studio 2017.
 
-# Screenshots
+# Screenshot
 
 ![Screen1](https://github.com/bbougot/PopcornExport/blob/master/Screenshots/Screen1.png)
