@@ -72,6 +72,8 @@ namespace PopcornExport.Services.Import
 
                         await RetrieveAssets(showJson);
 
+                        if (showJson.Year == null) continue;
+
                         var show = new Show
                         {
                             Rating = new Rating
@@ -183,6 +185,8 @@ namespace PopcornExport.Services.Import
                             foreach (var episode in existingEntity.Episodes)
                             {
                                 var updatedEpisode = show.Episodes.FirstOrDefault(a => a.TvdbId == episode.TvdbId);
+                                if (updatedEpisode == null) continue;
+
                                 if (episode.Torrents != null && episode.Torrents.Torrent0 != null &&
                                     updatedEpisode.Torrents.Torrent0 != null)
                                 {
