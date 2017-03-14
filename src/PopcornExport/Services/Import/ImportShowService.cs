@@ -70,9 +70,9 @@ namespace PopcornExport.Services.Import
                         var showJson =
                             BsonSerializer.Deserialize<ShowBson>(document);
 
-                        await RetrieveAssets(showJson);
-
                         if (showJson.Year == null) continue;
+
+                        await RetrieveAssets(showJson);
 
                         var show = new Show
                         {
