@@ -16,6 +16,8 @@ using Newtonsoft.Json;
 using PopcornExport.Models.Movie;
 using System.Collections.Async;
 using System.Collections.Concurrent;
+using TMDbLib.Client;
+using TMDbLib.Objects.Movies;
 
 namespace PopcornExport.Services.Export
 {
@@ -111,6 +113,7 @@ namespace PopcornExport.Services.Export
                                             var movieByIdRequest = GetMovieById(movie.Id);
                                             var fullMovie =
                                                 await innerClient.Execute<MovieFullJsonNode>(movieByIdRequest);
+
                                             ConvertJsonToBsonDocument(
                                                 JsonConvert.SerializeObject(fullMovie.Data.Data.Movie),
                                                 export);

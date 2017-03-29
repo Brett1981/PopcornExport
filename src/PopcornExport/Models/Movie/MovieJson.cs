@@ -102,5 +102,8 @@ namespace PopcornExport.Models.Movie
 
         [JsonProperty("large_screenshot_image3")]
         public string LargeScreenshotImage3 { get; set; }
+
+        [JsonProperty("similar")]
+        public List<string> Similar { get; set; }
     }
 }

@@ -21,6 +21,11 @@
         public const string KitsuApiUrl = "https://kitsu.io/api/edge/anime/";
 
         /// <summary>
+        /// Client ID for TMDb
+        /// </summary>
+        public const string TmDbClientId = "a21fe922d3bac6654e93450e9a18af1c";
+
+        /// <summary>
         /// Application Insights key used for logging
         /// </summary>
         public const string ApplicationInsightsKey = "3705b885-bcf3-4189-a668-12055839640e";

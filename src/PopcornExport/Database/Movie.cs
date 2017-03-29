@@ -11,6 +11,7 @@ namespace PopcornExport.Database
             this.Genres = new HashSet<Genre>();
             this.Cast = new HashSet<Cast>();
             this.Torrents = new HashSet<TorrentMovie>();
+            this.Similars = new HashSet<Similar>();
         }
     
         public int Id { get; set; }
@@ -43,7 +44,9 @@ namespace PopcornExport.Database
         public string LargeScreenshotImage1 { get; set; }
         public string LargeScreenshotImage2 { get; set; }
         public string LargeScreenshotImage3 { get; set; }
-    
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Similar> Similars { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Genre> Genres { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

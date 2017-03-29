@@ -16,6 +16,7 @@ using TMDbLib.Client;
 using TMDbLib.Objects.General;
 using TMDbLib.Objects.Movies;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Async;
 
 namespace PopcornExport.Services.Import
 {
@@ -44,7 +45,26 @@ namespace PopcornExport.Services.Import
         {
             _loggingService = loggingService;
             _assetsService = assetsService;
+
+            TmdbClient = new TMDbClient(Constants.TmDbClientId)
+            {
+                MaxRetryCount = 10
+            };
+
+            try
+            {
+                TmdbClient.GetConfig();
+            }
+            catch (Exception)
+            {
+                //TODO
+            }
         }
+
+        /// <summary>
+        /// TMDb client
+        /// </summary>
+        private TMDbClient TmdbClient { get; set; }
 
         /// <summary>
         /// Import movies to database
@@ -136,7 +156,7 @@ namespace PopcornExport.Services.Import
                         var existingEntity =
                             await context.MovieSet.Include(a => a.Torrents)
                                 .Include(a => a.Cast)
-                                .Include(a => a.Genres).FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
+                                .Include(a => a.Genres).Include(a => a.Similars).FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
 
                         if (existingEntity == null)
                         {
@@ -151,6 +171,33 @@ namespace PopcornExport.Services.Import
                                 torrent.Seeds = updatedTorrent.Seeds;
                                 torrent.Hash = updatedTorrent.Hash;
                                 torrent.Url = updatedTorrent.Url;
+                            }
+
+                            if(existingEntity.Similars == null || !existingEntity.Similars.Any())
+                            {
+                                try
+                                {
+                                    var tmdbMovie = await TmdbClient.GetMovieAsync(existingEntity.ImdbCode, MovieMethods.AlternativeTitles);
+                                    var search = await TmdbClient.GetMovieSimilarAsync(tmdbMovie.Id);
+                                    if (search.TotalResults != 0)
+                                    {
+                                        existingEntity.Similars = new List<Similar>();
+                                        await search.Results.Select(a => a.Id).ParallelForEachAsync(async id =>
+                                        {
+                                            var res = await TmdbClient.GetMovieAsync(id);
+                                            if (res != null && !string.IsNullOrEmpty(res.ImdbId))
+                                            {
+                                                existingEntity.Similars.Add(new Similar
+                                                {
+                                                    TmdbId = res.ImdbId
+                                                });
+                                            }
+                                        });
+                                    }
+                                }
+                                catch (Exception)
+                                {
+                                }
                             }
                         }
 

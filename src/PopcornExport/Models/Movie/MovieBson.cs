@@ -153,5 +153,9 @@ namespace PopcornExport.Models.Movie
         [DataMember]
         [BsonElement("large_screenshot_image3")]
         public string LargeScreenshotImage3 { get; set; }
+
+        [DataMember]
+        [BsonElement("similar")]
+        public List<string> Similar { get; set; }
     }
 }
