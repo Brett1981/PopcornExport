@@ -191,7 +191,6 @@ namespace PopcornExport.Services.Import
 
                         if (existingEntity == null)
                         {
-
                             await UpdateImagesAndSimilarShow(show);
                             context.ShowSet.Add(show);
                         }
@@ -303,7 +302,7 @@ namespace PopcornExport.Services.Import
                                 show.Images.Banner =
                                     await _assetsService.UploadFile(
                                         $@"images/{show.ImdbId}/banner/{backdrop.Split('/').Last()}",
-                                        backdrop, true);
+                                        backdrop);
                             }
                         }),
                         Task.Run(async () =>
@@ -319,7 +318,7 @@ namespace PopcornExport.Services.Import
                                 show.Images.Poster =
                                     await _assetsService.UploadFile(
                                         $@"images/{show.ImdbId}/poster/{poster.Split('/').Last()}",
-                                        poster, true);
+                                        poster);
                             }
                         }),
                         Task.Run(async () =>
@@ -335,7 +334,7 @@ namespace PopcornExport.Services.Import
                                 show.Images.Fanart =
                                     await _assetsService.UploadFile(
                                         $@"images/{show.ImdbId}/fanart/{fanart.Split('/').Last()}",
-                                        fanart, true);
+                                        fanart);
                             }
                         })
                     };
