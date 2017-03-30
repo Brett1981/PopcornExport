@@ -10,8 +10,9 @@ namespace PopcornExport.Database
         {
             this.Episodes = new HashSet<EpisodeShow>();
             this.Genres = new HashSet<Genre>();
+            this.Similars = new HashSet<Similar>();
         }
-    
+
         public int Id { get; set; }
         public string ImdbId { get; set; }
         public string TvdbId { get; set; }
@@ -27,7 +28,9 @@ namespace PopcornExport.Database
         public string Status { get; set; }
         public int NumSeasons { get; set; }
         public long LastUpdated { get; set; }
-    
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+        public virtual ICollection<Similar> Similars { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<EpisodeShow> Episodes { get; set; }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]

@@ -177,12 +177,11 @@ namespace PopcornExport.Services.Import
                             {
                                 try
                                 {
-                                    var tmdbMovie = await TmdbClient.GetMovieAsync(existingEntity.ImdbCode, MovieMethods.AlternativeTitles);
-                                    var search = await TmdbClient.GetMovieSimilarAsync(tmdbMovie.Id);
-                                    if (search.TotalResults != 0)
+                                    var tmdbMovie = await TmdbClient.GetMovieAsync(existingEntity.ImdbCode, MovieMethods.Similar);
+                                    if (tmdbMovie.Similar.TotalResults != 0)
                                     {
                                         existingEntity.Similars = new List<Similar>();
-                                        await search.Results.Select(a => a.Id).ParallelForEachAsync(async id =>
+                                        await tmdbMovie.Similar.Results.Select(a => a.Id).ParallelForEachAsync(async id =>
                                         {
                                             var res = await TmdbClient.GetMovieAsync(id);
                                             if (res != null && !string.IsNullOrEmpty(res.ImdbId))

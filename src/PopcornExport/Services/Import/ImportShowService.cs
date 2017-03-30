@@ -13,6 +13,10 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using PopcornExport.Models.Show;
 using PopcornExport.Services.Assets;
 using PopcornExport.Database;
+using TMDbLib.Client;
+using PopcornExport.Helpers;
+using TMDbLib.Objects.TvShows;
+using TMDbLib.Objects.General;
 
 namespace PopcornExport.Services.Import
 {
@@ -41,7 +45,26 @@ namespace PopcornExport.Services.Import
         {
             _loggingService = loggingService;
             _assetsService = assetsService;
+
+            TmdbClient = new TMDbClient(Constants.TmDbClientId)
+            {
+                MaxRetryCount = 10
+            };
+
+            try
+            {
+                TmdbClient.GetConfig();
+            }
+            catch (Exception)
+            {
+                //TODO
+            }
         }
+
+        /// <summary>
+        /// TMDb client
+        /// </summary>
+        private TMDbClient TmdbClient { get; set; }
 
         /// <summary>
         /// Import shows to database
@@ -72,8 +95,6 @@ namespace PopcornExport.Services.Import
 
                         if (showJson.Year == null) continue;
 
-                        await RetrieveAssets(showJson);
-
                         var show = new Show
                         {
                             Rating = new Rating
@@ -94,7 +115,7 @@ namespace PopcornExport.Services.Import
                             Title = showJson.Title,
                             Year = int.Parse(showJson.Year),
                             Runtime = showJson.Runtime,
-                            Genres = showJson.Genres.Select(genre => new Genre
+                            Genres = showJson.Genres.Select(genre => new Database.Genre
                             {
                                 Name = genre.AsString
                             }).ToList(),
@@ -165,7 +186,8 @@ namespace PopcornExport.Services.Import
                             .ThenInclude(episode => episode.Torrents)
                             .ThenInclude(torrent => torrent.Torrent720p)
                             .Include(a => a.Genres)
-                            .Include(a => a.Images).FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId);
+                            .Include(a => a.Images)
+                            .Include(a => a.Similars).FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId);
 
                         if (existingEntity == null)
                         {
@@ -224,6 +246,82 @@ namespace PopcornExport.Services.Import
                             }
                         }
 
+                        int tvId = 0;
+                        if (int.TryParse(existingEntity.TvdbId, out tvId))
+                        {
+                            var tmdbShow = await TmdbClient.GetTvShowAsync(tvId, TvShowMethods.Similar);
+
+                            var tasks = new List<Task>
+                            {
+                                Task.Run(async () =>
+                                {
+                                    if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
+                                    {
+                                        var backdrop = GetImagePathFromTmdb(TmdbClient,
+                                            tmdbShow.Images.Backdrops.Aggregate(
+                                                (image1, image2) =>
+                                                    image1 != null && image2 != null && image1.Width < image2.Width
+                                                        ? image2
+                                                        : image1));
+                                        existingEntity.Images.Banner =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{existingEntity.ImdbId}/banner/{backdrop.Split('/').Last()}",
+                                                backdrop, true);
+                                    }
+                                }),
+                                Task.Run(async () =>
+                                {
+                                    if (tmdbShow.Images?.Posters != null && tmdbShow.Images.Posters.Any())
+                                    {
+                                        var poster = GetImagePathFromTmdb(TmdbClient,
+                                            tmdbShow.Images.Posters.Aggregate(
+                                                (image1, image2) =>
+                                                    image1 != null && image2 != null && image1.Width < image2.Width
+                                                        ? image2
+                                                        : image1));
+                                        existingEntity.Images.Poster =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{existingEntity.ImdbId}/poster/{poster.Split('/').Last()}",
+                                                poster, true);
+                                    }
+                                }),
+                                Task.Run(async () =>
+                                {
+                                    if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
+                                    {
+                                        var fanart = GetImagePathFromTmdb(TmdbClient,
+                                            tmdbShow.Images.Backdrops.Aggregate(
+                                                (image1, image2) =>
+                                                    image1 != null && image2 != null && image1.VoteAverage < image2.VoteAverage
+                                                        ? image2
+                                                        : image1));
+                                        existingEntity.Images.Fanart =
+                                            await _assetsService.UploadFile(
+                                                $@"images/{existingEntity.ImdbId}/fanart/{fanart.Split('/').Last()}",
+                                                fanart, true);
+                                    }
+                                })
+                            };
+
+                            await Task.WhenAll(tasks);
+
+                            if (tmdbShow.Similar.Results.Any())
+                            {
+                                existingEntity.Similars = new List<Similar>();
+                                await tmdbShow.Similar.Results.Select(a => a.Id).ParallelForEachAsync(async id =>
+                                {
+                                    var res = await TmdbClient.GetTvShowAsync(id);
+                                    if (res != null && !string.IsNullOrEmpty(res.ExternalIds.ImdbId))
+                                    {
+                                        existingEntity.Similars.Add(new Similar
+                                        {
+                                            TmdbId = res.ExternalIds.ImdbId
+                                        });
+                                    }
+                                });
+                            }
+                        }
+
                         await context.SaveChangesAsync();
 
                         watch.Stop();
@@ -250,41 +348,14 @@ namespace PopcornExport.Services.Import
         }
 
         /// <summary>
-        /// Retrieve images for the provided show
+        /// Retrieve an image from Tmdb
         /// </summary>
-        /// <param name="show">Show to process</param>
-        /// <returns><see cref="Task"/></returns>
-        private async Task RetrieveAssets(ShowBson show)
+        /// <param name="client"><see cref="TMDbClient"/></param>
+        /// <param name="image">Image to retrieve</param>
+        /// <returns></returns>
+        private string GetImagePathFromTmdb(TMDbClient client, ImageData image)
         {
-            var tasks = new List<Task>
-            {
-                Task.Run(async () =>
-                {
-                    if (!string.IsNullOrWhiteSpace(show.Images.Banner))
-                        show.Images.Banner =
-                            await _assetsService.UploadFile(
-                                $@"images/{show.ImdbId}/banner/{show.Images.Banner.Split('/').Last()}",
-                                show.Images.Banner);
-                }),
-                Task.Run(async () =>
-                {
-                    if (!string.IsNullOrWhiteSpace(show.Images.Fanart))
-                        show.Images.Fanart =
-                            await _assetsService.UploadFile(
-                                $@"images/{show.ImdbId}/fanart/{show.Images.Fanart.Split('/').Last()}",
-                                show.Images.Fanart);
-                }),
-                Task.Run(async () =>
-                {
-                    if (!string.IsNullOrWhiteSpace(show.Images.Poster))
-                        show.Images.Poster =
-                            await _assetsService.UploadFile(
-                                $@"images/{show.ImdbId}/poster/{show.Images.Poster.Split('/').Last()}",
-                                show.Images.Poster);
-                })
-            };
-
-            await Task.WhenAll(tasks);
+            return client.GetImageUrl("original", image.FilePath).AbsoluteUri;
         }
     }
 }
