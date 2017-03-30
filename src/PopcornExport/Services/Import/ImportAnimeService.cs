@@ -73,29 +73,8 @@ namespace PopcornExport.Services.Import
                         var animeJson =
                             BsonSerializer.Deserialize<AnimeBson>(document);
 
-                        await RetrieveAssets(document, animeJson);
-
                         var anime = new Anime
                         {
-                            Images = new CollectionImageAnime
-                            {
-                                Poster = new ImageAnime
-                                {
-                                    Medium = animeJson.Images.Poster?.Medium,
-                                    Large = animeJson.Images.Poster?.Large,
-                                    Tiny = animeJson.Images.Poster?.Tiny,
-                                    Original = animeJson.Images.Poster?.Original,
-                                    Small = animeJson.Images.Poster?.Small
-                                },
-                                Cover = new ImageAnime
-                                {
-                                    Medium = animeJson.Images.Cover?.Medium,
-                                    Large = animeJson.Images.Cover?.Large,
-                                    Tiny = animeJson.Images.Cover?.Tiny,
-                                    Original = animeJson.Images.Cover?.Original,
-                                    Small = animeJson.Images.Cover?.Small
-                                }
-                            },
                             Rating = new Rating
                             {
                                 Hated = animeJson.Rating.Hated,
@@ -177,6 +156,27 @@ namespace PopcornExport.Services.Import
 
                         if (existingEntity == null)
                         {
+                            await RetrieveAssets(document, animeJson);
+                            anime.Images = new CollectionImageAnime
+                            {
+                                Poster = new ImageAnime
+                                {
+                                    Medium = animeJson.Images.Poster?.Medium,
+                                    Large = animeJson.Images.Poster?.Large,
+                                    Tiny = animeJson.Images.Poster?.Tiny,
+                                    Original = animeJson.Images.Poster?.Original,
+                                    Small = animeJson.Images.Poster?.Small
+                                },
+                                Cover = new ImageAnime
+                                {
+                                    Medium = animeJson.Images.Cover?.Medium,
+                                    Large = animeJson.Images.Cover?.Large,
+                                    Tiny = animeJson.Images.Cover?.Tiny,
+                                    Original = animeJson.Images.Cover?.Original,
+                                    Small = animeJson.Images.Cover?.Small
+                                }
+                            };
+
                             context.AnimeSet.Add(anime);
                         }
                         else
