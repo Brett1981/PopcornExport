@@ -191,8 +191,8 @@ namespace PopcornExport.Services.Import
 
                         if (existingEntity == null)
                         {
-                            
 
+                            await UpdateImagesAndSimilarShow(show);
                             context.ShowSet.Add(show);
                         }
                         else
@@ -247,8 +247,6 @@ namespace PopcornExport.Services.Import
                                 show.Episodes.Add(newEpisode);
                             }
                         }
-
-                        await UpdateImagesAndSimilarShow(existingEntity);
 
                         await context.SaveChangesAsync();
 
