@@ -95,19 +95,10 @@ namespace PopcornExport.Services.Import
                         var movieJson =
                             BsonSerializer.Deserialize<MovieBson>(document);
 
-                        await RetrieveAssets(tmdbClient, movieJson);
-
                         var movie = new Database.Movie
                         {
                             ImdbCode = movieJson.ImdbCode,
-                            LargeCoverImage = movieJson.LargeCoverImage,
-                            SmallCoverImage = movieJson.SmallCoverImage,
-                            BackgroundImage = movieJson.BackgroundImage,
-                            LargeScreenshotImage1 = movieJson.LargeScreenshotImage1,
-                            MediumCoverImage = movieJson.MediumCoverImage,
                             Url = movieJson.Url,
-                            MediumScreenshotImage1 = movieJson.MediumScreenshotImage1,
-                            BackdropImage = movieJson.BackdropImage,
                             Torrents = movieJson.Torrents.Select(torrent => new TorrentMovie
                             {
                                 Url = torrent.Url,
@@ -131,7 +122,6 @@ namespace PopcornExport.Services.Import
                             Rating = movieJson.Rating,
                             Year = movieJson.Year,
                             LikeCount = int.Parse(movieJson.LikeCount),
-                            PosterImage = movieJson.PosterImage,
                             DescriptionFull = movieJson.DescriptionFull,
                             Cast = movieJson.Cast?.Select(cast => new Database.Cast
                             {
@@ -145,10 +135,6 @@ namespace PopcornExport.Services.Import
                                 Name = genre
                             }).ToList(),
                             Language = movieJson.Language,
-                            LargeScreenshotImage2 = movieJson.LargeScreenshotImage2,
-                            LargeScreenshotImage3 = movieJson.LargeScreenshotImage3,
-                            MediumScreenshotImage2 = movieJson.MediumScreenshotImage2,
-                            MediumScreenshotImage3 = movieJson.MediumScreenshotImage3,
                             Slug = movieJson.Slug,
                             Title = movieJson.Title
                         };
@@ -183,6 +169,7 @@ namespace PopcornExport.Services.Import
                             {
                             }
 
+                            await RetrieveAssets(tmdbClient, movieJson);
                             context.MovieSet.Add(movie);
                         }
                         else
