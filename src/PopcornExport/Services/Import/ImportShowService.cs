@@ -191,6 +191,8 @@ namespace PopcornExport.Services.Import
 
                         if (existingEntity == null)
                         {
+                            
+
                             context.ShowSet.Add(show);
                         }
                         else
@@ -246,81 +248,7 @@ namespace PopcornExport.Services.Import
                             }
                         }
 
-                        int tvId = 0;
-                        if (int.TryParse(existingEntity.TvdbId, out tvId))
-                        {
-                            var tmdbShow = await TmdbClient.GetTvShowAsync(tvId, TvShowMethods.Similar);
-
-                            var tasks = new List<Task>
-                            {
-                                Task.Run(async () =>
-                                {
-                                    if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
-                                    {
-                                        var backdrop = GetImagePathFromTmdb(TmdbClient,
-                                            tmdbShow.Images.Backdrops.Aggregate(
-                                                (image1, image2) =>
-                                                    image1 != null && image2 != null && image1.Width < image2.Width
-                                                        ? image2
-                                                        : image1));
-                                        existingEntity.Images.Banner =
-                                            await _assetsService.UploadFile(
-                                                $@"images/{existingEntity.ImdbId}/banner/{backdrop.Split('/').Last()}",
-                                                backdrop, true);
-                                    }
-                                }),
-                                Task.Run(async () =>
-                                {
-                                    if (tmdbShow.Images?.Posters != null && tmdbShow.Images.Posters.Any())
-                                    {
-                                        var poster = GetImagePathFromTmdb(TmdbClient,
-                                            tmdbShow.Images.Posters.Aggregate(
-                                                (image1, image2) =>
-                                                    image1 != null && image2 != null && image1.Width < image2.Width
-                                                        ? image2
-                                                        : image1));
-                                        existingEntity.Images.Poster =
-                                            await _assetsService.UploadFile(
-                                                $@"images/{existingEntity.ImdbId}/poster/{poster.Split('/').Last()}",
-                                                poster, true);
-                                    }
-                                }),
-                                Task.Run(async () =>
-                                {
-                                    if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
-                                    {
-                                        var fanart = GetImagePathFromTmdb(TmdbClient,
-                                            tmdbShow.Images.Backdrops.Aggregate(
-                                                (image1, image2) =>
-                                                    image1 != null && image2 != null && image1.VoteAverage < image2.VoteAverage
-                                                        ? image2
-                                                        : image1));
-                                        existingEntity.Images.Fanart =
-                                            await _assetsService.UploadFile(
-                                                $@"images/{existingEntity.ImdbId}/fanart/{fanart.Split('/').Last()}",
-                                                fanart, true);
-                                    }
-                                })
-                            };
-
-                            await Task.WhenAll(tasks);
-
-                            if (tmdbShow.Similar.Results.Any())
-                            {
-                                existingEntity.Similars = new List<Similar>();
-                                await tmdbShow.Similar.Results.Select(a => a.Id).ParallelForEachAsync(async id =>
-                                {
-                                    var res = await TmdbClient.GetTvShowAsync(id);
-                                    if (res != null && !string.IsNullOrEmpty(res.ExternalIds.ImdbId))
-                                    {
-                                        existingEntity.Similars.Add(new Similar
-                                        {
-                                            TmdbId = res.ExternalIds.ImdbId
-                                        });
-                                    }
-                                });
-                            }
-                        }
+                        await UpdateImagesAndSimilarShow(existingEntity);
 
                         await context.SaveChangesAsync();
 
@@ -345,6 +273,98 @@ namespace PopcornExport.Services.Import
                 $@"Import shows ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
+        }
+
+        /// <summary>
+        /// Update images and similar shows for a show
+        /// </summary>
+        /// <param name="show">Show to update</param>
+        /// <returns></returns>
+        private async Task UpdateImagesAndSimilarShow(Show show)
+        {
+            int tvId = 0;
+            if (int.TryParse(show.TvdbId, out tvId))
+            {
+                var search = await TmdbClient.SearchTvShowAsync(show.Title);
+                if (search.TotalResults != 0)
+                {
+                    var result = search.Results.FirstOrDefault();
+                    var tmdbShow = await TmdbClient.GetTvShowAsync(result.Id, TvShowMethods.Images | TvShowMethods.Similar);
+                    var tasks = new List<Task>
+                    {
+                        Task.Run(async () =>
+                        {
+                            if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
+                            {
+                                var backdrop = GetImagePathFromTmdb(TmdbClient,
+                                    tmdbShow.Images.Backdrops.Aggregate(
+                                        (image1, image2) =>
+                                            image1 != null && image2 != null && image1.Width < image2.Width
+                                                ? image2
+                                                : image1));
+                                show.Images.Banner =
+                                    await _assetsService.UploadFile(
+                                        $@"images/{show.ImdbId}/banner/{backdrop.Split('/').Last()}",
+                                        backdrop, true);
+                            }
+                        }),
+                        Task.Run(async () =>
+                        {
+                            if (tmdbShow.Images?.Posters != null && tmdbShow.Images.Posters.Any())
+                            {
+                                var poster = GetImagePathFromTmdb(TmdbClient,
+                                    tmdbShow.Images.Posters.Aggregate(
+                                        (image1, image2) =>
+                                            image1 != null && image2 != null && image1.Width < image2.Width
+                                                ? image2
+                                                : image1));
+                                show.Images.Poster =
+                                    await _assetsService.UploadFile(
+                                        $@"images/{show.ImdbId}/poster/{poster.Split('/').Last()}",
+                                        poster, true);
+                            }
+                        }),
+                        Task.Run(async () =>
+                        {
+                            if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
+                            {
+                                var fanart = GetImagePathFromTmdb(TmdbClient,
+                                    tmdbShow.Images.Backdrops.Aggregate(
+                                        (image1, image2) =>
+                                            image1 != null && image2 != null && image1.VoteAverage < image2.VoteAverage
+                                                ? image2
+                                                : image1));
+                                show.Images.Fanart =
+                                    await _assetsService.UploadFile(
+                                        $@"images/{show.ImdbId}/fanart/{fanart.Split('/').Last()}",
+                                        fanart, true);
+                            }
+                        })
+                    };
+
+                    await Task.WhenAll(tasks);
+
+                    if (tmdbShow.Similar.Results.Any())
+                    {
+                        show.Similars = new List<Similar>();
+                        await tmdbShow.Similar.Results.Select(a => a.Id).ParallelForEachAsync(async id =>
+                        {
+                            try
+                            {
+                                var externalIds = await TmdbClient.GetTvShowExternalIdsAsync(id);
+                                if (externalIds != null)
+                                {
+                                    show.Similars.Add(new Similar
+                                    {
+                                        TmdbId = externalIds.ImdbId
+                                    });
+                                }
+                            }
+                            catch (Exception) { }
+                        });
+                    }
+                }
+            }
         }
 
         /// <summary>
