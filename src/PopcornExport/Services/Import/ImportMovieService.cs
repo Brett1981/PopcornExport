@@ -139,6 +139,13 @@ namespace PopcornExport.Services.Import
                             Title = movieJson.Title
                         };
 
+                        await movie.Torrents.ParallelForEachAsync(async torrent =>
+                        {
+                            torrent.Url = await _assetsService.UploadFile(
+                                $@"torrents/{movie.ImdbCode}/{torrent.Url.Split('/').Last()}.torrent",
+                                torrent.Url);
+                        });
+
                         var existingEntity =
                             await context.MovieSet.Include(a => a.Torrents)
                                 .Include(a => a.Cast)
@@ -152,23 +159,24 @@ namespace PopcornExport.Services.Import
                                 if (tmdbMovie.Similar.TotalResults != 0)
                                 {
                                     movie.Similars = new List<Similar>();
-                                    await tmdbMovie.Similar.Results.Select(a => a.Id).ParallelForEachAsync(async id =>
-                                    {
-                                        var res = await TmdbClient.GetMovieAsync(id);
-                                        if (res != null && !string.IsNullOrEmpty(res.ImdbId))
+                                    await tmdbMovie.Similar.Results.Select(a => a.Id)
+                                        .ParallelForEachAsync(async id =>
                                         {
-                                            movie.Similars.Add(new Similar
+                                            var res = await TmdbClient.GetMovieAsync(id);
+                                            if (res != null && !string.IsNullOrEmpty(res.ImdbId))
                                             {
-                                                TmdbId = res.ImdbId
-                                            });
-                                        }
-                                    });
+                                                movie.Similars.Add(new Similar
+                                                {
+                                                    TmdbId = res.ImdbId
+                                                });
+                                            }
+                                        });
                                 }
                             }
                             catch (Exception)
                             {
                             }
-
+                            
                             await RetrieveAssets(tmdbClient, movieJson);
                             context.MovieSet.Add(movie);
                         }
