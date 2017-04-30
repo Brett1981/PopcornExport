@@ -17,6 +17,7 @@ using TMDbLib.Objects.General;
 using TMDbLib.Objects.Movies;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Async;
+using Movie = PopcornExport.Database.Movie;
 
 namespace PopcornExport.Services.Import
 {
@@ -177,7 +178,7 @@ namespace PopcornExport.Services.Import
                             {
                             }
                             
-                            await RetrieveAssets(tmdbClient, movieJson);
+                            await RetrieveAssets(tmdbClient, movie);
                             context.MovieSet.Add(movie);
                         }
                         else
@@ -223,7 +224,7 @@ namespace PopcornExport.Services.Import
         /// <param name="tmdbClient"><see cref="TMDbClient"/></param>
         /// <param name="movie">Movie to update</param>
         /// <returns></returns>
-        private async Task RetrieveAssets(TMDbClient tmdbClient, MovieBson movie)
+        private async Task RetrieveAssets(TMDbClient tmdbClient, Movie movie)
         {
             var tmdbMovie = await tmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images);
 
