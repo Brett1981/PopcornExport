@@ -152,13 +152,6 @@ namespace PopcornExport.Services.Import
                             PosterImage = movieJson.PosterImage
                         };
 
-                        await movie.Torrents.ParallelForEachAsync(async torrent =>
-                        {
-                            torrent.Url = await _assetsService.UploadFile(
-                                $@"torrents/{movie.ImdbCode}/{torrent.Url.Split('/').Last()}.torrent",
-                                torrent.Url);
-                        });
-
                         var existingEntity =
                             await context.MovieSet.Include(a => a.Torrents)
                                 .Include(a => a.Cast)
@@ -185,6 +178,13 @@ namespace PopcornExport.Services.Import
                                             }
                                         });
                                 }
+
+                                await movie.Torrents.ParallelForEachAsync(async torrent =>
+                                {
+                                    torrent.Url = await _assetsService.UploadFile(
+                                        $@"torrents/{movie.ImdbCode}/{torrent.Url.Split('/').Last()}.torrent",
+                                        torrent.Url);
+                                });
                             }
                             catch (Exception)
                             {
@@ -203,20 +203,6 @@ namespace PopcornExport.Services.Import
                                 torrent.Hash = updatedTorrent.Hash;
                                 torrent.Url = updatedTorrent.Url;
                             }
-
-                            existingEntity.BackdropImage = movieJson.BackdropImage;
-                            existingEntity.BackgroundImage = movieJson.BackgroundImage;
-                            existingEntity.LargeCoverImage = movieJson.LargeCoverImage;
-                            existingEntity.LargeScreenshotImage1 = movieJson.LargeScreenshotImage1;
-                            existingEntity.LargeScreenshotImage2 = movieJson.LargeScreenshotImage2;
-                            existingEntity.LargeScreenshotImage3 = movieJson.LargeScreenshotImage3;
-                            existingEntity.MediumCoverImage = movieJson.MediumCoverImage;
-                            existingEntity.MediumScreenshotImage1 = movieJson.MediumScreenshotImage1;
-                            existingEntity.MediumScreenshotImage2 = movieJson.MediumScreenshotImage2;
-                            existingEntity.MediumScreenshotImage3 = movieJson.MediumScreenshotImage3;
-                            existingEntity.SmallCoverImage = movieJson.SmallCoverImage;
-                            existingEntity.PosterImage = movieJson.PosterImage;
-                            await RetrieveAssets(tmdbClient, existingEntity);
                         }
 
                         await context.SaveChangesAsync();
