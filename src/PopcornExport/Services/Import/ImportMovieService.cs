@@ -200,8 +200,6 @@ namespace PopcornExport.Services.Import
                                 var updatedTorrent = movie.Torrents.FirstOrDefault(a => a.Quality == torrent.Quality);
                                 torrent.Peers = updatedTorrent.Peers;
                                 torrent.Seeds = updatedTorrent.Seeds;
-                                torrent.Hash = updatedTorrent.Hash;
-                                torrent.Url = updatedTorrent.Url;
                             }
                         }
 
