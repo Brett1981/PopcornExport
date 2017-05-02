@@ -13,6 +13,7 @@ namespace PopcornExport.Database
         {
         }
 
+        public virtual DbSet<User> UserSet { get; set; }
         public virtual DbSet<Movie> MovieSet { get; set; }
         public virtual DbSet<Genre> GenreSet { get; set; }
         public virtual DbSet<Cast> CastSet { get; set; }
