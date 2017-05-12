@@ -16,7 +16,7 @@ namespace PopcornExport.Services.Assets
         private readonly IFileService _fileService;
 
         /// <summary>
-        /// Create an instance of <see cref="AssetsAnimeService"/>
+        /// Create an instance of <see cref="AssetsMovieService"/>
         /// </summary>
         public AssetsMovieService(IFileService fileService)
         {

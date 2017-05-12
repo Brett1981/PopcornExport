@@ -24,9 +24,5 @@ namespace PopcornExport.Database
         public virtual DbSet<Torrent> TorrentSet { get; set; }
         public virtual DbSet<ImageShow> ImageShowSet { get; set; }
         public virtual DbSet<Rating> RatingSet { get; set; }
-        public virtual DbSet<Anime> AnimeSet { get; set; }
-        public virtual DbSet<EpisodeAnime> EpisodeAnimeSet { get; set; }
-        public virtual DbSet<CollectionImageAnime> CollectionImageAnimeSet { get; set; }
-        public virtual DbSet<ImageAnime> ImageAnimeSet { get; set; }
     }
 }

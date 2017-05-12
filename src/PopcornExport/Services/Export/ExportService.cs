@@ -56,16 +56,13 @@ namespace PopcornExport.Services.Export
                         "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-                if (exportType == ExportType.Anime || exportType == ExportType.Shows)
+                if (exportType == ExportType.Shows)
                 {
                     using (var client = new RestClient(Constants.OriginalPopcornApi))
                     {
                         var request = new RestRequest("{segment}", Method.GET);
                         switch (exportType)
                         {
-                            case ExportType.Anime:
-                                request.AddUrlSegment("segment", "anime");
-                                break;
                             case ExportType.Shows:
                                 request.AddUrlSegment("segment", "show");
                                 break;

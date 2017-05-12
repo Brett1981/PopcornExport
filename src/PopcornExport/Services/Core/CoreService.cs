@@ -59,7 +59,7 @@ namespace PopcornExport.Services.Core
 
                 Console.WriteLine(loggingTraceBegin);
 
-                var exports = new[] {ExportType.Shows, ExportType.Anime, ExportType.Movies};
+                var exports = new[] {ExportType.Shows, ExportType.Movies};
                 foreach (var export in exports)
                 {
                     // Load export
@@ -69,11 +69,6 @@ namespace PopcornExport.Services.Core
                     // Import the documents according to export type
                     switch (export)
                     {
-                        case ExportType.Anime:
-                            importService = new ImportAnimeService(new AssetsAnimeService(_fileService),
-                                _loggingService);
-                            await importService.Import(documents);
-                            break;
                         case ExportType.Shows:
                             importService = new ImportShowService(new AssetsShowService(_fileService),
                                 _loggingService);

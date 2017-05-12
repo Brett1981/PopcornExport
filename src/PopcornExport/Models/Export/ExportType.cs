@@ -7,7 +7,6 @@ namespace PopcornExport.Models.Export
 {
     public enum ExportType
     {
-        Anime,
         Shows,
         Movies
     }

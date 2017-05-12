@@ -8,9 +8,10 @@ using PopcornExport.Database;
 namespace PopcornExport.Migrations
 {
     [DbContext(typeof(PopcornContext))]
-    partial class PopcornContextModelSnapshot : ModelSnapshot
+    [Migration("20170512134711_DropAnime")]
+    partial class DropAnime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("ProductVersion", "1.1.2")

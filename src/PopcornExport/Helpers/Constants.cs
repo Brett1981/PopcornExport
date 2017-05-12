@@ -16,11 +16,6 @@
         public const string YtsApiUrl = "https://yts.ag/api/v2/";
 
         /// <summary>
-        /// Kitsu Api for animes
-        /// </summary>
-        public const string KitsuApiUrl = "https://kitsu.io/api/edge/anime/";
-
-        /// <summary>
         /// Client ID for TMDb
         /// </summary>
         public const string TmDbClientId = "a21fe922d3bac6654e93450e9a18af1c";
