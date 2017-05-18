@@ -243,7 +243,7 @@ namespace PopcornExport.Services.Import
                                 show.Episodes.Where(a => existingEntity.Episodes.All(b => b.TvdbId != a.TvdbId));
                             foreach (var newEpisode in newEpisodes.ToList())
                             {
-                                show.Episodes.Add(newEpisode);
+                                existingEntity.Episodes.Add(newEpisode);
                             }
                         }
 
