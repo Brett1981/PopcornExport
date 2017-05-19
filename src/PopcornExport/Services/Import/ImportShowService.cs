@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using PopcornExport.Comparers;
 using PopcornExport.Models.Show;
 using PopcornExport.Services.Assets;
 using PopcornExport.Database;
@@ -240,7 +241,7 @@ namespace PopcornExport.Services.Import
                             }
 
                             var newEpisodes =
-                                show.Episodes.Where(a => existingEntity.Episodes.All(b => b.TvdbId != a.TvdbId));
+                                show.Episodes.Except(existingEntity.Episodes, new EpisodeComparer());
                             foreach (var newEpisode in newEpisodes.ToList())
                             {
                                 existingEntity.Episodes.Add(newEpisode);
