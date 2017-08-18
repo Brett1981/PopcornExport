@@ -27,6 +27,7 @@ namespace PopcornExport.Database
         public int Runtime { get; set; }
         public int DownloadCount { get; set; }
         public int LikeCount { get; set; }
+        public string GenreNames { get; set; }
         public string DescriptionIntro { get; set; }
         public string DescriptionFull { get; set; }
         public string YtTrailerCode { get; set; }

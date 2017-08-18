@@ -71,7 +71,8 @@ namespace PopcornExport.Services.Export
                         // Execute request
                         var response = await client.Execute(request);
                         // Load response into memory
-                        using (var reader = new StreamReader(new MemoryStream(response.RawBytes), Encoding.UTF8))
+                        using(var data = new MemoryStream(response.RawBytes))
+                        using (var reader = new StreamReader(data, Encoding.UTF8))
                         {
                             string line;
                             // Read all response parts

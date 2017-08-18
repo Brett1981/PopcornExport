@@ -83,7 +83,7 @@ namespace PopcornExport.Services.Import
             var updatedMovies = 0;
             var tmdbClient = new TMDbClient(Constants.TmdbClientApiKey);
             tmdbClient.GetConfig();
-            using (var context = new PopcornContextFactory().Create(new DbContextFactoryOptions()))
+            using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
             {
                 foreach (var document in documents)
                 {
@@ -135,6 +135,7 @@ namespace PopcornExport.Services.Import
                             {
                                 Name = genre
                             }).ToList(),
+                            GenreNames = string.Join(", ", movieJson.Genres.Select(FirstCharToUpper)),
                             Language = movieJson.Language,
                             Slug = movieJson.Slug,
                             Title = movieJson.Title,
@@ -169,7 +170,7 @@ namespace PopcornExport.Services.Import
                                         .ParallelForEachAsync(async id =>
                                         {
                                             var res = await TmdbClient.GetMovieAsync(id);
-                                            if (res != null && !string.IsNullOrEmpty(res.ImdbId))
+                                            if (!string.IsNullOrEmpty(res?.ImdbId))
                                             {
                                                 movie.Similars.Add(new Similar
                                                 {
@@ -200,7 +201,10 @@ namespace PopcornExport.Services.Import
                                 var updatedTorrent = movie.Torrents.FirstOrDefault(a => a.Quality == torrent.Quality);
                                 torrent.Peers = updatedTorrent.Peers;
                                 torrent.Seeds = updatedTorrent.Seeds;
+                                
                             }
+
+                            existingEntity.GenreNames = string.Join(", ", movieJson.Genres.Select(FirstCharToUpper));
                         }
 
                         await context.SaveChangesAsync();
@@ -226,6 +230,13 @@ namespace PopcornExport.Services.Import
                 $@"Import movies ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
+        }
+
+        private static string FirstCharToUpper(string input)
+        {
+            if (String.IsNullOrEmpty(input))
+                return string.Empty;
+            return input.First().ToString().ToUpper() + input.Substring(1);
         }
 
         /// <summary>

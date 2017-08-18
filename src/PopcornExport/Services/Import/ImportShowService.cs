@@ -81,7 +81,7 @@ namespace PopcornExport.Services.Import
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedShows = 0;
-            using (var context = new PopcornContextFactory().Create(new DbContextFactoryOptions()))
+            using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
             {
                 foreach (var document in documents)
                 {
@@ -120,6 +120,7 @@ namespace PopcornExport.Services.Import
                             {
                                 Name = genre.AsString
                             }).ToList(),
+                            GenreNames = string.Join(", ", showJson.Genres.Select(a => FirstCharToUpper(a.AsString))),
                             Slug = showJson.Slug,
                             LastUpdated = showJson.LastUpdated,
                             TvdbId = showJson.TvdbId,
@@ -206,6 +207,7 @@ namespace PopcornExport.Services.Import
                             existingEntity.AirTime = show.AirTime;
                             existingEntity.Status = show.Status;
                             existingEntity.NumSeasons = show.NumSeasons;
+                            existingEntity.GenreNames = string.Join(", ", show.Genres.Select(a => FirstCharToUpper(a.Name)));
                             foreach (var episode in existingEntity.Episodes)
                             {
                                 var updatedEpisode = show.Episodes.FirstOrDefault(a => a.TvdbId == episode.TvdbId);
@@ -271,6 +273,13 @@ namespace PopcornExport.Services.Import
                 $@"Import shows ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
+        }
+
+        private static string FirstCharToUpper(string input)
+        {
+            if (String.IsNullOrEmpty(input))
+                return string.Empty;
+            return input.First().ToString().ToUpper() + input.Substring(1);
         }
 
         /// <summary>

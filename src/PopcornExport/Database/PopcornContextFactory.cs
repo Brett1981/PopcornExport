@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
 namespace PopcornExport.Database
 {
-    public class PopcornContextFactory : IDbContextFactory<PopcornContext>
+    public class PopcornContextFactory : IDesignTimeDbContextFactory<PopcornContext>
     {
-        public PopcornContext Create(DbContextFactoryOptions options)
+        public PopcornContext CreateDbContext(string[] args)
         {
             var builder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json");

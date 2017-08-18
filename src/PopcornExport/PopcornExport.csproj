@@ -4,12 +4,12 @@
     <Description>Popcorn Api Exporter</Description>
     <Copyright>bbougot</Copyright>
     <AssemblyTitle>PopcornExport</AssemblyTitle>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>PopcornExport</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>PopcornExport</PackageId>
     <RuntimeIdentifiers>win10-x64;win7-x86;osx.10.12-x64</RuntimeIdentifiers>
-    <RuntimeFrameworkVersion>1.1.0</RuntimeFrameworkVersion>
+    <RuntimeFrameworkVersion>2.0.0</RuntimeFrameworkVersion>
     <PackageTargetFallback>$(PackageTargetFallback);portable-net451+win8</PackageTargetFallback>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
@@ -29,19 +29,20 @@
     <PackageReference Include="FubarCoder.RestSharp.Portable.Core" Version="4.0.8" />
     <PackageReference Include="FubarCoder.RestSharp.Portable.HttpClient" Version="4.0.8" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="1.1.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="1.1.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="1.1.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="1.1.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="2.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="2.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="2.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.4.4" />
+    <PackageReference Include="NETStandard.Library" Version="2.0.0" />
     <PackageReference Include="StructureMap.Microsoft.DependencyInjection" Version="1.3.1" />
     <PackageReference Include="TMDbLib" Version="1.0.0" />
-    <PackageReference Include="WindowsAzure.Storage" Version="8.2.1" />
+    <PackageReference Include="WindowsAzure.Storage" Version="8.3.0" />
     <PackageReference Include="AsyncEnumerator" Version="2.1.0" />
   </ItemGroup>
 
