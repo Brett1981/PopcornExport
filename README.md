@@ -16,7 +16,7 @@ Data is stored in Azure SQL Server.
 
 # Language and tools
 
-Built with .NET Core SDK 1.1 and Visual Studio 2017.
+Built with .NET Core SDK 2.0 and Visual Studio 2017.
 
 # Screenshot
 
