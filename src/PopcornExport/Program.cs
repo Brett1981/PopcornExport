@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PopcornExport.Database;
+using PopcornExport.Services.Caching;
 using PopcornExport.Services.Core;
 using PopcornExport.Services.File;
 using StructureMap;
@@ -34,6 +35,7 @@ namespace PopcornExport
                         return fileService;
                     }
                 )
+                .AddSingleton<ICachingService>(e => new CachingService(configuration["Redis:ConnectionString"]))
                 .AddLogging();
 
             // add StructureMap

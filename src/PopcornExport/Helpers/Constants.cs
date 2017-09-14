@@ -34,5 +34,10 @@
         /// Tmdb Api key
         /// </summary>
         public const string TmdbClientApiKey = "a21fe922d3bac6654e93450e9a18af1c";
+
+        /// <summary>
+        /// Redis host
+        /// </summary>
+        public const string RedisHost = "popcorn.redis.cache.windows.net:6380";
     }
 }

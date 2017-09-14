@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using PopcornExport.Models.Movie;
 using System.Collections.Async;
 using System.Collections.Concurrent;
+using PopcornExport.Services.Caching;
 using TMDbLib.Client;
 using TMDbLib.Objects.Movies;
 
@@ -32,12 +33,19 @@ namespace PopcornExport.Services.Export
         private readonly ILoggingService _loggingService;
 
         /// <summary>
+        /// The caching service
+        /// </summary>
+        private readonly ICachingService _cachingService;
+
+        /// <summary>
         /// The export service
         /// </summary>
         /// <param name="loggingService">The logging service</param>
-        public ExportService(ILoggingService loggingService)
+        /// <param name="cachingService">The caching service</param>
+        public ExportService(ILoggingService loggingService, ICachingService cachingService)
         {
             _loggingService = loggingService;
+            _cachingService = cachingService;
         }
 
         /// <summary>
@@ -48,7 +56,6 @@ namespace PopcornExport.Services.Export
         public async Task<IEnumerable<BsonDocument>> LoadExport(ExportType exportType)
         {
             var export = new ConcurrentBag<BsonDocument>();
-
             try
             {
                 var loggingTraceBegin =
@@ -127,6 +134,9 @@ namespace PopcornExport.Services.Export
                     } while (movieFound);
                 }
 
+                _loggingService.Telemetry.TrackTrace("Flushing Redis database...");
+                await _cachingService.Flush();
+                _loggingService.Telemetry.TrackTrace("Flushing Redis database completed.");
                 var loggingTraceEnd =
                     $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {DateTime.UtcNow.ToString(
                         "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
