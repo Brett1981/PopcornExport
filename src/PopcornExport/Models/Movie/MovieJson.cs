@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using PopcornExport.Models.Cast;
 using PopcornExport.Models.Torrent.Movie;
@@ -7,103 +8,103 @@ namespace PopcornExport.Models.Movie
 {
     public class MovieJson
     {
-        [JsonProperty("url")]
+        [DataMember(Name = "url")]
         public string Url { get; set; }
 
-        [JsonProperty("imdb_code")]
+        [DataMember(Name = "imdb_code")]
         public string ImdbCode { get; set; }
 
-        [JsonProperty("title")]
+        [DataMember(Name = "title")]
         public string Title { get; set; }
 
-        [JsonProperty("title_long")]
+        [DataMember(Name = "title_long")]
         public string TitleLong { get; set; }
 
-        [JsonProperty("slug")]
+        [DataMember(Name = "slug")]
         public string Slug { get; set; }
 
-        [JsonProperty("year")]
+        [DataMember(Name = "year")]
         public int Year { get; set; }
 
-        [JsonProperty("rating")]
+        [DataMember(Name = "rating")]
         public double Rating { get; set; }
 
-        [JsonProperty("runtime")]
+        [DataMember(Name = "runtime")]
         public int Runtime { get; set; }
 
-        [JsonProperty("genres")]
+        [DataMember(Name = "genres")]
         public List<string> Genres { get; set; }
 
-        [JsonProperty("language")]
+        [DataMember(Name = "language")]
         public string Language { get; set; }
 
-        [JsonProperty("mpa_rating")]
+        [DataMember(Name = "mpa_rating")]
         public string MpaRating { get; set; }
 
-        [JsonProperty("download_count")]
-        public string DownloadCount { get; set; }
+        [DataMember(Name = "download_count")]
+        public int DownloadCount { get; set; }
 
-        [JsonProperty("like_count")]
-        public string LikeCount { get; set; }
+        [DataMember(Name = "like_count")]
+        public int LikeCount { get; set; }
 
-        [JsonProperty("description_intro")]
+        [DataMember(Name = "description_intro")]
         public string DescriptionIntro { get; set; }
 
-        [JsonProperty("description_full")]
+        [DataMember(Name = "description_full")]
         public string DescriptionFull { get; set; }
 
-        [JsonProperty("yt_trailer_code")]
+        [DataMember(Name = "yt_trailer_code")]
         public string YtTrailerCode { get; set; }
 
-        [JsonProperty("cast")]
+        [DataMember(Name = "cast")]
         public List<CastJson> Cast { get; set; }
 
-        [JsonProperty("torrents")]
+        [DataMember(Name = "torrents")]
         public List<TorrentMovieJson> Torrents { get; set; }
 
-        [JsonProperty("date_uploaded")]
+        [DataMember(Name = "date_uploaded")]
         public string DateUploaded { get; set; }
 
-        [JsonProperty("date_uploaded_unix")]
+        [DataMember(Name = "date_uploaded_unix")]
         public int DateUploadedUnix { get; set; }
 
-        [JsonProperty("poster_image")]
+        [DataMember(Name = "poster_image")]
         public string PosterImage { get; set; }
 
-        [JsonProperty("backdrop_image")]
+        [DataMember(Name = "backdrop_image")]
         public string BackdropImage { get; set; }
 
-        [JsonProperty("background_image")]
+        [DataMember(Name = "background_image")]
         public string BackgroundImage { get; set; }
 
-        [JsonProperty("small_cover_image")]
+        [DataMember(Name = "small_cover_image")]
         public string SmallCoverImage { get; set; }
 
-        [JsonProperty("medium_cover_image")]
+        [DataMember(Name = "medium_cover_image")]
         public string MediumCoverImage { get; set; }
 
-        [JsonProperty("large_cover_image")]
+        [DataMember(Name = "large_cover_image")]
         public string LargeCoverImage { get; set; }
 
-        [JsonProperty("medium_screenshot_image1")]
+        [DataMember(Name = "medium_screenshot_image1")]
         public string MediumScreenshotImage1 { get; set; }
 
-        [JsonProperty("medium_screenshot_image2")]
+        [DataMember(Name = "medium_screenshot_image2")]
         public string MediumScreenshotImage2 { get; set; }
 
-        [JsonProperty("medium_screenshot_image3")]
+        [DataMember(Name = "medium_screenshot_image3")]
         public string MediumScreenshotImage3 { get; set; }
 
-        [JsonProperty("large_screenshot_image1")]
+        [DataMember(Name = "large_screenshot_image1")]
         public string LargeScreenshotImage1 { get; set; }
 
-        [JsonProperty("large_screenshot_image2")]
+        [DataMember(Name = "large_screenshot_image2")]
         public string LargeScreenshotImage2 { get; set; }
 
-        [JsonProperty("large_screenshot_image3")]
+        [DataMember(Name = "large_screenshot_image3")]
         public string LargeScreenshotImage3 { get; set; }
 
-        [JsonProperty("similar")]
+        [DataMember(Name = "similar")]
         public List<string> Similar { get; set; }
     }
 }

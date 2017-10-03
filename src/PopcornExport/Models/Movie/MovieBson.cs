@@ -56,11 +56,11 @@ namespace PopcornExport.Models.Movie
 
         [DataMember]
         [BsonElement("download_count")]
-        public string DownloadCount { get; set; }
+        public int DownloadCount { get; set; }
 
         [DataMember]
         [BsonElement("like_count")]
-        public string LikeCount { get; set; }
+        public int LikeCount { get; set; }
 
         [DataMember]
         [BsonElement("rt_critics_score")]

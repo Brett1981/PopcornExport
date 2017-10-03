@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using PopcornExport.Database;
 using PopcornExport.Services.Assets;
+using PopcornExport.Services.Caching;
 using PopcornExport.Services.File;
 
 namespace PopcornExport.Services.Core
@@ -27,6 +28,11 @@ namespace PopcornExport.Services.Core
         private readonly ILoggingService _loggingService;
 
         /// <summary>
+        /// The caching service
+        /// </summary>
+        private readonly ICachingService _cachingService;
+
+        /// <summary>
         /// The file service
         /// </summary>
         private readonly IFileService _fileService;
@@ -37,11 +43,13 @@ namespace PopcornExport.Services.Core
         /// <param name="exportService">Export service</param>
         /// <param name="loggingService">Logging service</param>
         /// <param name="fileService">The file service</param>
-        public CoreService(IExportService exportService, ILoggingService loggingService, IFileService fileService)
+        /// <param name="cachingService">The caching service</param>
+        public CoreService(IExportService exportService, ILoggingService loggingService, IFileService fileService, ICachingService cachingService)
         {
             _exportService = exportService;
             _loggingService = loggingService;
             _fileService = fileService;
+            _cachingService = cachingService;
         }
 
         /// <summary>
@@ -53,7 +61,7 @@ namespace PopcornExport.Services.Core
             try
             {
                 var loggingTraceBegin =
-                    $@"Export started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                    $@"Export started at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
                         CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
@@ -84,8 +92,11 @@ namespace PopcornExport.Services.Core
                     }
                 }
 
+                _loggingService.Telemetry.TrackTrace("Flushing Redis database...");
+                await _cachingService.Flush();
+                _loggingService.Telemetry.TrackTrace("Flushing Redis database completed.");
                 var loggingTraceEnd =
-                    $@"Export ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+                    $@"Export ended at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
             }
             catch (Exception ex)

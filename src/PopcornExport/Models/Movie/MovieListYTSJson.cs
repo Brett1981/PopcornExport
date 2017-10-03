@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.Text;
 using Newtonsoft.Json;
 
@@ -7,16 +8,16 @@ namespace PopcornExport.Models.Movie
 {
     public class MovieListYTSJson
     {
-        [JsonProperty("movie_count")]
+        [DataMember(Name = "movie_count")]
         public int MovieCount { get; set; }
 
-        [JsonProperty("limit")]
+        [DataMember(Name = "limit")]
         public int Limit { get; set; }
 
-        [JsonProperty("page_number")]
+        [DataMember(Name = "page_number")]
         public int PageNumber { get; set; }
 
-        [JsonProperty("movies")]
+        [DataMember(Name = "movies")]
         public List<MovieYTSJson> Movies { get; set; }
     }
 }

@@ -12,13 +12,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using PopcornExport.Models.Movie;
 using System.Collections.Async;
 using System.Collections.Concurrent;
 using PopcornExport.Services.Caching;
-using TMDbLib.Client;
-using TMDbLib.Objects.Movies;
+using Utf8Json;
 
 namespace PopcornExport.Services.Export
 {
@@ -33,19 +31,12 @@ namespace PopcornExport.Services.Export
         private readonly ILoggingService _loggingService;
 
         /// <summary>
-        /// The caching service
-        /// </summary>
-        private readonly ICachingService _cachingService;
-
-        /// <summary>
         /// The export service
         /// </summary>
         /// <param name="loggingService">The logging service</param>
-        /// <param name="cachingService">The caching service</param>
-        public ExportService(ILoggingService loggingService, ICachingService cachingService)
+        public ExportService(ILoggingService loggingService)
         {
             _loggingService = loggingService;
-            _cachingService = cachingService;
         }
 
         /// <summary>
@@ -59,7 +50,7 @@ namespace PopcornExport.Services.Export
             try
             {
                 var loggingTraceBegin =
-                    $@"Export {exportType.ToFriendlyString()} started at {DateTime.UtcNow.ToString(
+                    $@"Export {exportType.ToFriendlyString()} started at {DateTime.Now.ToString(
                         "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
@@ -83,7 +74,7 @@ namespace PopcornExport.Services.Export
                         {
                             string line;
                             // Read all response parts
-                            while ((line = reader.ReadLine()) != null)
+                            while ((line = await reader.ReadLineAsync()) != null)
                             {
                                 ConvertJsonToBsonDocument(line, export);
                             }
@@ -100,8 +91,9 @@ namespace PopcornExport.Services.Export
                         {
                             var moviesByPageRequest = GetMoviesByPageRequest(page);
                             // Execute request
-                            var response = await client.Execute<MovieShortJsonNode>(moviesByPageRequest);
-                            if (response?.Data?.Data?.Movies == null || !response.Data.Data.Movies.Any())
+                            var movieShortResponse = await client.Execute(moviesByPageRequest);
+                            var movieNode = JsonSerializer.Deserialize<MovieShortJsonNode>(movieShortResponse.RawBytes);
+                            if (movieNode?.Data?.Movies == null || !movieNode.Data.Movies.Any())
                             {
                                 movieFound = false;
                             }
@@ -109,18 +101,20 @@ namespace PopcornExport.Services.Export
                             {
                                 movieFound = true;
                                 page++;
-                                await response.Data.Data.Movies.ParallelForEachAsync(async movie =>
+                                await movieNode.Data.Movies.ParallelForEachAsync(async movie =>
                                 {
                                     try
                                     {
                                         using (var innerClient = new RestClient(Constants.YtsApiUrl))
                                         {
                                             var movieByIdRequest = GetMovieById(movie.Id);
+                                            var movieFullResponse =
+                                                await innerClient.Execute(movieByIdRequest);
                                             var fullMovie =
-                                                await innerClient.Execute<MovieFullJsonNode>(movieByIdRequest);
-
+                                                JsonSerializer.Deserialize<MovieFullJsonNode>(
+                                                    movieFullResponse.RawBytes);
                                             ConvertJsonToBsonDocument(
-                                                JsonConvert.SerializeObject(fullMovie.Data.Data.Movie),
+                                                JsonSerializer.ToJsonString(fullMovie.Data.Movie),
                                                 export);
                                         }
                                     }
@@ -134,11 +128,8 @@ namespace PopcornExport.Services.Export
                     } while (movieFound);
                 }
 
-                _loggingService.Telemetry.TrackTrace("Flushing Redis database...");
-                await _cachingService.Flush();
-                _loggingService.Telemetry.TrackTrace("Flushing Redis database completed.");
                 var loggingTraceEnd =
-                    $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {DateTime.UtcNow.ToString(
+                    $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {DateTime.Now.ToString(
                         "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
                 _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
 

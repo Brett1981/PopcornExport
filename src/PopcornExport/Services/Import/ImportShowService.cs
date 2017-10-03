@@ -76,7 +76,7 @@ namespace PopcornExport.Services.Import
         {
             var documents = docs.ToList();
             var loggingTraceBegin =
-                $@"Import {documents.Count} shows started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                $@"Import {documents.Count} shows started at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
@@ -256,7 +256,7 @@ namespace PopcornExport.Services.Import
                         updatedShows++;
                         Console.WriteLine(Environment.NewLine);
                         Console.WriteLine(
-                            $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED SHOW {show.Title} in {watch.ElapsedMilliseconds} ms. {updatedShows}/{documents.Count}");
+                            $"{DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED SHOW {show.Title} in {watch.ElapsedMilliseconds} ms. {updatedShows}/{documents.Count}");
                     }
                     catch (Exception ex)
                     {
@@ -270,7 +270,7 @@ namespace PopcornExport.Services.Import
             Console.WriteLine("Done processing shows.");
 
             var loggingTraceEnd =
-                $@"Import shows ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                $@"Import shows ended at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
         }

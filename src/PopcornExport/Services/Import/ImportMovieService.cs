@@ -76,7 +76,7 @@ namespace PopcornExport.Services.Import
         {
             var documents = docs.ToList();
             var loggingTraceBegin =
-                $@"Import {documents.Count} movies started at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                $@"Import {documents.Count} movies started at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
@@ -114,7 +114,7 @@ namespace PopcornExport.Services.Import
                             }).ToList(),
                             DateUploaded = movieJson.DateUploaded,
                             DateUploadedUnix = movieJson.DateUploadedUnix,
-                            DownloadCount = int.Parse(movieJson.DownloadCount),
+                            DownloadCount = movieJson.DownloadCount,
                             MpaRating = movieJson.MpaRating,
                             Runtime = movieJson.Runtime,
                             YtTrailerCode = movieJson.YtTrailerCode,
@@ -122,7 +122,7 @@ namespace PopcornExport.Services.Import
                             TitleLong = movieJson.TitleLong,
                             Rating = movieJson.Rating,
                             Year = movieJson.Year,
-                            LikeCount = int.Parse(movieJson.LikeCount),
+                            LikeCount = movieJson.LikeCount,
                             DescriptionFull = movieJson.DescriptionFull,
                             Cast = movieJson.Cast?.Select(cast => new Database.Cast
                             {
@@ -213,7 +213,7 @@ namespace PopcornExport.Services.Import
                         updatedMovies++;
                         Console.WriteLine(Environment.NewLine);
                         Console.WriteLine(
-                            $"{DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED MOVIE {movie.Title} in {watch.ElapsedMilliseconds} ms. {updatedMovies}/{documents.Count}");
+                            $"{DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED MOVIE {movie.Title} in {watch.ElapsedMilliseconds} ms. {updatedMovies}/{documents.Count}");
                     }
                     catch (Exception ex)
                     {
@@ -227,7 +227,7 @@ namespace PopcornExport.Services.Import
             Console.WriteLine("Done processing movies.");
 
             var loggingTraceEnd =
-                $@"Import movies ended at {DateTime.UtcNow.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                $@"Import movies ended at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
                     CultureInfo.InvariantCulture)}";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
         }

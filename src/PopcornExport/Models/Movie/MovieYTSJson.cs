@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using PopcornExport.Models.Torrent.Movie;
 
@@ -6,67 +7,67 @@ namespace PopcornExport.Models.Movie
 {
     public class MovieYTSJson
     {
-        [JsonProperty("id")]
+        [DataMember(Name = "id")]
         public int Id { get; set; }
 
-        [JsonProperty("url")]
+        [DataMember(Name = "url")]
         public string Url { get; set; }
 
-        [JsonProperty("imdb_code")]
+        [DataMember(Name = "imdb_code")]
         public string ImdbCode { get; set; }
 
-        [JsonProperty("title")]
+        [DataMember(Name = "title")]
         public string Title { get; set; }
 
-        [JsonProperty("title_long")]
+        [DataMember(Name = "title_long")]
         public string TitleLong { get; set; }
 
-        [JsonProperty("year")]
+        [DataMember(Name = "year")]
         public int Year { get; set; }
 
-        [JsonProperty("rating")]
+        [DataMember(Name = "rating")]
         public double Rating { get; set; }
 
-        [JsonProperty("runtime")]
+        [DataMember(Name = "runtime")]
         public int Runtime { get; set; }
 
-        [JsonProperty("genres")]
+        [DataMember(Name = "genres")]
         public List<string> Genres { get; set; }
 
-        [JsonProperty("language")]
+        [DataMember(Name = "language")]
         public string Language { get; set; }
 
-        [JsonProperty("mpa_rating")]
+        [DataMember(Name = "mpa_rating")]
         public string MpaRating { get; set; }
 
-        [JsonProperty("small_cover_image")]
+        [DataMember(Name = "small_cover_image")]
         public string SmallCoverImage { get; set; }
 
-        [JsonProperty("medium_cover_image")]
+        [DataMember(Name = "medium_cover_image")]
         public string MediumCoverImage { get; set; }
 
-        [JsonProperty("state")]
+        [DataMember(Name = "state")]
         public string State { get; set; }
 
-        [JsonProperty("torrents")]
+        [DataMember(Name = "torrents")]
         public List<TorrentMovieJson> Torrents { get; set; }
 
-        [JsonProperty("date_uploaded")]
+        [DataMember(Name = "date_uploaded")]
         public string DateUploaded { get; set; }
 
-        [JsonProperty("date_uploaded_unix")]
+        [DataMember(Name = "date_uploaded_unix")]
         public int DateUploadedUnix { get; set; }
 
-        [JsonProperty("server_time")]
+        [DataMember(Name = "server_time")]
         public int ServerTime { get; set; }
 
-        [JsonProperty("server_timezone")]
+        [DataMember(Name = "server_timezone")]
         public string ServerTimezone { get; set; }
 
-        [JsonProperty("api_version")]
+        [DataMember(Name = "api_version")]
         public int ApiVersion { get; set; }
 
-        [JsonProperty("execution_time")]
+        [DataMember(Name = "execution_time")]
         public string ExecutionTime { get; set; }
 
     }
