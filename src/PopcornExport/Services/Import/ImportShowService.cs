@@ -248,6 +248,12 @@ namespace PopcornExport.Services.Import
                             {
                                 existingEntity.Episodes.Add(newEpisode);
                             }
+
+                            if (existingEntity.Episodes.Any())
+                            {
+                                var lastEpisode = existingEntity.Episodes.OrderBy(a => a.FirstAired).Last();
+                                existingEntity.LastUpdated = lastEpisode.FirstAired;
+                            }
                         }
 
                         await context.SaveChangesAsync();
