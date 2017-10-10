@@ -39,12 +39,12 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.4.4" />
-    <PackageReference Include="NETStandard.Library" Version="2.0.0" />
+    <PackageReference Include="NETStandard.Library" Version="2.0.1" />
     <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
     <PackageReference Include="StructureMap.Microsoft.DependencyInjection" Version="1.4.0" />
     <PackageReference Include="TMDbLib" Version="1.0.0" />
-    <PackageReference Include="Utf8Json" Version="1.1.1" />
-    <PackageReference Include="WindowsAzure.Storage" Version="8.4.0" />
+    <PackageReference Include="Utf8Json" Version="1.2.0" />
+    <PackageReference Include="WindowsAzure.Storage" Version="8.5.0" />
     <PackageReference Include="AsyncEnumerator" Version="2.1.0" />
   </ItemGroup>
 
