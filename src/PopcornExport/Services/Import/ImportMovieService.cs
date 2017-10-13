@@ -201,7 +201,10 @@ namespace PopcornExport.Services.Import
                                 var updatedTorrent = movie.Torrents.FirstOrDefault(a => a.Quality == torrent.Quality);
                                 torrent.Peers = updatedTorrent.Peers;
                                 torrent.Seeds = updatedTorrent.Seeds;
-                                
+                                if (string.IsNullOrEmpty(torrent.Url))
+                                {
+                                    torrent.Url = updatedTorrent.Url;
+                                }
                             }
 
                             existingEntity.GenreNames = string.Join(", ", movieJson.Genres.Select(FirstCharToUpper));
