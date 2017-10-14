@@ -84,7 +84,7 @@ namespace PopcornExport.Services.File
                     using (var handler = new HttpClientHandler { CookieContainer = cookieContainer })
                     using (var client = new HttpClient(handler)
                     {
-                        Timeout = TimeSpan.FromSeconds(2)
+                        Timeout = TimeSpan.FromSeconds(10)
                     })
                     using (var request = new HttpRequestMessage(HttpMethod.Get, url))
                     {

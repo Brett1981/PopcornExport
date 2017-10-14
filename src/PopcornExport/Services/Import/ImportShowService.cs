@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -113,7 +114,7 @@ namespace PopcornExport.Services.Import
                                 Fanart = showJson.Images.Fanart
                             },
                             ImdbId = showJson.ImdbId,
-                            Title = showJson.Title,
+                            Title = WebUtility.HtmlDecode(showJson.Title),
                             Year = int.Parse(showJson.Year),
                             Runtime = showJson.Runtime,
                             Genres = showJson.Genres.Select(genre => new Database.Genre
@@ -130,7 +131,7 @@ namespace PopcornExport.Services.Import
                             Country = showJson.Country,
                             Episodes = showJson.Episodes.Select(episode => new EpisodeShow
                             {
-                                Title = episode.Title,
+                                Title = WebUtility.HtmlDecode(episode.Title),
                                 DateBased = episode.DateBased,
                                 TvdbId = episode.TvdbId,
                                 Torrents = new TorrentNode
@@ -198,6 +199,7 @@ namespace PopcornExport.Services.Import
                         }
                         else
                         {
+                            existingEntity.Title = WebUtility.HtmlDecode(show.Title);
                             existingEntity.Rating.Hated = show.Rating.Hated;
                             existingEntity.Rating.Loved = show.Rating.Loved;
                             existingEntity.Rating.Percentage = show.Rating.Percentage;
@@ -213,6 +215,7 @@ namespace PopcornExport.Services.Import
                                 var updatedEpisode = show.Episodes.FirstOrDefault(a => a.TvdbId == episode.TvdbId);
                                 if (updatedEpisode == null) continue;
 
+                                episode.Title = WebUtility.HtmlDecode(updatedEpisode.Title);
                                 if (episode.Torrents != null && episode.Torrents.Torrent0 != null &&
                                     updatedEpisode.Torrents.Torrent0 != null)
                                 {
