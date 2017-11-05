@@ -313,15 +313,11 @@ namespace PopcornExport.Services.Import
                             if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
                             {
                                 var backdrop = GetImagePathFromTmdb(TmdbClient,
-                                    tmdbShow.Images.Backdrops.Aggregate(
-                                        (image1, image2) =>
-                                            image1 != null && image2 != null && image1.Width < image2.Width
-                                                ? image2
-                                                : image1));
+                                    tmdbShow.BackdropPath);
                                 show.Images.Banner =
                                     await _assetsService.UploadFile(
                                         $@"images/{show.ImdbId}/banner/{backdrop.Split('/').Last()}",
-                                        backdrop);
+                                        backdrop, true);
                             }
                         }),
                         Task.Run(async () =>
@@ -329,15 +325,11 @@ namespace PopcornExport.Services.Import
                             if (tmdbShow.Images?.Posters != null && tmdbShow.Images.Posters.Any())
                             {
                                 var poster = GetImagePathFromTmdb(TmdbClient,
-                                    tmdbShow.Images.Posters.Aggregate(
-                                        (image1, image2) =>
-                                            image1 != null && image2 != null && image1.Width < image2.Width
-                                                ? image2
-                                                : image1));
+                                    tmdbShow.PosterPath);
                                 show.Images.Poster =
                                     await _assetsService.UploadFile(
                                         $@"images/{show.ImdbId}/poster/{poster.Split('/').Last()}",
-                                        poster);
+                                        poster, true);
                             }
                         }),
                         Task.Run(async () =>
@@ -349,7 +341,7 @@ namespace PopcornExport.Services.Import
                                         (image1, image2) =>
                                             image1 != null && image2 != null && image1.VoteAverage < image2.VoteAverage
                                                 ? image2
-                                                : image1));
+                                                : image1).FilePath);
                                 show.Images.Fanart =
                                     await _assetsService.UploadFile(
                                         $@"images/{show.ImdbId}/fanart/{fanart.Split('/').Last()}",
@@ -387,11 +379,11 @@ namespace PopcornExport.Services.Import
         /// Retrieve an image from Tmdb
         /// </summary>
         /// <param name="client"><see cref="TMDbClient"/></param>
-        /// <param name="image">Image to retrieve</param>
+        /// <param name="path">Path to the image to retrieve</param>
         /// <returns></returns>
-        private string GetImagePathFromTmdb(TMDbClient client, ImageData image)
+        private string GetImagePathFromTmdb(TMDbClient client, string path)
         {
-            return client.GetImageUrl("original", image.FilePath).AbsoluteUri;
+            return client.GetImageUrl("original", path, true).AbsoluteUri;
         }
     }
 }

@@ -76,8 +76,10 @@ namespace PopcornExport.Services.Import
         {
             var documents = docs.ToList();
             var loggingTraceBegin =
-                $@"Import {documents.Count} movies started at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
-                    CultureInfo.InvariantCulture)}";
+                $@"Import {documents.Count} movies started at {
+                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                            CultureInfo.InvariantCulture)
+                    }";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedMovies = 0;
@@ -156,7 +158,8 @@ namespace PopcornExport.Services.Import
                         var existingEntity =
                             await context.MovieSet.Include(a => a.Torrents)
                                 .Include(a => a.Cast)
-                                .Include(a => a.Genres).Include(a => a.Similars).FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
+                                .Include(a => a.Genres).Include(a => a.Similars)
+                                .FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
 
                         if (existingEntity == null)
                         {
@@ -190,7 +193,7 @@ namespace PopcornExport.Services.Import
                             catch (Exception)
                             {
                             }
-                            
+
                             await RetrieveAssets(tmdbClient, movie);
                             context.MovieSet.Add(movie);
                         }
@@ -230,8 +233,10 @@ namespace PopcornExport.Services.Import
             Console.WriteLine("Done processing movies.");
 
             var loggingTraceEnd =
-                $@"Import movies ended at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
-                    CultureInfo.InvariantCulture)}";
+                $@"Import movies ended at {
+                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                            CultureInfo.InvariantCulture)
+                    }";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
         }
 
@@ -259,31 +264,22 @@ namespace PopcornExport.Services.Import
                     if (tmdbMovie.Images?.Backdrops != null && tmdbMovie.Images.Backdrops.Any())
                     {
                         var backdrop = GetImagePathFromTmdb(tmdbClient,
-                            tmdbMovie.Images.Backdrops.Aggregate(
-                                (image1, image2) =>
-                                    image1 != null && image2 != null && image1.Width < image2.Width
-                                        ? image2
-                                        : image1));
+                            tmdbMovie.BackdropPath);
                         movie.BackdropImage =
                             await _assetsService.UploadFile(
                                 $@"images/{movie.ImdbCode}/backdrop/{backdrop.Split('/').Last()}",
-                                backdrop);
+                                backdrop, true);
                     }
                 }),
                 Task.Run(async () =>
                 {
                     if (tmdbMovie.Images?.Posters != null && tmdbMovie.Images.Posters.Any())
                     {
-                        var poster = GetImagePathFromTmdb(tmdbClient,
-                            tmdbMovie.Images.Posters.Aggregate(
-                                (image1, image2) =>
-                                    image1 != null && image2 != null && image1.VoteAverage < image2.VoteAverage
-                                        ? image2
-                                        : image1));
+                        var poster = GetImagePathFromTmdb(tmdbClient, tmdbMovie.PosterPath);
                         movie.PosterImage =
                             await _assetsService.UploadFile(
                                 $@"images/{movie.ImdbCode}/poster/{poster.Split('/').Last()}",
-                                poster);
+                                poster, true);
                     }
                 }),
                 Task.Run(async () =>
@@ -312,8 +308,10 @@ namespace PopcornExport.Services.Import
                     {
                         movie.MediumCoverImage =
                             await _assetsService.UploadFile(
-                                $@"images/{movie.ImdbCode}/cover/medium/{movie.MediumCoverImage.Split('/')
-                                    .Last()}",
+                                $@"images/{movie.ImdbCode}/cover/medium/{
+                                        movie.MediumCoverImage.Split('/')
+                                            .Last()
+                                    }",
                                 movie.MediumCoverImage);
                     }
                 }),
@@ -333,9 +331,11 @@ namespace PopcornExport.Services.Import
                     {
                         movie.MediumScreenshotImage1 =
                             await _assetsService.UploadFile(
-                                $@"images/{movie.ImdbCode}/screenshot/medium/1/{movie.MediumScreenshotImage1
-                                    .Split('/')
-                                    .Last()}", movie.MediumScreenshotImage1);
+                                $@"images/{movie.ImdbCode}/screenshot/medium/1/{
+                                        movie.MediumScreenshotImage1
+                                            .Split('/')
+                                            .Last()
+                                    }", movie.MediumScreenshotImage1);
                     }
                 }),
                 Task.Run(async () =>
@@ -344,9 +344,11 @@ namespace PopcornExport.Services.Import
                     {
                         movie.MediumScreenshotImage2 =
                             await _assetsService.UploadFile(
-                                $@"images/{movie.ImdbCode}/screenshot/medium/2/{movie.MediumScreenshotImage2
-                                    .Split('/')
-                                    .Last()}", movie.MediumScreenshotImage2);
+                                $@"images/{movie.ImdbCode}/screenshot/medium/2/{
+                                        movie.MediumScreenshotImage2
+                                            .Split('/')
+                                            .Last()
+                                    }", movie.MediumScreenshotImage2);
                     }
                 }),
                 Task.Run(async () =>
@@ -355,9 +357,11 @@ namespace PopcornExport.Services.Import
                     {
                         movie.MediumScreenshotImage3 =
                             await _assetsService.UploadFile(
-                                $@"images/{movie.ImdbCode}/screenshot/medium/3/{movie.MediumScreenshotImage3
-                                    .Split('/')
-                                    .Last()}", movie.MediumScreenshotImage3);
+                                $@"images/{movie.ImdbCode}/screenshot/medium/3/{
+                                        movie.MediumScreenshotImage3
+                                            .Split('/')
+                                            .Last()
+                                    }", movie.MediumScreenshotImage3);
                     }
                 }),
                 Task.Run(async () =>
@@ -366,9 +370,11 @@ namespace PopcornExport.Services.Import
                     {
                         movie.LargeScreenshotImage1 =
                             await _assetsService.UploadFile(
-                                $@"images/{movie.ImdbCode}/screenshot/large/1/{movie.LargeScreenshotImage1.Split
-                                    ('/')
-                                    .Last()}", movie.LargeScreenshotImage1);
+                                $@"images/{movie.ImdbCode}/screenshot/large/1/{
+                                        movie.LargeScreenshotImage1.Split
+                                            ('/')
+                                            .Last()
+                                    }", movie.LargeScreenshotImage1);
                     }
                 }),
                 Task.Run(async () =>
@@ -377,9 +383,11 @@ namespace PopcornExport.Services.Import
                     {
                         movie.LargeScreenshotImage2 =
                             await _assetsService.UploadFile(
-                                $@"images/{movie.ImdbCode}/screenshot/large/2/{movie.LargeScreenshotImage2.Split
-                                    ('/')
-                                    .Last()}", movie.LargeScreenshotImage2);
+                                $@"images/{movie.ImdbCode}/screenshot/large/2/{
+                                        movie.LargeScreenshotImage2.Split
+                                            ('/')
+                                            .Last()
+                                    }", movie.LargeScreenshotImage2);
                     }
                 }),
                 Task.Run(async () =>
@@ -388,9 +396,11 @@ namespace PopcornExport.Services.Import
                     {
                         movie.LargeScreenshotImage3 =
                             await _assetsService.UploadFile(
-                                $@"images/{movie.ImdbCode}/screenshot/large/3/{movie.LargeScreenshotImage3.Split
-                                    ('/')
-                                    .Last()}", movie.LargeScreenshotImage3);
+                                $@"images/{movie.ImdbCode}/screenshot/large/3/{
+                                        movie.LargeScreenshotImage3.Split
+                                            ('/')
+                                            .Last()
+                                    }", movie.LargeScreenshotImage3);
                     }
                 }),
                 Task.Run(async () =>
@@ -415,9 +425,11 @@ namespace PopcornExport.Services.Import
                             if (!string.IsNullOrWhiteSpace(cast.SmallImage))
                             {
                                 cast.SmallImage = await _assetsService.UploadFile(
-                                    $@"images/{movie.ImdbCode}/cast/{cast.ImdbCode}/{cast.SmallImage.Split
-                                        ('/')
-                                        .Last()}", cast.SmallImage);
+                                    $@"images/{movie.ImdbCode}/cast/{cast.ImdbCode}/{
+                                            cast.SmallImage.Split
+                                                ('/')
+                                                .Last()
+                                        }", cast.SmallImage);
                             }
                         }
                     }
@@ -431,11 +443,11 @@ namespace PopcornExport.Services.Import
         /// Retrieve an image from Tmdb
         /// </summary>
         /// <param name="client"><see cref="TMDbClient"/></param>
-        /// <param name="image">Image to retrieve</param>
+        /// <param name="path">Path to the image to retrieve</param>
         /// <returns></returns>
-        private string GetImagePathFromTmdb(TMDbClient client, ImageData image)
+        private string GetImagePathFromTmdb(TMDbClient client, string path)
         {
-            return client.GetImageUrl("original", image.FilePath).AbsoluteUri;
+            return client.GetImageUrl("original", path, true).AbsoluteUri;
         }
     }
 }
