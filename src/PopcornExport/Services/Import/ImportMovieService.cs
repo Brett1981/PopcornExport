@@ -83,8 +83,6 @@ namespace PopcornExport.Services.Import
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedMovies = 0;
-            var tmdbClient = new TMDbClient(Constants.TmdbClientApiKey);
-            tmdbClient.GetConfig();
             using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
             {
                 foreach (var document in documents)
@@ -194,7 +192,7 @@ namespace PopcornExport.Services.Import
                             {
                             }
 
-                            await RetrieveAssets(tmdbClient, movie);
+                            await RetrieveAssets(TmdbClient, movie);
                             context.MovieSet.Add(movie);
                         }
                         else
@@ -268,7 +266,7 @@ namespace PopcornExport.Services.Import
                         movie.BackdropImage =
                             await _assetsService.UploadFile(
                                 $@"images/{movie.ImdbCode}/backdrop/{backdrop.Split('/').Last()}",
-                                backdrop, true);
+                                backdrop);
                     }
                 }),
                 Task.Run(async () =>
@@ -279,7 +277,7 @@ namespace PopcornExport.Services.Import
                         movie.PosterImage =
                             await _assetsService.UploadFile(
                                 $@"images/{movie.ImdbCode}/poster/{poster.Split('/').Last()}",
-                                poster, true);
+                                poster);
                     }
                 }),
                 Task.Run(async () =>

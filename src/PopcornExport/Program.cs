@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PopcornExport.Database;
+using PopcornExport.Services.Assets;
 using PopcornExport.Services.Caching;
 using PopcornExport.Services.Core;
 using PopcornExport.Services.File;
@@ -55,7 +56,7 @@ namespace PopcornExport
             var coreService = container.GetInstance<ICoreService>();
 
             // Start export
-            coreService.Export().GetAwaiter().GetResult();
+            coreService.Export(true).GetAwaiter().GetResult();
         }
     }
 }
