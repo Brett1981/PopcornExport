@@ -5,11 +5,9 @@ using PopcornExport.Services.Logging;
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
-using PopcornExport.Database;
 using PopcornExport.Services.Assets;
 using PopcornExport.Services.Caching;
 using PopcornExport.Services.File;
-using PopcornExport.Services.Integrity;
 
 namespace PopcornExport.Services.Core
 {
@@ -39,11 +37,6 @@ namespace PopcornExport.Services.Core
         private readonly IFileService _fileService;
 
         /// <summary>
-        /// The integrity service
-        /// </summary>
-        private readonly IIntegrityService _integrityService;
-
-        /// <summary>
         /// Core service
         /// </summary>
         /// <param name="exportService">Export service</param>
@@ -51,9 +44,8 @@ namespace PopcornExport.Services.Core
         /// <param name="integrityService">Integrity service</param>
         /// <param name="fileService">The file service</param>
         /// <param name="cachingService">The caching service</param>
-        public CoreService(IExportService exportService, ILoggingService loggingService, IIntegrityService integrityService, IFileService fileService, ICachingService cachingService)
+        public CoreService(IExportService exportService, ILoggingService loggingService, IFileService fileService, ICachingService cachingService)
         {
-            _integrityService = integrityService;
             _exportService = exportService;
             _loggingService = loggingService;
             _fileService = fileService;
@@ -64,7 +56,7 @@ namespace PopcornExport.Services.Core
         /// Process the exportation
         /// </summary>
         /// <returns><see cref="Task"/></returns>
-        public async Task Export(bool consolidate = false)
+        public async Task Export()
         {
             try
             {
@@ -74,10 +66,6 @@ namespace PopcornExport.Services.Core
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
                 Console.WriteLine(loggingTraceBegin);
-
-                if (consolidate)
-                    await _integrityService.Consolidate();
-
                 var exports = new[] {ExportType.Shows, ExportType.Movies};
                 foreach (var export in exports)
                 {

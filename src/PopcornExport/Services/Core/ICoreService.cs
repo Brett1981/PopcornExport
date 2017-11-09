@@ -12,6 +12,6 @@ namespace PopcornExport.Services.Core
         /// </summary>
         /// <param name="consolidate">Consolidate existing assets</param>
         /// <returns><see cref="Task"/></returns>
-        Task Export(bool consolidate = false);
+        Task Export();
     }
 }
