@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -8,6 +9,10 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using PopcornExport.Extensions;
 using PopcornExport.Helpers;
 using PopcornExport.Models.Export;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.Primitives;
 
 namespace PopcornExport.Services.File
 {
@@ -71,7 +76,8 @@ namespace PopcornExport.Services.File
         /// <param name="type"><see cref="ExportType"/></param>
         /// <param name="forceReplace">Force replacing an existing file</param>
         /// <returns>Uri of the uploaded file</returns>
-        public async Task<string> UploadFileFromUrlToAzureStorage(string fileName, string url, ExportType type, bool forceReplace = false)
+        public async Task<string> UploadFileFromUrlToAzureStorage(string fileName, string url, ExportType type,
+            bool forceReplace = false)
         {
             try
             {
@@ -81,7 +87,7 @@ namespace PopcornExport.Services.File
                 if (forceReplace || !await blob.ExistsAsync())
                 {
                     var cookieContainer = new CookieContainer();
-                    using (var handler = new HttpClientHandler { CookieContainer = cookieContainer })
+                    using (var handler = new HttpClientHandler {CookieContainer = cookieContainer})
                     using (var client = new HttpClient(handler)
                     {
                         Timeout = TimeSpan.FromSeconds(10)
@@ -105,9 +111,57 @@ namespace PopcornExport.Services.File
                             response.EnsureSuccessStatusCode();
                             using (var contentStream = await response.Content.ReadAsStreamAsync())
                             {
-                                // Create a directory under the root directory 
                                 var file = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
-                                await file.UploadFromStreamAsync(contentStream);
+                                if (blob.Name.Contains("backdrop") ||
+                                    blob.Name.Contains("fanart") ||
+                                    blob.Name.Contains("poster"))
+                                {
+                                    using (var innerClient = new HttpClient())
+                                    using (var blobStream = await innerClient.GetStreamAsync(blob.Uri))
+                                    using (var stream = new MemoryStream())
+                                    using (var image = Image.Load(blobStream, new JpegDecoder()))
+                                    {
+                                        if (blob.Name.Contains("backdrop"))
+                                            image.Mutate(x => x
+                                                .Resize(new ResizeOptions
+                                                {
+                                                    Mode = ResizeMode.Stretch,
+                                                    Size = new Size(1280, 720),
+                                                    Sampler = new NearestNeighborResampler()
+                                                }));
+
+                                        if (blob.Name.Contains("fanart"))
+                                            image.Mutate(x => x
+                                                .Resize(new ResizeOptions
+                                                {
+                                                    Mode = ResizeMode.Stretch,
+                                                    Size = new Size(1280, 720),
+                                                    Sampler = new NearestNeighborResampler()
+                                                }));
+
+                                        if (blob.Name.Contains("poster"))
+                                            image.Mutate(x => x
+                                                .Resize(new ResizeOptions
+                                                {
+                                                    Mode = ResizeMode.Stretch,
+                                                    Size = new Size(400, 600),
+                                                    Sampler = new NearestNeighborResampler()
+                                                }));
+
+                                        image.SaveAsJpeg(stream, new JpegEncoder
+                                        {
+                                            Quality = 60
+                                        });
+                                        stream.Seek(0, SeekOrigin.Begin);
+
+                                        await file.UploadFromStreamAsync(stream);
+                                    }
+                                }
+                                else
+                                {
+                                    await file.UploadFromStreamAsync(contentStream);
+                                }
+
                                 return file.Uri.AbsoluteUri;
                             }
                         }
