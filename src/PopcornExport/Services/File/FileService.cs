@@ -114,6 +114,7 @@ namespace PopcornExport.Services.File
                                 var file = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
                                 if (blob.Name.Contains("backdrop") ||
                                     blob.Name.Contains("fanart") ||
+                                    blob.Name.Contains("banner") ||
                                     blob.Name.Contains("poster"))
                                 {
                                     using (var innerClient = new HttpClient())
@@ -121,16 +122,7 @@ namespace PopcornExport.Services.File
                                     using (var stream = new MemoryStream())
                                     using (var image = Image.Load(blobStream, new JpegDecoder()))
                                     {
-                                        if (blob.Name.Contains("backdrop"))
-                                            image.Mutate(x => x
-                                                .Resize(new ResizeOptions
-                                                {
-                                                    Mode = ResizeMode.Stretch,
-                                                    Size = new Size(1280, 720),
-                                                    Sampler = new NearestNeighborResampler()
-                                                }));
-
-                                        if (blob.Name.Contains("fanart"))
+                                        if (blob.Name.Contains("backdrop") || blob.Name.Contains("fanart") || blob.Name.Contains("banner"))
                                             image.Mutate(x => x
                                                 .Resize(new ResizeOptions
                                                 {
