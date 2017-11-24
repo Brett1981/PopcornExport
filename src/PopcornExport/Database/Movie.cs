@@ -34,17 +34,7 @@ namespace PopcornExport.Database
         public string DateUploaded { get; set; }
         public int DateUploadedUnix { get; set; }
         public string PosterImage { get; set; }
-        public string BackdropImage { get; set; }
         public string BackgroundImage { get; set; }
-        public string SmallCoverImage { get; set; }
-        public string MediumCoverImage { get; set; }
-        public string LargeCoverImage { get; set; }
-        public string MediumScreenshotImage1 { get; set; }
-        public string MediumScreenshotImage2 { get; set; }
-        public string MediumScreenshotImage3 { get; set; }
-        public string LargeScreenshotImage1 { get; set; }
-        public string LargeScreenshotImage2 { get; set; }
-        public string LargeScreenshotImage3 { get; set; }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public virtual ICollection<Similar> Similars { get; set; }

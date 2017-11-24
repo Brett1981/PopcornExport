@@ -77,8 +77,10 @@ namespace PopcornExport.Services.Import
         {
             var documents = docs.ToList();
             var loggingTraceBegin =
-                $@"Import {documents.Count} shows started at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
-                    CultureInfo.InvariantCulture)}";
+                $@"Import {documents.Count} shows started at {
+                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                            CultureInfo.InvariantCulture)
+                    }";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
             var updatedShows = 0;
@@ -110,8 +112,7 @@ namespace PopcornExport.Services.Import
                             Images = new ImageShow
                             {
                                 Banner = showJson.Images.Banner,
-                                Poster = showJson.Images.Poster,
-                                Fanart = showJson.Images.Fanart
+                                Poster = showJson.Images.Poster
                             },
                             ImdbId = showJson.ImdbId,
                             Title = WebUtility.HtmlDecode(showJson.Title),
@@ -175,31 +176,30 @@ namespace PopcornExport.Services.Import
                             Network = showJson.Network
                         };
 
-                        var existingEntity = await context.ShowSet.Include(a => a.Rating)
-                            .Include(a => a.Episodes)
-                            .ThenInclude(episode => episode.Torrents)
-                            .ThenInclude(torrent => torrent.Torrent0)
-                            .Include(a => a.Episodes)
-                            .ThenInclude(episode => episode.Torrents)
-                            .ThenInclude(torrent => torrent.Torrent1080p)
-                            .Include(a => a.Episodes)
-                            .ThenInclude(episode => episode.Torrents)
-                            .ThenInclude(torrent => torrent.Torrent480p)
-                            .Include(a => a.Episodes)
-                            .ThenInclude(episode => episode.Torrents)
-                            .ThenInclude(torrent => torrent.Torrent720p)
-                            .Include(a => a.Genres)
-                            .Include(a => a.Images)
-                            .Include(a => a.Similars).FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId);
-
-                        if (existingEntity == null)
+                        if (!context.ShowSet.Any(a => a.ImdbId == show.ImdbId))
                         {
                             await UpdateImagesAndSimilarShow(show);
                             context.ShowSet.Add(show);
                         }
                         else
                         {
-                            existingEntity.Title = WebUtility.HtmlDecode(show.Title);
+                            var existingEntity = await context.ShowSet.Include(a => a.Rating)
+                                .Include(a => a.Episodes)
+                                .ThenInclude(episode => episode.Torrents)
+                                .ThenInclude(torrent => torrent.Torrent0)
+                                .Include(a => a.Episodes)
+                                .ThenInclude(episode => episode.Torrents)
+                                .ThenInclude(torrent => torrent.Torrent1080p)
+                                .Include(a => a.Episodes)
+                                .ThenInclude(episode => episode.Torrents)
+                                .ThenInclude(torrent => torrent.Torrent480p)
+                                .Include(a => a.Episodes)
+                                .ThenInclude(episode => episode.Torrents)
+                                .ThenInclude(torrent => torrent.Torrent720p)
+                                .Include(a => a.Genres)
+                                .Include(a => a.Images)
+                                .Include(a => a.Similars).FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId);
+
                             existingEntity.Rating.Hated = show.Rating.Hated;
                             existingEntity.Rating.Loved = show.Rating.Loved;
                             existingEntity.Rating.Percentage = show.Rating.Percentage;
@@ -209,7 +209,6 @@ namespace PopcornExport.Services.Import
                             existingEntity.AirTime = show.AirTime;
                             existingEntity.Status = show.Status;
                             existingEntity.NumSeasons = show.NumSeasons;
-                            existingEntity.GenreNames = string.Join(", ", show.Genres.Select(a => FirstCharToUpper(a.Name)));
                             foreach (var episode in existingEntity.Episodes)
                             {
                                 var updatedEpisode = show.Episodes.FirstOrDefault(a => a.TvdbId == episode.TvdbId);
@@ -257,6 +256,8 @@ namespace PopcornExport.Services.Import
                                 var lastEpisode = existingEntity.Episodes.OrderBy(a => a.FirstAired).Last();
                                 existingEntity.LastUpdated = lastEpisode.FirstAired;
                             }
+
+                            await UpdateImagesAndSimilarShow(existingEntity);
                         }
 
                         await context.SaveChangesAsync();
@@ -278,8 +279,10 @@ namespace PopcornExport.Services.Import
             Console.WriteLine("Done processing shows.");
 
             var loggingTraceEnd =
-                $@"Import shows ended at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
-                    CultureInfo.InvariantCulture)}";
+                $@"Import shows ended at {
+                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                            CultureInfo.InvariantCulture)
+                    }";
             _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
         }
 
@@ -304,7 +307,8 @@ namespace PopcornExport.Services.Import
                 if (search.TotalResults != 0)
                 {
                     var result = search.Results.FirstOrDefault();
-                    var tmdbShow = await TmdbClient.GetTvShowAsync(result.Id, TvShowMethods.Images | TvShowMethods.Similar);
+                    var tmdbShow =
+                        await TmdbClient.GetTvShowAsync(result.Id, TvShowMethods.Images | TvShowMethods.Similar);
                     var tasks = new List<Task>
                     {
                         Task.Run(async () =>
@@ -312,11 +316,14 @@ namespace PopcornExport.Services.Import
                             if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
                             {
                                 var backdrop = GetImagePathFromTmdb(TmdbClient,
-                                    tmdbShow.BackdropPath);
+                                    tmdbShow.Images.Backdrops.Aggregate((image1, image2) =>
+                                        image1 != null && image2 != null && image1.VoteCount < image2.VoteCount
+                                            ? image2
+                                            : image1).FilePath);
                                 show.Images.Banner =
                                     await _assetsService.UploadFile(
                                         $@"images/{show.ImdbId}/banner/{backdrop.Split('/').Last()}",
-                                        backdrop);
+                                        backdrop, true);
                             }
                         }),
                         Task.Run(async () =>
@@ -324,27 +331,14 @@ namespace PopcornExport.Services.Import
                             if (tmdbShow.Images?.Posters != null && tmdbShow.Images.Posters.Any())
                             {
                                 var poster = GetImagePathFromTmdb(TmdbClient,
-                                    tmdbShow.PosterPath);
+                                    tmdbShow.Images.Posters.Aggregate((image1, image2) =>
+                                        image1 != null && image2 != null && image1.VoteCount < image2.VoteCount
+                                            ? image2
+                                            : image1).FilePath);
                                 show.Images.Poster =
                                     await _assetsService.UploadFile(
                                         $@"images/{show.ImdbId}/poster/{poster.Split('/').Last()}",
-                                        poster);
-                            }
-                        }),
-                        Task.Run(async () =>
-                        {
-                            if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
-                            {
-                                var fanart = GetImagePathFromTmdb(TmdbClient,
-                                    tmdbShow.Images.Backdrops.Aggregate(
-                                        (image1, image2) =>
-                                            image1 != null && image2 != null && image1.VoteAverage < image2.VoteAverage
-                                                ? image2
-                                                : image1).FilePath);
-                                show.Images.Fanart =
-                                    await _assetsService.UploadFile(
-                                        $@"images/{show.ImdbId}/fanart/{fanart.Split('/').Last()}",
-                                        fanart);
+                                        poster, true);
                             }
                         })
                     };
@@ -367,7 +361,9 @@ namespace PopcornExport.Services.Import
                                     });
                                 }
                             }
-                            catch (Exception) { }
+                            catch (Exception)
+                            {
+                            }
                         });
                     }
                 }

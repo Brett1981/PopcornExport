@@ -16,10 +16,6 @@ namespace PopcornExport.Models.Image
         public string Poster { get; set; }
 
         [DataMember]
-        [BsonElement("fanart")]
-        public string Fanart { get; set; }
-
-        [DataMember]
         [BsonElement("banner")]
         public string Banner { get; set; }
     }

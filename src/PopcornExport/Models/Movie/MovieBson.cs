@@ -111,48 +111,8 @@ namespace PopcornExport.Models.Movie
         public string PosterImage { get; set; }
 
         [DataMember]
-        [BsonElement("backdrop_image")]
-        public string BackdropImage { get; set; }
-
-        [DataMember]
         [BsonElement("background_image")]
         public string BackgroundImage { get; set; }
-
-        [DataMember]
-        [BsonElement("small_cover_image")]
-        public string SmallCoverImage { get; set; }
-
-        [DataMember]
-        [BsonElement("medium_cover_image")]
-        public string MediumCoverImage { get; set; }
-
-        [DataMember]
-        [BsonElement("large_cover_image")]
-        public string LargeCoverImage { get; set; }
-
-        [DataMember]
-        [BsonElement("medium_screenshot_image1")]
-        public string MediumScreenshotImage1 { get; set; }
-
-        [DataMember]
-        [BsonElement("medium_screenshot_image2")]
-        public string MediumScreenshotImage2 { get; set; }
-
-        [DataMember]
-        [BsonElement("medium_screenshot_image3")]
-        public string MediumScreenshotImage3 { get; set; }
-
-        [DataMember]
-        [BsonElement("large_screenshot_image1")]
-        public string LargeScreenshotImage1 { get; set; }
-
-        [DataMember]
-        [BsonElement("large_screenshot_image2")]
-        public string LargeScreenshotImage2 { get; set; }
-
-        [DataMember]
-        [BsonElement("large_screenshot_image3")]
-        public string LargeScreenshotImage3 { get; set; }
 
         [DataMember]
         [BsonElement("similar")]

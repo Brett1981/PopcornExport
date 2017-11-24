@@ -7,7 +7,6 @@ namespace PopcornExport.Database
     {
         public int Id { get; set; }
         public string Poster { get; set; }
-        public string Fanart { get; set; }
         public string Banner { get; set; }
     }
 }

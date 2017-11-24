@@ -112,41 +112,45 @@ namespace PopcornExport.Services.File
                             using (var contentStream = await response.Content.ReadAsStreamAsync())
                             {
                                 var file = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
-                                if (blob.Name.Contains("backdrop") ||
-                                    blob.Name.Contains("fanart") ||
+                                if (blob.Name.Contains("background") ||
                                     blob.Name.Contains("banner") ||
                                     blob.Name.Contains("poster"))
                                 {
-                                    using (var innerClient = new HttpClient())
-                                    using (var blobStream = await innerClient.GetStreamAsync(blob.Uri))
-                                    using (var stream = new MemoryStream())
-                                    using (var image = Image.Load(blobStream, new JpegDecoder()))
+                                    try
                                     {
-                                        if (blob.Name.Contains("backdrop") || blob.Name.Contains("fanart") || blob.Name.Contains("banner"))
-                                            image.Mutate(x => x
-                                                .Resize(new ResizeOptions
-                                                {
-                                                    Mode = ResizeMode.Stretch,
-                                                    Size = new Size(1280, 720),
-                                                    Sampler = new NearestNeighborResampler()
-                                                }));
-
-                                        if (blob.Name.Contains("poster"))
-                                            image.Mutate(x => x
-                                                .Resize(new ResizeOptions
-                                                {
-                                                    Mode = ResizeMode.Stretch,
-                                                    Size = new Size(400, 600),
-                                                    Sampler = new NearestNeighborResampler()
-                                                }));
-
-                                        image.SaveAsJpeg(stream, new JpegEncoder
+                                        using (var stream = new MemoryStream())
+                                        using (var image = Image.Load(contentStream, new JpegDecoder()))
                                         {
-                                            Quality = 60
-                                        });
-                                        stream.Seek(0, SeekOrigin.Begin);
+                                            if (blob.Name.Contains("background") || blob.Name.Contains("banner"))
+                                                image.Mutate(x => x
+                                                    .Resize(new ResizeOptions
+                                                    {
+                                                        Mode = ResizeMode.Stretch,
+                                                        Size = new Size(1280, 720),
+                                                        Sampler = new NearestNeighborResampler()
+                                                    }));
 
-                                        await file.UploadFromStreamAsync(stream);
+                                            if (blob.Name.Contains("poster"))
+                                                image.Mutate(x => x
+                                                    .Resize(new ResizeOptions
+                                                    {
+                                                        Mode = ResizeMode.Stretch,
+                                                        Size = new Size(400, 600),
+                                                        Sampler = new NearestNeighborResampler()
+                                                    }));
+
+                                            image.SaveAsJpeg(stream, new JpegEncoder
+                                            {
+                                                Quality = 80
+                                            });
+                                            stream.Seek(0, SeekOrigin.Begin);
+
+                                            await file.UploadFromStreamAsync(stream);
+                                        }
+                                    }
+                                    catch (Exception)
+                                    {
+                                        await file.UploadFromStreamAsync(contentStream);
                                     }
                                 }
                                 else
