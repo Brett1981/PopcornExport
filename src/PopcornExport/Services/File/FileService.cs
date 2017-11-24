@@ -127,7 +127,7 @@ namespace PopcornExport.Services.File
                                                     {
                                                         Mode = ResizeMode.Stretch,
                                                         Size = new Size(1280, 720),
-                                                        Sampler = new NearestNeighborResampler()
+                                                        Sampler = new BicubicResampler()
                                                     }));
 
                                             if (blob.Name.Contains("poster"))
@@ -136,15 +136,14 @@ namespace PopcornExport.Services.File
                                                     {
                                                         Mode = ResizeMode.Stretch,
                                                         Size = new Size(400, 600),
-                                                        Sampler = new NearestNeighborResampler()
+                                                        Sampler = new BicubicResampler()
                                                     }));
 
                                             image.SaveAsJpeg(stream, new JpegEncoder
                                             {
-                                                Quality = 80
+                                                Quality = 90
                                             });
                                             stream.Seek(0, SeekOrigin.Begin);
-
                                             await file.UploadFromStreamAsync(stream);
                                         }
                                     }
