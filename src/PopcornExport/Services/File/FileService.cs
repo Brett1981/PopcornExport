@@ -119,7 +119,7 @@ namespace PopcornExport.Services.File
                                     try
                                     {
                                         using (var stream = new MemoryStream())
-                                        using (var image = Image.Load(contentStream, new JpegDecoder()))
+                                        using (var image = Image.Load(contentStream))
                                         {
                                             if (blob.Name.Contains("background") || blob.Name.Contains("banner"))
                                                 image.Mutate(x => x
