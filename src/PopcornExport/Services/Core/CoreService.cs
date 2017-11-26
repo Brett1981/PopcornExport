@@ -66,7 +66,7 @@ namespace PopcornExport.Services.Core
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
                 Console.WriteLine(loggingTraceBegin);
-                var exports = new[] {ExportType.Shows, ExportType.Movies};
+                var exports = new[] {ExportType.Movies, ExportType.Shows};
                 foreach (var export in exports)
                 {
                     // Load export

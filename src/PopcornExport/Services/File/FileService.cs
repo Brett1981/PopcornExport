@@ -98,13 +98,14 @@ namespace PopcornExport.Services.File
                         {
                             // Sometimes YTS requires an authentication to access movies. Here is an already authenticated cookie valid until December 2017
                             cookieContainer.Add(new Uri(url),
-                                new Cookie("PHPSESSID", "ncrmefe4s79la9d2mba0n538o6", "/", "yts.ag"));
+                                new Cookie("PHPSESSID", "9kp14954qk7pfa6kconsocg2a3", "/", "yts.am"));
                             cookieContainer.Add(new Uri(url),
-                                new Cookie("__cfduid", "d6c81b283d74b436fec66f02bcb99c04d1481020053", "/", ".yts.ag"));
-                            cookieContainer.Add(new Uri(url), new Cookie("bgb2", "1", "/", "yts.ag"));
+                                new Cookie("__atuvs", "5a1b42230c1ac9da002", "/", "yts.am"));
                             cookieContainer.Add(new Uri(url),
-                                new Cookie("uhh", "60a8c98fd72e7a79b731f1ea09a5d09d", "/", ".yts.ag"));
-                            cookieContainer.Add(new Uri(url), new Cookie("uid", "2188423", "/", ".yts.ag"));
+                                new Cookie("__cfduid", "da06ef1392f710522307088b060b5826a1511735838", "/", ".yts.am"));
+                            cookieContainer.Add(new Uri(url),
+                                new Cookie("uhh", "5703d275ec7d989652c497b9f921dfcf", "/", ".yts.am"));
+                            cookieContainer.Add(new Uri(url), new Cookie("uid", "3788520", "/", ".yts.am"));
                         }
                         using (var response = await client.SendAsync(request))
                         {
