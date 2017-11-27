@@ -1,8 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using PopcornExport.Database;
-using PopcornExport.Services.Assets;
 using PopcornExport.Services.Caching;
 using PopcornExport.Services.Core;
 using PopcornExport.Services.File;
@@ -20,15 +18,12 @@ namespace PopcornExport
         /// Entry point
         /// </summary>
         /// <param name="args"></param>
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json");
             var configuration = builder.Build();
-
-            // add StructureMap
             var container = new Container();
-            // add the framework services
             var services = new ServiceCollection()
                 .AddTransient<IFileService>(
                     e =>
@@ -42,23 +37,18 @@ namespace PopcornExport
                 .AddSingleton<ICachingService>(e => new CachingService(configuration["Redis:ConnectionString"]))
                 .AddLogging();
 
-
             container.Configure(config =>
             {
-                // Register stuff in container, using the StructureMap APIs...
                 config.Scan(_ =>
                 {
                     _.AssemblyContainingType(typeof(Program));
                     _.WithDefaultConventions();
                 });
-                // Populate the container using the service collection
                 config.Populate(services);
             });
 
             var coreService = container.GetInstance<ICoreService>();
-
-            // Start export
-            coreService.Export().GetAwaiter().GetResult();
+            await coreService.Export().ConfigureAwait(false);
         }
     }
 }

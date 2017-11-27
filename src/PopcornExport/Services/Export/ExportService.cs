@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using PopcornExport.Models.Movie;
 using System.Collections.Async;
 using System.Collections.Concurrent;
-using PopcornExport.Services.Caching;
 using Utf8Json;
 
 namespace PopcornExport.Services.Export
@@ -50,8 +49,10 @@ namespace PopcornExport.Services.Export
             try
             {
                 var loggingTraceBegin =
-                    $@"Export {exportType.ToFriendlyString()} started at {DateTime.Now.ToString(
-                        "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+                    $@"Export {exportType.ToFriendlyString()} started at {
+                            DateTime.Now.ToString(
+                                "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)
+                        }";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
                 if (exportType == ExportType.Shows)
@@ -67,14 +68,14 @@ namespace PopcornExport.Services.Export
                         }
 
                         // Execute request
-                        var response = await client.Execute(request);
+                        var response = await client.Execute(request).ConfigureAwait(false);
                         // Load response into memory
-                        using(var data = new MemoryStream(response.RawBytes))
+                        using (var data = new MemoryStream(response.RawBytes))
                         using (var reader = new StreamReader(data, Encoding.UTF8))
                         {
                             string line;
                             // Read all response parts
-                            while ((line = await reader.ReadLineAsync()) != null)
+                            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
                             {
                                 ConvertJsonToBsonDocument(line, export);
                             }
@@ -91,7 +92,7 @@ namespace PopcornExport.Services.Export
                         {
                             var moviesByPageRequest = GetMoviesByPageRequest(page);
                             // Execute request
-                            var movieShortResponse = await client.Execute(moviesByPageRequest);
+                            var movieShortResponse = await client.Execute(moviesByPageRequest).ConfigureAwait(false);
                             var movieNode = JsonSerializer.Deserialize<MovieShortJsonNode>(movieShortResponse.RawBytes);
                             if (movieNode?.Data?.Movies == null || !movieNode.Data.Movies.Any())
                             {
@@ -109,7 +110,7 @@ namespace PopcornExport.Services.Export
                                         {
                                             var movieByIdRequest = GetMovieById(movie.Id);
                                             var movieFullResponse =
-                                                await innerClient.Execute(movieByIdRequest);
+                                                await innerClient.Execute(movieByIdRequest).ConfigureAwait(false);
                                             var fullMovie =
                                                 JsonSerializer.Deserialize<MovieFullJsonNode>(
                                                     movieFullResponse.RawBytes);
@@ -122,15 +123,17 @@ namespace PopcornExport.Services.Export
                                     {
                                         _loggingService.Telemetry.TrackException(ex);
                                     }
-                                });
+                                }).ConfigureAwait(false);
                             }
                         }
                     } while (movieFound);
                 }
 
                 var loggingTraceEnd =
-                    $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {DateTime.Now.ToString(
-                        "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+                    $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {
+                            DateTime.Now.ToString(
+                                "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)
+                        }";
                 _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
 
                 return export;
@@ -179,9 +182,8 @@ namespace PopcornExport.Services.Export
         /// <param name="export">Bag of <see cref="BsonDocument"/> to update</param>
         private void ConvertJsonToBsonDocument(string json, ConcurrentBag<BsonDocument> export)
         {
-            BsonDocument document;
             // Try to parse a document
-            if (BsonDocument.TryParse(json, out document))
+            if (BsonDocument.TryParse(json, out var document))
             {
                 export.Add(document);
             }

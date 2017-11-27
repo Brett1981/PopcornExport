@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.VisualBasic;
+﻿using System.Threading.Tasks;
 using StackExchange.Redis;
 using Constants = PopcornExport.Helpers.Constants;
 
@@ -42,7 +38,7 @@ namespace PopcornExport.Services.Caching
         public async Task Flush()
         {
             var server = _connection.GetServer(Constants.RedisHost);
-            await server.FlushAllDatabasesAsync();
+            await server.FlushAllDatabasesAsync().ConfigureAwait(false);
         }
     }
 }

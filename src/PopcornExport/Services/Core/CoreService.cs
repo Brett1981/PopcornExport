@@ -69,7 +69,7 @@ namespace PopcornExport.Services.Core
                 foreach (var export in exports)
                 {
                     // Load export
-                    var documents = await _exportService.LoadExport(export);
+                    var documents = await _exportService.LoadExport(export).ConfigureAwait(false);
 
                     IImportService importService;
                     // Import the documents according to export type
@@ -78,12 +78,12 @@ namespace PopcornExport.Services.Core
                         case ExportType.Shows:
                             importService = new ImportShowService(new AssetsShowService(_loggingService, _fileService),
                                 _loggingService);
-                            await importService.Import(documents);
+                            await importService.Import(documents).ConfigureAwait(false);
                             break;
                         case ExportType.Movies:
                             importService = new ImportMovieService(new AssetsMovieService(_loggingService, _fileService),
                                 _loggingService);
-                            await importService.Import(documents);
+                            await importService.Import(documents).ConfigureAwait(false);
                             break;
                         default:
                             throw new NotImplementedException();
@@ -91,7 +91,7 @@ namespace PopcornExport.Services.Core
                 }
 
                 _loggingService.Telemetry.TrackTrace("Flushing Redis database...");
-                await _cachingService.Flush();
+                await _cachingService.Flush().ConfigureAwait(false);
                 _loggingService.Telemetry.TrackTrace("Flushing Redis database completed.");
                 var loggingTraceEnd =
                     $@"Export ended at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";

@@ -92,7 +92,7 @@ namespace PopcornExport.Services.File
                 if (!_initialized) throw new Exception("Service is not initialized");
 
                 var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
-                if (forceReplace || !await blob.ExistsAsync())
+                if (forceReplace || !await blob.ExistsAsync().ConfigureAwait(false))
                 {
                     var cookieContainer = new CookieContainer();
                     using (var handler = new HttpClientHandler {CookieContainer = cookieContainer})
@@ -115,10 +115,10 @@ namespace PopcornExport.Services.File
                                 new Cookie("uhh", "5703d275ec7d989652c497b9f921dfcf", "/", ".yts.am"));
                             cookieContainer.Add(new Uri(url), new Cookie("uid", "3788520", "/", ".yts.am"));
                         }
-                        using (var response = await client.SendAsync(request))
+                        using (var response = await client.SendAsync(request).ConfigureAwait(false))
                         {
                             response.EnsureSuccessStatusCode();
-                            using (var contentStream = await response.Content.ReadAsStreamAsync())
+                            using (var contentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                             {
                                 var file = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
                                 if (blob.Name.Contains("background") ||
@@ -153,18 +153,18 @@ namespace PopcornExport.Services.File
                                                 Quality = 90
                                             });
                                             stream.Seek(0, SeekOrigin.Begin);
-                                            await file.UploadFromStreamAsync(stream);
+                                            await file.UploadFromStreamAsync(stream).ConfigureAwait(false);
                                         }
                                     }
                                     catch (Exception ex)
                                     {
                                         _loggingService.Telemetry.TrackException(ex);
-                                        await file.UploadFromStreamAsync(contentStream);
+                                        await file.UploadFromStreamAsync(contentStream).ConfigureAwait(false);
                                     }
                                 }
                                 else
                                 {
-                                    await file.UploadFromStreamAsync(contentStream);
+                                    await file.UploadFromStreamAsync(contentStream).ConfigureAwait(false);
                                 }
 
                                 return file.Uri.AbsoluteUri;

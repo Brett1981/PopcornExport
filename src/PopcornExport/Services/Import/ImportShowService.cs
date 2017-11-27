@@ -176,7 +176,7 @@ namespace PopcornExport.Services.Import
 
                         if (!context.ShowSet.Any(a => a.ImdbId == show.ImdbId))
                         {
-                            await UpdateImagesAndSimilarShow(show);
+                            await UpdateImagesAndSimilarShow(show).ConfigureAwait(false);
                             context.ShowSet.Add(show);
                         }
                         else
@@ -196,7 +196,8 @@ namespace PopcornExport.Services.Import
                                 .ThenInclude(torrent => torrent.Torrent720p)
                                 .Include(a => a.Genres)
                                 .Include(a => a.Images)
-                                .Include(a => a.Similars).FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId);
+                                .Include(a => a.Similars).FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId)
+                                .ConfigureAwait(false);
 
                             existingEntity.Rating.Hated = show.Rating.Hated;
                             existingEntity.Rating.Loved = show.Rating.Loved;
@@ -217,19 +218,22 @@ namespace PopcornExport.Services.Import
                                     episode.Torrents.Torrent0.Seeds = updatedEpisode.Torrents.Torrent0.Seeds;
                                 }
 
-                                if (episode.Torrents?.Torrent1080p != null && updatedEpisode.Torrents.Torrent1080p != null)
+                                if (episode.Torrents?.Torrent1080p != null &&
+                                    updatedEpisode.Torrents.Torrent1080p != null)
                                 {
                                     episode.Torrents.Torrent1080p.Peers = updatedEpisode.Torrents.Torrent1080p.Peers;
                                     episode.Torrents.Torrent1080p.Seeds = updatedEpisode.Torrents.Torrent1080p.Seeds;
                                 }
 
-                                if (episode.Torrents?.Torrent720p != null && updatedEpisode.Torrents.Torrent720p != null)
+                                if (episode.Torrents?.Torrent720p != null &&
+                                    updatedEpisode.Torrents.Torrent720p != null)
                                 {
                                     episode.Torrents.Torrent720p.Peers = updatedEpisode.Torrents.Torrent720p.Peers;
                                     episode.Torrents.Torrent720p.Seeds = updatedEpisode.Torrents.Torrent720p.Seeds;
                                 }
 
-                                if (episode.Torrents?.Torrent480p != null && updatedEpisode.Torrents.Torrent480p != null)
+                                if (episode.Torrents?.Torrent480p != null &&
+                                    updatedEpisode.Torrents.Torrent480p != null)
                                 {
                                     episode.Torrents.Torrent480p.Peers = updatedEpisode.Torrents.Torrent480p.Peers;
                                     episode.Torrents.Torrent480p.Seeds = updatedEpisode.Torrents.Torrent480p.Seeds;
@@ -250,7 +254,7 @@ namespace PopcornExport.Services.Import
                             }
                         }
 
-                        await context.SaveChangesAsync();
+                        await context.SaveChangesAsync().ConfigureAwait(false);
                         watch.Stop();
                         updatedShows++;
                         Console.WriteLine(Environment.NewLine);
@@ -292,57 +296,48 @@ namespace PopcornExport.Services.Import
         {
             if (int.TryParse(show.TvdbId, out _))
             {
-                var search = await TmdbClient.SearchTvShowAsync(show.Title);
+                var search = await TmdbClient.SearchTvShowAsync(show.Title).ConfigureAwait(false);
                 if (search.TotalResults != 0)
                 {
                     var result = search.Results.FirstOrDefault();
                     if (result == null) return;
                     var tmdbShow =
-                        await TmdbClient.GetTvShowAsync(result.Id, TvShowMethods.Images | TvShowMethods.Similar);
-                    var tasks = new List<Task>
+                        await TmdbClient.GetTvShowAsync(result.Id, TvShowMethods.Images | TvShowMethods.Similar)
+                            .ConfigureAwait(false);
+                    if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
                     {
-                        Task.Run(async () =>
-                        {
-                            if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
-                            {
-                                var backdrop = GetImagePathFromTmdb(TmdbClient,
-                                    tmdbShow.Images.Backdrops.Aggregate((image1, image2) =>
-                                        image1 != null && image2 != null && image1.VoteCount < image2.VoteCount
-                                            ? image2
-                                            : image1).FilePath);
-                                show.Images.Banner =
-                                    await _assetsService.UploadFile(
-                                        $@"images/{show.ImdbId}/banner/{backdrop.Split('/').Last()}",
-                                        backdrop);
-                            }
-                        }),
-                        Task.Run(async () =>
-                        {
-                            if (tmdbShow.Images?.Posters != null && tmdbShow.Images.Posters.Any())
-                            {
-                                var poster = GetImagePathFromTmdb(TmdbClient,
-                                    tmdbShow.Images.Posters.Aggregate((image1, image2) =>
-                                        image1 != null && image2 != null && image1.VoteCount < image2.VoteCount
-                                            ? image2
-                                            : image1).FilePath);
-                                show.Images.Poster =
-                                    await _assetsService.UploadFile(
-                                        $@"images/{show.ImdbId}/poster/{poster.Split('/').Last()}",
-                                        poster);
-                            }
-                        })
-                    };
+                        var backdrop = GetImagePathFromTmdb(TmdbClient,
+                            tmdbShow.Images.Backdrops.Aggregate((image1, image2) =>
+                                image1 != null && image2 != null && image1.VoteCount < image2.VoteCount
+                                    ? image2
+                                    : image1).FilePath);
+                        show.Images.Banner =
+                            await _assetsService.UploadFile(
+                                $@"images/{show.ImdbId}/banner/{backdrop.Split('/').Last()}",
+                                backdrop).ConfigureAwait(false);
+                    }
 
-                    await Task.WhenAll(tasks);
+                    if (tmdbShow.Images?.Posters != null && tmdbShow.Images.Posters.Any())
+                    {
+                        var poster = GetImagePathFromTmdb(TmdbClient,
+                            tmdbShow.Images.Posters.Aggregate((image1, image2) =>
+                                image1 != null && image2 != null && image1.VoteCount < image2.VoteCount
+                                    ? image2
+                                    : image1).FilePath);
+                        show.Images.Poster =
+                            await _assetsService.UploadFile(
+                                $@"images/{show.ImdbId}/poster/{poster.Split('/').Last()}",
+                                poster).ConfigureAwait(false);
+                    }
 
                     if (tmdbShow.Similar.Results.Any())
                     {
                         show.Similars = new List<Similar>();
-                        await tmdbShow.Similar.Results.Select(a => a.Id).ParallelForEachAsync(async id =>
+                        foreach (var id in tmdbShow.Similar.Results.Select(a => a.Id))
                         {
                             try
                             {
-                                var externalIds = await TmdbClient.GetTvShowExternalIdsAsync(id);
+                                var externalIds = await TmdbClient.GetTvShowExternalIdsAsync(id).ConfigureAwait(false);
                                 if (externalIds != null)
                                 {
                                     show.Similars.Add(new Similar
@@ -355,7 +350,7 @@ namespace PopcornExport.Services.Import
                             {
                                 _loggingService.Telemetry.TrackException(ex);
                             }
-                        });
+                        }
                     }
                 }
             }
