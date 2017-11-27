@@ -144,13 +144,12 @@ namespace PopcornExport.Services.Import
                         {
                             await RetrieveAssets(TmdbClient, movie).ConfigureAwait(false);
                             context.MovieSet.Add(movie);
+                            await context.SaveChangesAsync().ConfigureAwait(false);
                         }
                         else
                         {
                             var existingEntity =
                                 await context.MovieSet.Include(a => a.Torrents)
-                                    .Include(a => a.Cast)
-                                    .Include(a => a.Genres).Include(a => a.Similars)
                                     .FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode).ConfigureAwait(false);
 
                             existingEntity.DownloadCount = movie.DownloadCount;
@@ -164,17 +163,9 @@ namespace PopcornExport.Services.Import
                                 torrent.Seeds = updatedTorrent.Seeds;
                             }
 
-                            existingEntity.Cast = movieJson.Cast?.Select(cast => new Database.Cast
-                            {
-                                ImdbCode = cast?.ImdbCode,
-                                SmallImage = cast?.SmallImage,
-                                CharacterName = cast?.CharacterName,
-                                Name = cast?.Name
-                            }).ToList();
-                            await RetrieveAssets(TmdbClient, existingEntity).ConfigureAwait(false);
+                            await context.SaveChangesAsync().ConfigureAwait(false);
                         }
 
-                        await context.SaveChangesAsync().ConfigureAwait(false);
                         watch.Stop();
                         updatedMovies++;
                         Console.WriteLine(Environment.NewLine);
