@@ -10,7 +10,6 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using PopcornExport.Comparers;
 using PopcornExport.Models.Show;
 using PopcornExport.Services.Assets;
@@ -18,7 +17,6 @@ using PopcornExport.Database;
 using TMDbLib.Client;
 using PopcornExport.Helpers;
 using TMDbLib.Objects.TvShows;
-using TMDbLib.Objects.General;
 
 namespace PopcornExport.Services.Import
 {
@@ -118,7 +116,7 @@ namespace PopcornExport.Services.Import
                             Title = WebUtility.HtmlDecode(showJson.Title),
                             Year = int.Parse(showJson.Year),
                             Runtime = showJson.Runtime,
-                            Genres = showJson.Genres.Select(genre => new Database.Genre
+                            Genres = showJson.Genres.Select(genre => new Genre
                             {
                                 Name = genre.AsString
                             }).ToList(),
@@ -213,31 +211,25 @@ namespace PopcornExport.Services.Import
                             {
                                 var updatedEpisode = show.Episodes.FirstOrDefault(a => a.TvdbId == episode.TvdbId);
                                 if (updatedEpisode == null) continue;
-
-                                episode.Title = WebUtility.HtmlDecode(updatedEpisode.Title);
-                                if (episode.Torrents != null && episode.Torrents.Torrent0 != null &&
-                                    updatedEpisode.Torrents.Torrent0 != null)
+                                if (episode.Torrents?.Torrent0 != null && updatedEpisode.Torrents.Torrent0 != null)
                                 {
                                     episode.Torrents.Torrent0.Peers = updatedEpisode.Torrents.Torrent0.Peers;
                                     episode.Torrents.Torrent0.Seeds = updatedEpisode.Torrents.Torrent0.Seeds;
                                 }
 
-                                if (episode.Torrents != null && episode.Torrents.Torrent1080p != null &&
-                                    updatedEpisode.Torrents.Torrent1080p != null)
+                                if (episode.Torrents?.Torrent1080p != null && updatedEpisode.Torrents.Torrent1080p != null)
                                 {
                                     episode.Torrents.Torrent1080p.Peers = updatedEpisode.Torrents.Torrent1080p.Peers;
                                     episode.Torrents.Torrent1080p.Seeds = updatedEpisode.Torrents.Torrent1080p.Seeds;
                                 }
 
-                                if (episode.Torrents != null && episode.Torrents.Torrent720p != null &&
-                                    updatedEpisode.Torrents.Torrent720p != null)
+                                if (episode.Torrents?.Torrent720p != null && updatedEpisode.Torrents.Torrent720p != null)
                                 {
                                     episode.Torrents.Torrent720p.Peers = updatedEpisode.Torrents.Torrent720p.Peers;
                                     episode.Torrents.Torrent720p.Seeds = updatedEpisode.Torrents.Torrent720p.Seeds;
                                 }
 
-                                if (episode.Torrents != null && episode.Torrents.Torrent480p != null &&
-                                    updatedEpisode.Torrents.Torrent480p != null)
+                                if (episode.Torrents?.Torrent480p != null && updatedEpisode.Torrents.Torrent480p != null)
                                 {
                                     episode.Torrents.Torrent480p.Peers = updatedEpisode.Torrents.Torrent480p.Peers;
                                     episode.Torrents.Torrent480p.Seeds = updatedEpisode.Torrents.Torrent480p.Seeds;
@@ -256,8 +248,6 @@ namespace PopcornExport.Services.Import
                                 var lastEpisode = existingEntity.Episodes.OrderBy(a => a.FirstAired).Last();
                                 existingEntity.LastUpdated = lastEpisode.FirstAired;
                             }
-
-                            await UpdateImagesAndSimilarShow(existingEntity);
                         }
 
                         await context.SaveChangesAsync();
@@ -300,13 +290,14 @@ namespace PopcornExport.Services.Import
         /// <returns></returns>
         private async Task UpdateImagesAndSimilarShow(Show show)
         {
-            int tvId = 0;
+            var tvId = 0;
             if (int.TryParse(show.TvdbId, out tvId))
             {
                 var search = await TmdbClient.SearchTvShowAsync(show.Title);
                 if (search.TotalResults != 0)
                 {
                     var result = search.Results.FirstOrDefault();
+                    if (result == null) return;
                     var tmdbShow =
                         await TmdbClient.GetTvShowAsync(result.Id, TvShowMethods.Images | TvShowMethods.Similar);
                     var tasks = new List<Task>
@@ -323,7 +314,7 @@ namespace PopcornExport.Services.Import
                                 show.Images.Banner =
                                     await _assetsService.UploadFile(
                                         $@"images/{show.ImdbId}/banner/{backdrop.Split('/').Last()}",
-                                        backdrop, true);
+                                        backdrop);
                             }
                         }),
                         Task.Run(async () =>
@@ -338,7 +329,7 @@ namespace PopcornExport.Services.Import
                                 show.Images.Poster =
                                     await _assetsService.UploadFile(
                                         $@"images/{show.ImdbId}/poster/{poster.Split('/').Last()}",
-                                        poster, true);
+                                        poster);
                             }
                         })
                     };

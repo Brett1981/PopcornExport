@@ -9,11 +9,9 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using PopcornExport.Database;
 using PopcornExport.Services.Assets;
 using TMDbLib.Client;
-using TMDbLib.Objects.General;
 using TMDbLib.Objects.Movies;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Async;
@@ -96,7 +94,7 @@ namespace PopcornExport.Services.Import
                         var movieJson =
                             BsonSerializer.Deserialize<MovieBson>(document);
 
-                        var movie = new Database.Movie
+                        var movie = new Movie
                         {
                             ImdbCode = movieJson.ImdbCode,
                             Url = movieJson.Url,
@@ -131,7 +129,7 @@ namespace PopcornExport.Services.Import
                                 CharacterName = cast?.CharacterName,
                                 Name = cast?.Name
                             }).ToList(),
-                            Genres = movieJson.Genres.Select(genre => new Database.Genre
+                            Genres = movieJson.Genres.Select(genre => new Genre
                             {
                                 Name = genre
                             }).ToList(),
@@ -159,6 +157,7 @@ namespace PopcornExport.Services.Import
                             foreach (var torrent in existingEntity.Torrents)
                             {
                                 var updatedTorrent = movie.Torrents.FirstOrDefault(a => a.Quality == torrent.Quality);
+                                if (updatedTorrent == null) continue;
                                 torrent.Peers = updatedTorrent.Peers;
                                 torrent.Seeds = updatedTorrent.Seeds;
                                 if (string.IsNullOrEmpty(torrent.Url))
@@ -167,11 +166,17 @@ namespace PopcornExport.Services.Import
                                 }
                             }
 
+                            existingEntity.Cast = movieJson.Cast?.Select(cast => new Database.Cast
+                            {
+                                ImdbCode = cast?.ImdbCode,
+                                SmallImage = cast?.SmallImage,
+                                CharacterName = cast?.CharacterName,
+                                Name = cast?.Name
+                            }).ToList();
                             await RetrieveAssets(TmdbClient, existingEntity);
                         }
 
                         await context.SaveChangesAsync();
-
                         watch.Stop();
                         updatedMovies++;
                         Console.WriteLine(Environment.NewLine);
@@ -227,7 +232,7 @@ namespace PopcornExport.Services.Import
                         movie.BackgroundImage =
                             await _assetsService.UploadFile(
                                 $@"images/{movie.ImdbCode}/background/{backdrop.Split('/').Last()}",
-                                backdrop, true);
+                                backdrop);
                     }
                 }),
                 Task.Run(async () =>
@@ -242,7 +247,7 @@ namespace PopcornExport.Services.Import
                         movie.PosterImage =
                             await _assetsService.UploadFile(
                                 $@"images/{movie.ImdbCode}/poster/{poster.Split('/').Last()}",
-                                poster, true);
+                                poster);
                     }
                 }),
                 Task.Run(async () =>
