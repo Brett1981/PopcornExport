@@ -41,7 +41,6 @@ namespace PopcornExport.Services.Core
         /// </summary>
         /// <param name="exportService">Export service</param>
         /// <param name="loggingService">Logging service</param>
-        /// <param name="integrityService">Integrity service</param>
         /// <param name="fileService">The file service</param>
         /// <param name="cachingService">The caching service</param>
         public CoreService(IExportService exportService, ILoggingService loggingService, IFileService fileService, ICachingService cachingService)
@@ -77,12 +76,12 @@ namespace PopcornExport.Services.Core
                     switch (export)
                     {
                         case ExportType.Shows:
-                            importService = new ImportShowService(new AssetsShowService(_fileService),
+                            importService = new ImportShowService(new AssetsShowService(_loggingService, _fileService),
                                 _loggingService);
                             await importService.Import(documents);
                             break;
                         case ExportType.Movies:
-                            importService = new ImportMovieService(new AssetsMovieService(_fileService),
+                            importService = new ImportMovieService(new AssetsMovieService(_loggingService, _fileService),
                                 _loggingService);
                             await importService.Import(documents);
                             break;

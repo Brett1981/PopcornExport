@@ -55,16 +55,16 @@ namespace PopcornExport.Services.Import
             {
                 TmdbClient.GetConfig();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                //TODO
+                _loggingService.Telemetry.TrackException(ex);
             }
         }
 
         /// <summary>
         /// TMDb client
         /// </summary>
-        private TMDbClient TmdbClient { get; set; }
+        private TMDbClient TmdbClient { get; }
 
         /// <summary>
         /// Import shows to database
@@ -290,8 +290,7 @@ namespace PopcornExport.Services.Import
         /// <returns></returns>
         private async Task UpdateImagesAndSimilarShow(Show show)
         {
-            var tvId = 0;
-            if (int.TryParse(show.TvdbId, out tvId))
+            if (int.TryParse(show.TvdbId, out _))
             {
                 var search = await TmdbClient.SearchTvShowAsync(show.Title);
                 if (search.TotalResults != 0)
@@ -352,8 +351,9 @@ namespace PopcornExport.Services.Import
                                     });
                                 }
                             }
-                            catch (Exception)
+                            catch (Exception ex)
                             {
+                                _loggingService.Telemetry.TrackException(ex);
                             }
                         });
                     }

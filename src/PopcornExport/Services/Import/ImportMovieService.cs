@@ -54,16 +54,16 @@ namespace PopcornExport.Services.Import
             {
                 TmdbClient.GetConfig();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                //TODO
+                _loggingService.Telemetry.TrackException(ex);
             }
         }
 
         /// <summary>
         /// TMDb client
         /// </summary>
-        private TMDbClient TmdbClient { get; set; }
+        private TMDbClient TmdbClient { get; }
 
         /// <summary>
         /// Import movies to database
@@ -154,16 +154,15 @@ namespace PopcornExport.Services.Import
                                     .Include(a => a.Genres).Include(a => a.Similars)
                                     .FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
 
+                            existingEntity.DownloadCount = movie.DownloadCount;
+                            existingEntity.LikeCount = movie.LikeCount;
+                            existingEntity.Rating = movie.Rating;
                             foreach (var torrent in existingEntity.Torrents)
                             {
                                 var updatedTorrent = movie.Torrents.FirstOrDefault(a => a.Quality == torrent.Quality);
                                 if (updatedTorrent == null) continue;
                                 torrent.Peers = updatedTorrent.Peers;
                                 torrent.Seeds = updatedTorrent.Seeds;
-                                if (string.IsNullOrEmpty(torrent.Url))
-                                {
-                                    torrent.Url = updatedTorrent.Url;
-                                }
                             }
 
                             existingEntity.Cast = movieJson.Cast?.Select(cast => new Database.Cast
@@ -285,7 +284,7 @@ namespace PopcornExport.Services.Import
 
             await Task.WhenAll(tasks);
 
-            if (tmdbMovie.Similar.TotalResults != 0)
+            if (!movie.Similars.Any() && tmdbMovie.Similar.TotalResults != 0)
             {
                 movie.Similars = new List<Similar>();
                 await tmdbMovie.Similar.Results.Select(a => a.Id)
@@ -302,9 +301,9 @@ namespace PopcornExport.Services.Import
                                 });
                             }
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
-
+                            _loggingService.Telemetry.TrackException(ex);
                         }
                     });
             }

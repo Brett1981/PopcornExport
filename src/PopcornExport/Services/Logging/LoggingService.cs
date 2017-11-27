@@ -12,10 +12,10 @@ namespace PopcornExport.Services.Logging
 
         public LoggingService()
         {
-            Telemetry = new TelemetryClient(new Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration
+            Telemetry = new TelemetryClient
             {
                 InstrumentationKey = Constants.ApplicationInsightsKey
-            });
+            };
         }
     }
 }

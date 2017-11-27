@@ -6,6 +6,7 @@ using PopcornExport.Services.Assets;
 using PopcornExport.Services.Caching;
 using PopcornExport.Services.Core;
 using PopcornExport.Services.File;
+using PopcornExport.Services.Logging;
 using StructureMap;
 
 namespace PopcornExport
@@ -25,12 +26,14 @@ namespace PopcornExport
                 .AddJsonFile("appsettings.json");
             var configuration = builder.Build();
 
+            // add StructureMap
+            var container = new Container();
             // add the framework services
             var services = new ServiceCollection()
                 .AddTransient<IFileService>(
                     e =>
                     {
-                        var fileService = new FileService(configuration["AzureStorage:AccountName"],
+                        var fileService = new FileService(container.GetInstance<ILoggingService>(), configuration["AzureStorage:AccountName"],
                             configuration["AzureStorage:Key"]);
                         fileService.Initialize().GetAwaiter().GetResult();
                         return fileService;
@@ -39,8 +42,7 @@ namespace PopcornExport
                 .AddSingleton<ICachingService>(e => new CachingService(configuration["Redis:ConnectionString"]))
                 .AddLogging();
 
-            // add StructureMap
-            var container = new Container();
+
             container.Configure(config =>
             {
                 // Register stuff in container, using the StructureMap APIs...

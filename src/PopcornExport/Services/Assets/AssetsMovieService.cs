@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using PopcornExport.Models.Export;
 using PopcornExport.Services.File;
+using PopcornExport.Services.Logging;
 
 namespace PopcornExport.Services.Assets
 {
@@ -16,10 +17,16 @@ namespace PopcornExport.Services.Assets
         private readonly IFileService _fileService;
 
         /// <summary>
+        /// The logging service
+        /// </summary>
+        private readonly ILoggingService _loggingService;
+
+        /// <summary>
         /// Create an instance of <see cref="AssetsMovieService"/>
         /// </summary>
-        public AssetsMovieService(IFileService fileService)
+        public AssetsMovieService(ILoggingService loggingService, IFileService fileService)
         {
+            _loggingService = loggingService;
             _fileService = fileService;
         }
 
@@ -34,8 +41,7 @@ namespace PopcornExport.Services.Assets
         {
             try
             {
-                Uri result;
-                if (Uri.TryCreate(fileUrl, UriKind.Absolute, out result))
+                if (Uri.TryCreate(fileUrl, UriKind.Absolute, out _))
                 {
                     return
                         await _fileService.UploadFileFromUrlToAzureStorage(fileName, fileUrl, ExportType.Movies, forceReplace);
@@ -45,8 +51,9 @@ namespace PopcornExport.Services.Assets
                     return string.Empty;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _loggingService.Telemetry.TrackException(ex);
                 return string.Empty;
             }
         }

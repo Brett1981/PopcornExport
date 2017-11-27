@@ -9,6 +9,7 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using PopcornExport.Extensions;
 using PopcornExport.Helpers;
 using PopcornExport.Models.Export;
+using PopcornExport.Services.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
@@ -32,6 +33,11 @@ namespace PopcornExport.Services.File
         private readonly CloudStorageAccount _storageAccount;
 
         /// <summary>
+        /// <see cref="ILoggingService"/>
+        /// </summary>
+        private readonly ILoggingService _loggingService;
+
+        /// <summary>
         /// Container
         /// </summary>
         private CloudBlobContainer _container;
@@ -39,10 +45,12 @@ namespace PopcornExport.Services.File
         /// <summary>
         /// Create an instance of <see cref="FileService"/>
         /// </summary>
+        /// <param name="loggingService"></param>
         /// <param name="accountName"></param>
         /// <param name="storageConnectionString"></param>
-        public FileService(string accountName, string storageConnectionString)
+        public FileService(ILoggingService loggingService, string accountName, string storageConnectionString)
         {
+            _loggingService = loggingService;
             _storageAccount = new CloudStorageAccount(new StorageCredentials(accountName, storageConnectionString),
                 true);
         }
@@ -148,8 +156,9 @@ namespace PopcornExport.Services.File
                                             await file.UploadFromStreamAsync(stream);
                                         }
                                     }
-                                    catch (Exception)
+                                    catch (Exception ex)
                                     {
+                                        _loggingService.Telemetry.TrackException(ex);
                                         await file.UploadFromStreamAsync(contentStream);
                                     }
                                 }
@@ -166,8 +175,9 @@ namespace PopcornExport.Services.File
 
                 return blob.Uri.AbsoluteUri;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _loggingService.Telemetry.TrackException(ex);
                 return string.Empty;
             }
         }
