@@ -142,7 +142,7 @@ namespace PopcornExport.Services.Import
 
                         if (!context.MovieSet.Any(a => a.ImdbCode == movie.ImdbCode))
                         {
-                            await RetrieveAssets(TmdbClient, movie).ConfigureAwait(false);
+                            await RetrieveAssets(movie).ConfigureAwait(false);
                             context.MovieSet.Add(movie);
                             await context.SaveChangesAsync().ConfigureAwait(false);
                         }
@@ -201,12 +201,11 @@ namespace PopcornExport.Services.Import
         /// <summary>
         /// Retrieve assets for the provided movie
         /// </summary>
-        /// <param name="tmdbClient"><see cref="TMDbClient"/></param>
         /// <param name="movie">Movie to update</param>
         /// <returns></returns>
-        private async Task RetrieveAssets(TMDbClient tmdbClient, Movie movie)
+        private async Task RetrieveAssets(Movie movie)
         {
-            var tmdbMovie = await tmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images | MovieMethods.Similar)
+            var tmdbMovie = await TmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images | MovieMethods.Similar)
                 .ConfigureAwait(false);
             if (tmdbMovie.Images?.Backdrops != null && tmdbMovie.Images.Backdrops.Any())
             {
