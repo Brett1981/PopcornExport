@@ -62,7 +62,7 @@ namespace PopcornExport.Services.Export
                     ProgressCharacter = '─',
                     BackgroundColor = ConsoleColor.DarkGray,
                 };
-                using (var childProgress = pbar.Spawn(0, $"step import {exportType} progress", workBarOptions))
+                using (var childProgress = pbar.Spawn(0, $"step export progress", workBarOptions))
                 {
                     if (exportType == ExportType.Shows)
                     {

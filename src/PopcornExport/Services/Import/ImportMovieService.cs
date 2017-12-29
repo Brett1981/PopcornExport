@@ -86,7 +86,7 @@ namespace PopcornExport.Services.Import
                 ProgressCharacter = '─',
                 BackgroundColor = ConsoleColor.DarkGray,
             };
-            using (var childProgress = pbar.Spawn(documents.Count, "step import movie progress", workBarOptions))
+            using (var childProgress = pbar.Spawn(documents.Count, "step import progress", workBarOptions))
             {
                 using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
                 {

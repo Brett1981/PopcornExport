@@ -5,6 +5,7 @@ using PopcornExport.Services.Logging;
 using System;
 using System.Globalization;
 using System.Threading.Tasks;
+using PopcornExport.Extensions;
 using PopcornExport.Services.Assets;
 using PopcornExport.Services.Caching;
 using PopcornExport.Services.File;
@@ -86,7 +87,7 @@ namespace PopcornExport.Services.Core
                             BackgroundColor = ConsoleColor.DarkGray,
                             CollapseWhenFinished = true,
                         };
-                        using (var childProgress = pbar.Spawn(2, $"step movie progress", stepBarOptions))
+                        using (var childProgress = pbar.Spawn(2, $"step {export.ToFriendlyString().ToLowerInvariant()} progress", stepBarOptions))
                         {
                             // Load export
                             var documents = await _exportService.LoadExport(export, childProgress).ConfigureAwait(false);
