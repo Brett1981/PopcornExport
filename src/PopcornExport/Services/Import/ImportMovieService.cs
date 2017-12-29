@@ -74,12 +74,6 @@ namespace PopcornExport.Services.Import
         public async Task Import(IEnumerable<BsonDocument> docs, IProgressBar pbar)
         {
             var documents = docs.ToList();
-            var loggingTraceBegin =
-                $@"Import {documents.Count} movies started at {
-                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
-                            CultureInfo.InvariantCulture)
-                    }";
-            _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
             var workBarOptions = new ProgressBarOptions
             {
                 ForegroundColor = ConsoleColor.Yellow,
@@ -186,12 +180,6 @@ namespace PopcornExport.Services.Import
 
                 // Finish
                 pbar.Tick();
-                var loggingTraceEnd =
-                    $@"Import movies ended at {
-                            DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
-                                CultureInfo.InvariantCulture)
-                        }";
-                _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
             }
         }
 
