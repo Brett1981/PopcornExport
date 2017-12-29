@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using PopcornExport.Models.Movie;
 using System.Collections.Async;
 using System.Collections.Concurrent;
+using ShellProgressBar;
 using Utf8Json;
 
 namespace PopcornExport.Services.Export
@@ -42,8 +43,9 @@ namespace PopcornExport.Services.Export
         /// Load an export
         /// </summary>
         /// <param name="exportType">Export to load</param>
+        /// <param name="pbar"><see cref="IProgressBar"/></param>
         /// <returns>Bson documents</returns>
-        public async Task<IEnumerable<BsonDocument>> LoadExport(ExportType exportType)
+        public async Task<IEnumerable<BsonDocument>> LoadExport(ExportType exportType, IProgressBar pbar)
         {
             var export = new ConcurrentBag<BsonDocument>();
             try
@@ -54,89 +56,104 @@ namespace PopcornExport.Services.Export
                                 "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)
                         }";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
-
-                if (exportType == ExportType.Shows)
+                var workBarOptions = new ProgressBarOptions
                 {
-                    using (var client = new RestClient(Constants.OriginalPopcornApi))
+                    ForegroundColor = ConsoleColor.Yellow,
+                    ProgressCharacter = '─',
+                    BackgroundColor = ConsoleColor.DarkGray,
+                };
+                using (var childProgress = pbar.Spawn(0, $"step import {exportType} progress", workBarOptions))
+                {
+                    if (exportType == ExportType.Shows)
                     {
-                        var request = new RestRequest("{segment}", Method.GET);
-                        switch (exportType)
+                        using (var client = new RestClient(Constants.OriginalPopcornApi))
                         {
-                            case ExportType.Shows:
-                                request.AddUrlSegment("segment", "show");
-                                break;
-                        }
-
-                        // Execute request
-                        var response = await client.Execute(request).ConfigureAwait(false);
-                        // Load response into memory
-                        using (var data = new MemoryStream(response.RawBytes))
-                        using (var reader = new StreamReader(data, Encoding.UTF8))
-                        {
-                            string line;
-                            // Read all response parts
-                            while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
+                            var request = new RestRequest("{segment}", Method.GET);
+                            switch (exportType)
                             {
-                                ConvertJsonToBsonDocument(line, export);
+                                case ExportType.Shows:
+                                    request.AddUrlSegment("segment", "show");
+                                    break;
+                            }
+
+                            // Execute request
+                            var response = await client.Execute(request).ConfigureAwait(false);
+                            // Load response into memory
+                            using (var data = new MemoryStream(response.RawBytes))
+                            using (var reader = new StreamReader(data, Encoding.UTF8))
+                            {
+                                string line;
+                                // Read all response parts
+                                while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
+                                {
+                                    ConvertJsonToBsonDocument(line, export);
+                                    childProgress.Tick();
+                                    childProgress.MaxTicks = childProgress.CurrentTick;
+                                }
                             }
                         }
                     }
-                }
-                else if (exportType == ExportType.Movies)
-                {
-                    var page = 1;
-                    bool movieFound;
-                    do
+                    else if (exportType == ExportType.Movies)
                     {
-                        using (var client = new RestClient(Constants.YtsApiUrl))
+                        var page = 1;
+                        bool movieFound;
+                        do
                         {
-                            var moviesByPageRequest = GetMoviesByPageRequest(page);
-                            // Execute request
-                            var movieShortResponse = await client.Execute(moviesByPageRequest).ConfigureAwait(false);
-                            var movieNode = JsonSerializer.Deserialize<MovieShortJsonNode>(movieShortResponse.RawBytes);
-                            if (movieNode?.Data?.Movies == null || !movieNode.Data.Movies.Any())
+                            using (var client = new RestClient(Constants.YtsApiUrl))
                             {
-                                movieFound = false;
-                            }
-                            else
-                            {
-                                movieFound = true;
-                                page++;
-                                await movieNode.Data.Movies.ParallelForEachAsync(async movie =>
+                                var moviesByPageRequest = GetMoviesByPageRequest(page);
+                                // Execute request
+                                var movieShortResponse =
+                                    await client.Execute(moviesByPageRequest).ConfigureAwait(false);
+                                var movieNode =
+                                    JsonSerializer.Deserialize<MovieShortJsonNode>(movieShortResponse.RawBytes);
+                                if (movieNode?.Data?.Movies == null || !movieNode.Data.Movies.Any())
                                 {
-                                    try
+                                    movieFound = false;
+                                }
+                                else
+                                {
+                                    childProgress.MaxTicks = movieNode.Data.MovieCount;
+                                    movieFound = true;
+                                    page++;
+                                    await movieNode.Data.Movies.ParallelForEachAsync(async movie =>
                                     {
-                                        using (var innerClient = new RestClient(Constants.YtsApiUrl))
+                                        try
                                         {
-                                            var movieByIdRequest = GetMovieById(movie.Id);
-                                            var movieFullResponse =
-                                                await innerClient.Execute(movieByIdRequest).ConfigureAwait(false);
-                                            var fullMovie =
-                                                JsonSerializer.Deserialize<MovieFullJsonNode>(
-                                                    movieFullResponse.RawBytes);
-                                            ConvertJsonToBsonDocument(
-                                                JsonSerializer.ToJsonString(fullMovie.Data.Movie),
-                                                export);
+                                            using (var innerClient = new RestClient(Constants.YtsApiUrl))
+                                            {
+                                                var movieByIdRequest = GetMovieById(movie.Id);
+                                                var movieFullResponse =
+                                                    await innerClient.Execute(movieByIdRequest).ConfigureAwait(false);
+                                                var fullMovie =
+                                                    JsonSerializer.Deserialize<MovieFullJsonNode>(
+                                                        movieFullResponse.RawBytes);
+                                                ConvertJsonToBsonDocument(
+                                                    JsonSerializer.ToJsonString(fullMovie.Data.Movie),
+                                                    export);
+                                                childProgress.Tick();
+                                            }
                                         }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _loggingService.Telemetry.TrackException(ex);
-                                    }
-                                }).ConfigureAwait(false);
+                                        catch (Exception ex)
+                                        {
+                                            _loggingService.Telemetry.TrackException(ex);
+                                        }
+                                    }).ConfigureAwait(false);
+                                }
                             }
-                        }
-                    } while (movieFound);
+                        } while (movieFound);
+                    }
+
+                    pbar.Tick();
+                    var loggingTraceEnd =
+                        $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {
+                                DateTime.Now.ToString(
+                                    "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)
+                            }";
+                    _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
+
+                    return export;
                 }
-
-                var loggingTraceEnd =
-                    $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {
-                            DateTime.Now.ToString(
-                                "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)
-                        }";
-                _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
-
-                return export;
 
             }
             catch (Exception ex)

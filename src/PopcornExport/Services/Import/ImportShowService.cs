@@ -16,6 +16,7 @@ using PopcornExport.Services.Assets;
 using PopcornExport.Database;
 using TMDbLib.Client;
 using PopcornExport.Helpers;
+using ShellProgressBar;
 using TMDbLib.Objects.TvShows;
 
 namespace PopcornExport.Services.Import
@@ -70,8 +71,9 @@ namespace PopcornExport.Services.Import
         /// Import shows to database
         /// </summary>
         /// <param name="docs">Documents to import</param>
+        /// <param name="pbar"><see cref="IProgressBar"/></param>
         /// <returns><see cref="Task"/></returns>
-        public async Task Import(IEnumerable<BsonDocument> docs)
+        public async Task Import(IEnumerable<BsonDocument> docs, IProgressBar pbar)
         {
             var documents = docs.ToList();
             var loggingTraceBegin =
@@ -81,203 +83,205 @@ namespace PopcornExport.Services.Import
                     }";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
-            var updatedShows = 0;
-            using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
+            var workBarOptions = new ProgressBarOptions
             {
-                foreach (var document in documents)
+                ForegroundColor = ConsoleColor.Yellow,
+                ProgressCharacter = '─',
+                BackgroundColor = ConsoleColor.DarkGray,
+            };
+            using (var childProgress = pbar.Spawn(documents.Count, "step import show progress", workBarOptions))
+            {
+                using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
                 {
-                    try
+                    foreach (var document in documents)
                     {
-                        var watch = new Stopwatch();
-                        watch.Start();
-
-                        // Deserialize a document to a show
-                        var showJson =
-                            BsonSerializer.Deserialize<ShowBson>(document);
-
-                        if (showJson.Year == null) continue;
-
-                        var show = new Show
+                        try
                         {
-                            Rating = new Rating
+                            // Deserialize a document to a show
+                            var showJson =
+                                BsonSerializer.Deserialize<ShowBson>(document);
+
+                            if (showJson.Year == null) continue;
+
+                            var show = new Show
                             {
-                                Watching = showJson.Rating.Watching,
-                                Hated = showJson.Rating.Hated,
-                                Percentage = showJson.Rating.Percentage,
-                                Votes = showJson.Rating.Votes,
-                                Loved = showJson.Rating.Loved
-                            },
-                            Images = new ImageShow
-                            {
-                                Banner = showJson.Images.Banner,
-                                Poster = showJson.Images.Poster
-                            },
-                            ImdbId = showJson.ImdbId,
-                            Title = WebUtility.HtmlDecode(showJson.Title),
-                            Year = int.Parse(showJson.Year),
-                            Runtime = showJson.Runtime,
-                            Genres = showJson.Genres.Select(genre => new Genre
-                            {
-                                Name = genre.AsString
-                            }).ToList(),
-                            GenreNames = string.Join(", ", showJson.Genres.Select(a => FirstCharToUpper(a.AsString))),
-                            Slug = showJson.Slug,
-                            LastUpdated = showJson.LastUpdated,
-                            TvdbId = showJson.TvdbId,
-                            NumSeasons = showJson.NumSeasons,
-                            Status = showJson.Status,
-                            Synopsis = showJson.Synopsis,
-                            Country = showJson.Country,
-                            Episodes = showJson.Episodes.Select(episode => new EpisodeShow
-                            {
-                                Title = WebUtility.HtmlDecode(episode.Title),
-                                DateBased = episode.DateBased,
-                                TvdbId = episode.TvdbId,
-                                Torrents = new TorrentNode
+                                Rating = new Rating
                                 {
-                                    Torrent0 = new Torrent
-                                    {
-                                        Url = episode.Torrents.Torrent_0?.Url,
-                                        Peers = episode.Torrents.Torrent_0?.Peers,
-                                        Seeds = episode.Torrents.Torrent_0?.Seeds,
-                                        Provider = episode.Torrents.Torrent_0?.Provider
-                                    },
-                                    Torrent1080p = new Torrent
-                                    {
-                                        Url = episode.Torrents.Torrent_1080p?.Url,
-                                        Peers = episode.Torrents.Torrent_1080p?.Peers,
-                                        Seeds = episode.Torrents.Torrent_1080p?.Seeds,
-                                        Provider = episode.Torrents.Torrent_1080p?.Provider
-                                    },
-                                    Torrent480p = new Torrent
-                                    {
-                                        Url = episode.Torrents.Torrent_480p?.Url,
-                                        Peers = episode.Torrents.Torrent_480p?.Peers,
-                                        Seeds = episode.Torrents.Torrent_480p?.Seeds,
-                                        Provider = episode.Torrents.Torrent_480p?.Provider
-                                    },
-                                    Torrent720p = new Torrent
-                                    {
-                                        Url = episode.Torrents.Torrent_720p?.Url,
-                                        Peers = episode.Torrents.Torrent_720p?.Peers,
-                                        Seeds = episode.Torrents.Torrent_720p?.Seeds,
-                                        Provider = episode.Torrents.Torrent_720p?.Provider
-                                    }
+                                    Watching = showJson.Rating.Watching,
+                                    Hated = showJson.Rating.Hated,
+                                    Percentage = showJson.Rating.Percentage,
+                                    Votes = showJson.Rating.Votes,
+                                    Loved = showJson.Rating.Loved
                                 },
-                                EpisodeNumber = episode.EpisodeNumber,
-                                Season = episode.Season,
-                                Overview = episode.Overview,
-                                FirstAired = episode.FirstAired
-                            }).ToList(),
-                            AirDay = showJson.AirDay,
-                            AirTime = showJson.AirTime,
-                            Network = showJson.Network
-                        };
+                                Images = new ImageShow
+                                {
+                                    Banner = showJson.Images.Banner,
+                                    Poster = showJson.Images.Poster
+                                },
+                                ImdbId = showJson.ImdbId,
+                                Title = WebUtility.HtmlDecode(showJson.Title),
+                                Year = int.Parse(showJson.Year),
+                                Runtime = showJson.Runtime,
+                                Genres = showJson.Genres.Select(genre => new Genre
+                                {
+                                    Name = genre.AsString
+                                }).ToList(),
+                                GenreNames =
+                                    string.Join(", ", showJson.Genres.Select(a => FirstCharToUpper(a.AsString))),
+                                Slug = showJson.Slug,
+                                LastUpdated = showJson.LastUpdated,
+                                TvdbId = showJson.TvdbId,
+                                NumSeasons = showJson.NumSeasons,
+                                Status = showJson.Status,
+                                Synopsis = showJson.Synopsis,
+                                Country = showJson.Country,
+                                Episodes = showJson.Episodes.Select(episode => new EpisodeShow
+                                {
+                                    Title = WebUtility.HtmlDecode(episode.Title),
+                                    DateBased = episode.DateBased,
+                                    TvdbId = episode.TvdbId,
+                                    Torrents = new TorrentNode
+                                    {
+                                        Torrent0 = new Torrent
+                                        {
+                                            Url = episode.Torrents.Torrent_0?.Url,
+                                            Peers = episode.Torrents.Torrent_0?.Peers,
+                                            Seeds = episode.Torrents.Torrent_0?.Seeds,
+                                            Provider = episode.Torrents.Torrent_0?.Provider
+                                        },
+                                        Torrent1080p = new Torrent
+                                        {
+                                            Url = episode.Torrents.Torrent_1080p?.Url,
+                                            Peers = episode.Torrents.Torrent_1080p?.Peers,
+                                            Seeds = episode.Torrents.Torrent_1080p?.Seeds,
+                                            Provider = episode.Torrents.Torrent_1080p?.Provider
+                                        },
+                                        Torrent480p = new Torrent
+                                        {
+                                            Url = episode.Torrents.Torrent_480p?.Url,
+                                            Peers = episode.Torrents.Torrent_480p?.Peers,
+                                            Seeds = episode.Torrents.Torrent_480p?.Seeds,
+                                            Provider = episode.Torrents.Torrent_480p?.Provider
+                                        },
+                                        Torrent720p = new Torrent
+                                        {
+                                            Url = episode.Torrents.Torrent_720p?.Url,
+                                            Peers = episode.Torrents.Torrent_720p?.Peers,
+                                            Seeds = episode.Torrents.Torrent_720p?.Seeds,
+                                            Provider = episode.Torrents.Torrent_720p?.Provider
+                                        }
+                                    },
+                                    EpisodeNumber = episode.EpisodeNumber,
+                                    Season = episode.Season,
+                                    Overview = episode.Overview,
+                                    FirstAired = episode.FirstAired
+                                }).ToList(),
+                                AirDay = showJson.AirDay,
+                                AirTime = showJson.AirTime,
+                                Network = showJson.Network
+                            };
 
-                        if (!context.ShowSet.Any(a => a.ImdbId == show.ImdbId))
-                        {
-                            await UpdateImagesAndSimilarShow(show).ConfigureAwait(false);
-                            context.ShowSet.Add(show);
+                            if (!context.ShowSet.Any(a => a.ImdbId == show.ImdbId))
+                            {
+                                await UpdateImagesAndSimilarShow(show).ConfigureAwait(false);
+                                context.ShowSet.Add(show);
+                            }
+                            else
+                            {
+                                var existingEntity = await context.ShowSet.Include(a => a.Rating)
+                                    .Include(a => a.Episodes)
+                                    .ThenInclude(episode => episode.Torrents)
+                                    .ThenInclude(torrent => torrent.Torrent0)
+                                    .Include(a => a.Episodes)
+                                    .ThenInclude(episode => episode.Torrents)
+                                    .ThenInclude(torrent => torrent.Torrent1080p)
+                                    .Include(a => a.Episodes)
+                                    .ThenInclude(episode => episode.Torrents)
+                                    .ThenInclude(torrent => torrent.Torrent480p)
+                                    .Include(a => a.Episodes)
+                                    .ThenInclude(episode => episode.Torrents)
+                                    .ThenInclude(torrent => torrent.Torrent720p)
+                                    .Include(a => a.Genres)
+                                    .Include(a => a.Images)
+                                    .Include(a => a.Similars).FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId)
+                                    .ConfigureAwait(false);
+
+                                existingEntity.Rating.Hated = show.Rating.Hated;
+                                existingEntity.Rating.Loved = show.Rating.Loved;
+                                existingEntity.Rating.Percentage = show.Rating.Percentage;
+                                existingEntity.Rating.Votes = show.Rating.Votes;
+                                existingEntity.Rating.Watching = show.Rating.Watching;
+                                existingEntity.AirDay = show.AirDay;
+                                existingEntity.AirTime = show.AirTime;
+                                existingEntity.Status = show.Status;
+                                existingEntity.NumSeasons = show.NumSeasons;
+                                foreach (var episode in existingEntity.Episodes)
+                                {
+                                    var updatedEpisode = show.Episodes.FirstOrDefault(a => a.TvdbId == episode.TvdbId);
+                                    if (updatedEpisode == null) continue;
+                                    if (episode.Torrents?.Torrent0 != null && updatedEpisode.Torrents.Torrent0 != null)
+                                    {
+                                        episode.Torrents.Torrent0.Peers = updatedEpisode.Torrents.Torrent0.Peers;
+                                        episode.Torrents.Torrent0.Seeds = updatedEpisode.Torrents.Torrent0.Seeds;
+                                    }
+
+                                    if (episode.Torrents?.Torrent1080p != null &&
+                                        updatedEpisode.Torrents.Torrent1080p != null)
+                                    {
+                                        episode.Torrents.Torrent1080p.Peers =
+                                            updatedEpisode.Torrents.Torrent1080p.Peers;
+                                        episode.Torrents.Torrent1080p.Seeds =
+                                            updatedEpisode.Torrents.Torrent1080p.Seeds;
+                                    }
+
+                                    if (episode.Torrents?.Torrent720p != null &&
+                                        updatedEpisode.Torrents.Torrent720p != null)
+                                    {
+                                        episode.Torrents.Torrent720p.Peers = updatedEpisode.Torrents.Torrent720p.Peers;
+                                        episode.Torrents.Torrent720p.Seeds = updatedEpisode.Torrents.Torrent720p.Seeds;
+                                    }
+
+                                    if (episode.Torrents?.Torrent480p != null &&
+                                        updatedEpisode.Torrents.Torrent480p != null)
+                                    {
+                                        episode.Torrents.Torrent480p.Peers = updatedEpisode.Torrents.Torrent480p.Peers;
+                                        episode.Torrents.Torrent480p.Seeds = updatedEpisode.Torrents.Torrent480p.Seeds;
+                                    }
+                                }
+
+                                var newEpisodes =
+                                    show.Episodes.Except(existingEntity.Episodes, new EpisodeComparer());
+                                foreach (var newEpisode in newEpisodes.ToList())
+                                {
+                                    existingEntity.Episodes.Add(newEpisode);
+                                }
+
+                                if (existingEntity.Episodes.Any())
+                                {
+                                    var lastEpisode = existingEntity.Episodes.OrderBy(a => a.FirstAired).Last();
+                                    existingEntity.LastUpdated = lastEpisode.FirstAired;
+                                }
+                            }
+
+                            await context.SaveChangesAsync().ConfigureAwait(false);
+                            childProgress.Tick();
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            var existingEntity = await context.ShowSet.Include(a => a.Rating)
-                                .Include(a => a.Episodes)
-                                .ThenInclude(episode => episode.Torrents)
-                                .ThenInclude(torrent => torrent.Torrent0)
-                                .Include(a => a.Episodes)
-                                .ThenInclude(episode => episode.Torrents)
-                                .ThenInclude(torrent => torrent.Torrent1080p)
-                                .Include(a => a.Episodes)
-                                .ThenInclude(episode => episode.Torrents)
-                                .ThenInclude(torrent => torrent.Torrent480p)
-                                .Include(a => a.Episodes)
-                                .ThenInclude(episode => episode.Torrents)
-                                .ThenInclude(torrent => torrent.Torrent720p)
-                                .Include(a => a.Genres)
-                                .Include(a => a.Images)
-                                .Include(a => a.Similars).FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId)
-                                .ConfigureAwait(false);
-
-                            existingEntity.Rating.Hated = show.Rating.Hated;
-                            existingEntity.Rating.Loved = show.Rating.Loved;
-                            existingEntity.Rating.Percentage = show.Rating.Percentage;
-                            existingEntity.Rating.Votes = show.Rating.Votes;
-                            existingEntity.Rating.Watching = show.Rating.Watching;
-                            existingEntity.AirDay = show.AirDay;
-                            existingEntity.AirTime = show.AirTime;
-                            existingEntity.Status = show.Status;
-                            existingEntity.NumSeasons = show.NumSeasons;
-                            foreach (var episode in existingEntity.Episodes)
-                            {
-                                var updatedEpisode = show.Episodes.FirstOrDefault(a => a.TvdbId == episode.TvdbId);
-                                if (updatedEpisode == null) continue;
-                                if (episode.Torrents?.Torrent0 != null && updatedEpisode.Torrents.Torrent0 != null)
-                                {
-                                    episode.Torrents.Torrent0.Peers = updatedEpisode.Torrents.Torrent0.Peers;
-                                    episode.Torrents.Torrent0.Seeds = updatedEpisode.Torrents.Torrent0.Seeds;
-                                }
-
-                                if (episode.Torrents?.Torrent1080p != null &&
-                                    updatedEpisode.Torrents.Torrent1080p != null)
-                                {
-                                    episode.Torrents.Torrent1080p.Peers = updatedEpisode.Torrents.Torrent1080p.Peers;
-                                    episode.Torrents.Torrent1080p.Seeds = updatedEpisode.Torrents.Torrent1080p.Seeds;
-                                }
-
-                                if (episode.Torrents?.Torrent720p != null &&
-                                    updatedEpisode.Torrents.Torrent720p != null)
-                                {
-                                    episode.Torrents.Torrent720p.Peers = updatedEpisode.Torrents.Torrent720p.Peers;
-                                    episode.Torrents.Torrent720p.Seeds = updatedEpisode.Torrents.Torrent720p.Seeds;
-                                }
-
-                                if (episode.Torrents?.Torrent480p != null &&
-                                    updatedEpisode.Torrents.Torrent480p != null)
-                                {
-                                    episode.Torrents.Torrent480p.Peers = updatedEpisode.Torrents.Torrent480p.Peers;
-                                    episode.Torrents.Torrent480p.Seeds = updatedEpisode.Torrents.Torrent480p.Seeds;
-                                }
-                            }
-
-                            var newEpisodes =
-                                show.Episodes.Except(existingEntity.Episodes, new EpisodeComparer());
-                            foreach (var newEpisode in newEpisodes.ToList())
-                            {
-                                existingEntity.Episodes.Add(newEpisode);
-                            }
-
-                            if (existingEntity.Episodes.Any())
-                            {
-                                var lastEpisode = existingEntity.Episodes.OrderBy(a => a.FirstAired).Last();
-                                existingEntity.LastUpdated = lastEpisode.FirstAired;
-                            }
+                            _loggingService.Telemetry.TrackException(ex);
                         }
-
-                        await context.SaveChangesAsync().ConfigureAwait(false);
-                        watch.Stop();
-                        updatedShows++;
-                        Console.WriteLine(Environment.NewLine);
-                        Console.WriteLine(
-                            $"{DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED SHOW {show.Title} in {watch.ElapsedMilliseconds} ms. {updatedShows}/{documents.Count}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _loggingService.Telemetry.TrackException(ex);
                     }
                 }
+
+                // Finish
+                pbar.Tick();
+                var loggingTraceEnd =
+                    $@"Import shows ended at {
+                            DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                                CultureInfo.InvariantCulture)
+                        }";
+                _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
             }
-
-            // Finish
-            Console.WriteLine(Environment.NewLine);
-            Console.WriteLine("Done processing shows.");
-
-            var loggingTraceEnd =
-                $@"Import shows ended at {
-                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
-                            CultureInfo.InvariantCulture)
-                    }";
-            _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
         }
 
         private static string FirstCharToUpper(string input)

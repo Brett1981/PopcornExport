@@ -14,6 +14,7 @@ using PopcornExport.Services.Assets;
 using TMDbLib.Client;
 using TMDbLib.Objects.Movies;
 using Microsoft.EntityFrameworkCore;
+using ShellProgressBar;
 using Movie = PopcornExport.Database.Movie;
 
 namespace PopcornExport.Services.Import
@@ -68,8 +69,9 @@ namespace PopcornExport.Services.Import
         /// Import movies to database
         /// </summary>
         /// <param name="docs">Documents to import</param>
+        /// <param name="pbar"><see cref="IProgressBar"/></param>
         /// <returns><see cref="Task"/></returns>
-        public async Task Import(IEnumerable<BsonDocument> docs)
+        public async Task Import(IEnumerable<BsonDocument> docs, IProgressBar pbar)
         {
             var documents = docs.ToList();
             var loggingTraceBegin =
@@ -78,117 +80,116 @@ namespace PopcornExport.Services.Import
                             CultureInfo.InvariantCulture)
                     }";
             _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
-
-            var updatedMovies = 0;
-            using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
+            var workBarOptions = new ProgressBarOptions
             {
-                foreach (var document in documents)
+                ForegroundColor = ConsoleColor.Yellow,
+                ProgressCharacter = '─',
+                BackgroundColor = ConsoleColor.DarkGray,
+            };
+            using (var childProgress = pbar.Spawn(documents.Count, "step import movie progress", workBarOptions))
+            {
+                using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
                 {
-                    try
+                    foreach (var document in documents)
                     {
-                        var watch = new Stopwatch();
-                        watch.Start();
-
-                        // Deserialize a document to a movie
-                        var movieJson =
-                            BsonSerializer.Deserialize<MovieBson>(document);
-
-                        var movie = new Movie
+                        try
                         {
-                            ImdbCode = movieJson.ImdbCode,
-                            Url = movieJson.Url,
-                            Torrents = movieJson.Torrents.Select(torrent => new TorrentMovie
-                            {
-                                Url = torrent.Url,
-                                DateUploaded = torrent.DateUploaded,
-                                DateUploadedUnix = torrent.DateUploadedUnix,
-                                Quality = torrent.Quality,
-                                Hash = torrent.Hash,
-                                Peers = torrent.Peers,
-                                Seeds = torrent.Seeds,
-                                Size = torrent.Size,
-                                SizeBytes = torrent.SizeBytes
-                            }).ToList(),
-                            DateUploaded = movieJson.DateUploaded,
-                            DateUploadedUnix = movieJson.DateUploadedUnix,
-                            DownloadCount = movieJson.DownloadCount,
-                            MpaRating = movieJson.MpaRating,
-                            Runtime = movieJson.Runtime,
-                            YtTrailerCode = movieJson.YtTrailerCode,
-                            DescriptionIntro = movieJson.DescriptionIntro,
-                            TitleLong = movieJson.TitleLong,
-                            Rating = movieJson.Rating,
-                            Year = movieJson.Year,
-                            LikeCount = movieJson.LikeCount,
-                            DescriptionFull = movieJson.DescriptionFull,
-                            Cast = movieJson.Cast?.Select(cast => new Database.Cast
-                            {
-                                ImdbCode = cast?.ImdbCode,
-                                SmallImage = cast?.SmallImage,
-                                CharacterName = cast?.CharacterName,
-                                Name = cast?.Name
-                            }).ToList(),
-                            Genres = movieJson.Genres.Select(genre => new Genre
-                            {
-                                Name = genre
-                            }).ToList(),
-                            GenreNames = string.Join(", ", movieJson.Genres.Select(FirstCharToUpper)),
-                            Language = movieJson.Language,
-                            Slug = movieJson.Slug,
-                            Title = movieJson.Title,
-                            BackgroundImage = movieJson.BackgroundImage,
-                            PosterImage = movieJson.PosterImage
-                        };
+                            // Deserialize a document to a movie
+                            var movieJson =
+                                BsonSerializer.Deserialize<MovieBson>(document);
 
-                        if (!context.MovieSet.Any(a => a.ImdbCode == movie.ImdbCode))
-                        {
-                            await RetrieveAssets(movie).ConfigureAwait(false);
-                            context.MovieSet.Add(movie);
-                            await context.SaveChangesAsync().ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            var existingEntity =
-                                await context.MovieSet.Include(a => a.Torrents)
-                                    .FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode).ConfigureAwait(false);
-
-                            existingEntity.DownloadCount = movie.DownloadCount;
-                            existingEntity.LikeCount = movie.LikeCount;
-                            existingEntity.Rating = movie.Rating;
-                            foreach (var torrent in existingEntity.Torrents)
+                            var movie = new Movie
                             {
-                                var updatedTorrent = movie.Torrents.FirstOrDefault(a => a.Quality == torrent.Quality);
-                                if (updatedTorrent == null) continue;
-                                torrent.Peers = updatedTorrent.Peers;
-                                torrent.Seeds = updatedTorrent.Seeds;
+                                ImdbCode = movieJson.ImdbCode,
+                                Url = movieJson.Url,
+                                Torrents = movieJson.Torrents.Select(torrent => new TorrentMovie
+                                {
+                                    Url = torrent.Url,
+                                    DateUploaded = torrent.DateUploaded,
+                                    DateUploadedUnix = torrent.DateUploadedUnix,
+                                    Quality = torrent.Quality,
+                                    Hash = torrent.Hash,
+                                    Peers = torrent.Peers,
+                                    Seeds = torrent.Seeds,
+                                    Size = torrent.Size,
+                                    SizeBytes = torrent.SizeBytes
+                                }).ToList(),
+                                DateUploaded = movieJson.DateUploaded,
+                                DateUploadedUnix = movieJson.DateUploadedUnix,
+                                DownloadCount = movieJson.DownloadCount,
+                                MpaRating = movieJson.MpaRating,
+                                Runtime = movieJson.Runtime,
+                                YtTrailerCode = movieJson.YtTrailerCode,
+                                DescriptionIntro = movieJson.DescriptionIntro,
+                                TitleLong = movieJson.TitleLong,
+                                Rating = movieJson.Rating,
+                                Year = movieJson.Year,
+                                LikeCount = movieJson.LikeCount,
+                                DescriptionFull = movieJson.DescriptionFull,
+                                Cast = movieJson.Cast?.Select(cast => new Database.Cast
+                                {
+                                    ImdbCode = cast?.ImdbCode,
+                                    SmallImage = cast?.SmallImage,
+                                    CharacterName = cast?.CharacterName,
+                                    Name = cast?.Name
+                                }).ToList(),
+                                Genres = movieJson.Genres.Select(genre => new Genre
+                                {
+                                    Name = genre
+                                }).ToList(),
+                                GenreNames = string.Join(", ", movieJson.Genres.Select(FirstCharToUpper)),
+                                Language = movieJson.Language,
+                                Slug = movieJson.Slug,
+                                Title = movieJson.Title,
+                                BackgroundImage = movieJson.BackgroundImage,
+                                PosterImage = movieJson.PosterImage
+                            };
+
+                            if (!context.MovieSet.Any(a => a.ImdbCode == movie.ImdbCode))
+                            {
+                                await RetrieveAssets(movie).ConfigureAwait(false);
+                                context.MovieSet.Add(movie);
+                                await context.SaveChangesAsync().ConfigureAwait(false);
+                            }
+                            else
+                            {
+                                var existingEntity =
+                                    await context.MovieSet.Include(a => a.Torrents)
+                                        .FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode).ConfigureAwait(false);
+
+                                existingEntity.DownloadCount = movie.DownloadCount;
+                                existingEntity.LikeCount = movie.LikeCount;
+                                existingEntity.Rating = movie.Rating;
+                                foreach (var torrent in existingEntity.Torrents)
+                                {
+                                    var updatedTorrent =
+                                        movie.Torrents.FirstOrDefault(a => a.Quality == torrent.Quality);
+                                    if (updatedTorrent == null) continue;
+                                    torrent.Peers = updatedTorrent.Peers;
+                                    torrent.Seeds = updatedTorrent.Seeds;
+                                }
+
+                                await context.SaveChangesAsync().ConfigureAwait(false);
                             }
 
-                            await context.SaveChangesAsync().ConfigureAwait(false);
+                            childProgress.Tick();
                         }
-
-                        watch.Stop();
-                        updatedMovies++;
-                        Console.WriteLine(Environment.NewLine);
-                        Console.WriteLine(
-                            $"{DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)} UPDATED MOVIE {movie.Title} in {watch.ElapsedMilliseconds} ms. {updatedMovies}/{documents.Count}");
-                    }
-                    catch (Exception ex)
-                    {
-                        _loggingService.Telemetry.TrackException(ex);
+                        catch (Exception ex)
+                        {
+                            _loggingService.Telemetry.TrackException(ex);
+                        }
                     }
                 }
+
+                // Finish
+                pbar.Tick();
+                var loggingTraceEnd =
+                    $@"Import movies ended at {
+                            DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                                CultureInfo.InvariantCulture)
+                        }";
+                _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
             }
-
-            // Finish
-            Console.WriteLine(Environment.NewLine);
-            Console.WriteLine("Done processing movies.");
-
-            var loggingTraceEnd =
-                $@"Import movies ended at {
-                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
-                            CultureInfo.InvariantCulture)
-                    }";
-            _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
         }
 
         private static string FirstCharToUpper(string input)

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using PopcornExport.Services.Assets;
 using PopcornExport.Services.Caching;
 using PopcornExport.Services.File;
+using ShellProgressBar;
 
 namespace PopcornExport.Services.Core
 {
@@ -43,7 +44,8 @@ namespace PopcornExport.Services.Core
         /// <param name="loggingService">Logging service</param>
         /// <param name="fileService">The file service</param>
         /// <param name="cachingService">The caching service</param>
-        public CoreService(IExportService exportService, ILoggingService loggingService, IFileService fileService, ICachingService cachingService)
+        public CoreService(IExportService exportService, ILoggingService loggingService, IFileService fileService,
+            ICachingService cachingService)
         {
             _exportService = exportService;
             _loggingService = loggingService;
@@ -60,33 +62,54 @@ namespace PopcornExport.Services.Core
             try
             {
                 var loggingTraceBegin =
-                    $@"Export started at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
-                        CultureInfo.InvariantCulture)}";
+                    $@"Export started at {
+                            DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff",
+                                CultureInfo.InvariantCulture)
+                        }";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
 
                 Console.WriteLine(loggingTraceBegin);
                 var exports = new[] {ExportType.Movies, ExportType.Shows};
-                foreach (var export in exports)
+                var overProgressOptions = new ProgressBarOptions
                 {
-                    // Load export
-                    var documents = await _exportService.LoadExport(export).ConfigureAwait(false);
-
-                    IImportService importService;
-                    // Import the documents according to export type
-                    switch (export)
+                    BackgroundColor = ConsoleColor.DarkGray
+                };
+                using (var pbar = new ProgressBar(exports.Length, "overall progress", overProgressOptions))
+                {
+                    foreach (var export in exports)
                     {
-                        case ExportType.Shows:
-                            importService = new ImportShowService(new AssetsShowService(_loggingService, _fileService),
-                                _loggingService);
-                            await importService.Import(documents).ConfigureAwait(false);
-                            break;
-                        case ExportType.Movies:
-                            importService = new ImportMovieService(new AssetsMovieService(_loggingService, _fileService),
-                                _loggingService);
-                            await importService.Import(documents).ConfigureAwait(false);
-                            break;
-                        default:
-                            throw new NotImplementedException();
+                        var stepBarOptions = new ProgressBarOptions
+                        {
+                            ForegroundColor = ConsoleColor.Cyan,
+                            ForegroundColorDone = ConsoleColor.DarkGreen,
+                            ProgressCharacter = '─',
+                            BackgroundColor = ConsoleColor.DarkGray,
+                            CollapseWhenFinished = true,
+                        };
+                        using (var childProgress = pbar.Spawn(2, $"step movie progress", stepBarOptions))
+                        {
+                            // Load export
+                            var documents = await _exportService.LoadExport(export, childProgress).ConfigureAwait(false);
+                            IImportService importService;
+                            // Import the documents according to export type
+                            switch (export)
+                            {
+                                case ExportType.Shows:
+                                    importService = new ImportShowService(
+                                        new AssetsShowService(_loggingService, _fileService),
+                                        _loggingService);
+                                    await importService.Import(documents, childProgress).ConfigureAwait(false);
+                                    break;
+                                case ExportType.Movies:
+                                    importService = new ImportMovieService(
+                                        new AssetsMovieService(_loggingService, _fileService),
+                                        _loggingService);
+                                    await importService.Import(documents, childProgress).ConfigureAwait(false);
+                                    break;
+                                default:
+                                    throw new NotImplementedException();
+                            }
+                        }
                     }
                 }
 
@@ -94,7 +117,9 @@ namespace PopcornExport.Services.Core
                 await _cachingService.Flush().ConfigureAwait(false);
                 _loggingService.Telemetry.TrackTrace("Flushing Redis database completed.");
                 var loggingTraceEnd =
-                    $@"Export ended at {DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)}";
+                    $@"Export ended at {
+                            DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)
+                        }";
                 _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
             }
             catch (Exception ex)
