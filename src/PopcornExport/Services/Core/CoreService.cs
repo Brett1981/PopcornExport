@@ -75,7 +75,7 @@ namespace PopcornExport.Services.Core
                 {
                     BackgroundColor = ConsoleColor.DarkGray
                 };
-                using (var pbar = new ProgressBar(exports.Length, "overall progress", overProgressOptions))
+                using (var pbar = new ProgressBar(exports.Length * 2, "overall progress", overProgressOptions))
                 {
                     foreach (var export in exports)
                     {
@@ -85,12 +85,14 @@ namespace PopcornExport.Services.Core
                             ForegroundColorDone = ConsoleColor.DarkGreen,
                             ProgressCharacter = '─',
                             BackgroundColor = ConsoleColor.DarkGray,
-                            CollapseWhenFinished = true,
                         };
-                        using (var childProgress = pbar.Spawn(2, $"step {export.ToFriendlyString().ToLowerInvariant()} progress", stepBarOptions))
+                        using (var childProgress = pbar.Spawn(2,
+                            $"step {export.ToFriendlyString().ToLowerInvariant()} progress", stepBarOptions))
                         {
                             // Load export
-                            var documents = await _exportService.LoadExport(export, childProgress).ConfigureAwait(false);
+                            var documents = await _exportService.LoadExport(export, childProgress)
+                                .ConfigureAwait(false);
+                            pbar.Tick();
                             IImportService importService;
                             // Import the documents according to export type
                             switch (export)
@@ -110,6 +112,8 @@ namespace PopcornExport.Services.Core
                                 default:
                                     throw new NotImplementedException();
                             }
+
+                            pbar.Tick();
                         }
                     }
                 }

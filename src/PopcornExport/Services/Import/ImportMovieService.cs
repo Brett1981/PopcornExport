@@ -98,6 +98,9 @@ namespace PopcornExport.Services.Import
                             var movieJson =
                                 BsonSerializer.Deserialize<MovieBson>(document);
 
+                            if (movieJson.Torrents == null || movieJson.Cast == null)
+                                continue;
+
                             var movie = new Movie
                             {
                                 ImdbCode = movieJson.ImdbCode,
@@ -261,7 +264,7 @@ namespace PopcornExport.Services.Import
                 }
             }
 
-            if (!movie.Similars.Any() && tmdbMovie.Similar.TotalResults != 0)
+            if (!movie.Similars.Any() && tmdbMovie.Similar != null && tmdbMovie.Similar.TotalResults != 0)
             {
                 movie.Similars = new List<Similar>();
                 foreach (var id in tmdbMovie.Similar.Results.Select(a => a.Id))
