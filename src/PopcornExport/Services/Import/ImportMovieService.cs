@@ -80,7 +80,7 @@ namespace PopcornExport.Services.Import
                 ProgressCharacter = '─',
                 BackgroundColor = ConsoleColor.DarkGray,
             };
-            using (var childProgress = pbar.Spawn(documents.Count, "step import progress", workBarOptions))
+            using (var childProgress = pbar?.Spawn(documents.Count, "step import progress", workBarOptions))
             {
                 using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
                 {
@@ -169,7 +169,7 @@ namespace PopcornExport.Services.Import
                                 await context.SaveChangesAsync().ConfigureAwait(false);
                             }
 
-                            childProgress.Tick();
+                            childProgress?.Tick();
                         }
                         catch (Exception ex)
                         {
@@ -179,7 +179,7 @@ namespace PopcornExport.Services.Import
                 }
 
                 // Finish
-                pbar.Tick();
+                pbar?.Tick();
             }
         }
 

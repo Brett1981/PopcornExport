@@ -50,19 +50,13 @@ namespace PopcornExport.Services.Export
             var export = new ConcurrentBag<BsonDocument>();
             try
             {
-                var loggingTraceBegin =
-                    $@"Export {exportType.ToFriendlyString()} started at {
-                            DateTime.Now.ToString(
-                                "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)
-                        }";
-                _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
                 var workBarOptions = new ProgressBarOptions
                 {
                     ForegroundColor = ConsoleColor.Yellow,
                     ProgressCharacter = '─',
                     BackgroundColor = ConsoleColor.DarkGray,
                 };
-                using (var childProgress = pbar.Spawn(0, $"step export progress", workBarOptions))
+                using (var childProgress = pbar?.Spawn(0, $"step export progress", workBarOptions))
                 {
                     if (exportType == ExportType.Shows)
                     {
@@ -87,8 +81,11 @@ namespace PopcornExport.Services.Export
                                 while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
                                 {
                                     ConvertJsonToBsonDocument(line, export);
-                                    childProgress.Tick();
-                                    childProgress.MaxTicks = childProgress.CurrentTick;
+                                    if (childProgress != null)
+                                    {
+                                        childProgress.Tick();
+                                        childProgress.MaxTicks = childProgress.CurrentTick;
+                                    }
                                 }
                             }
                         }
@@ -113,7 +110,9 @@ namespace PopcornExport.Services.Export
                                 }
                                 else
                                 {
-                                    childProgress.MaxTicks = movieNode.Data.MovieCount;
+                                    if(childProgress != null)
+                                        childProgress.MaxTicks = movieNode.Data.MovieCount;
+
                                     movieFound = true;
                                     page++;
                                     await movieNode.Data.Movies.ParallelForEachAsync(async movie =>
@@ -131,7 +130,8 @@ namespace PopcornExport.Services.Export
                                                 ConvertJsonToBsonDocument(
                                                     JsonSerializer.ToJsonString(fullMovie.Data.Movie),
                                                     export);
-                                                childProgress.Tick();
+
+                                                childProgress?.Tick();
                                             }
                                         }
                                         catch (Exception ex)
@@ -144,14 +144,7 @@ namespace PopcornExport.Services.Export
                         } while (movieFound);
                     }
 
-                    pbar.Tick();
-                    var loggingTraceEnd =
-                        $@"Export {export.Count} {exportType.ToFriendlyString()} ended at {
-                                DateTime.Now.ToString(
-                                    "dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)
-                            }";
-                    _loggingService.Telemetry.TrackTrace(loggingTraceEnd);
-
+                    pbar?.Tick();
                     return export;
                 }
 

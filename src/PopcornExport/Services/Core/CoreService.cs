@@ -68,14 +68,13 @@ namespace PopcornExport.Services.Core
                                 CultureInfo.InvariantCulture)
                         }";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
-
                 Console.WriteLine(loggingTraceBegin);
                 var exports = new[] {ExportType.Movies, ExportType.Shows};
                 var overProgressOptions = new ProgressBarOptions
                 {
                     BackgroundColor = ConsoleColor.DarkGray
                 };
-                using (var pbar = new ProgressBar(exports.Length * 2, "overall progress", overProgressOptions))
+                using (var pbar = Schim.ProgressBar.Create(exports.Length * 2, "overall progress", overProgressOptions))
                 {
                     foreach (var export in exports)
                     {
@@ -101,26 +100,23 @@ namespace PopcornExport.Services.Core
                                     importService = new ImportShowService(
                                         new AssetsShowService(_loggingService, _fileService),
                                         _loggingService);
-                                    await importService.Import(documents, childProgress).ConfigureAwait(false);
                                     break;
                                 case ExportType.Movies:
                                     importService = new ImportMovieService(
                                         new AssetsMovieService(_loggingService, _fileService),
                                         _loggingService);
-                                    await importService.Import(documents, childProgress).ConfigureAwait(false);
                                     break;
                                 default:
                                     throw new NotImplementedException();
                             }
 
+                            await importService.Import(documents, childProgress).ConfigureAwait(false);
                             pbar.Tick();
                         }
                     }
                 }
 
-                _loggingService.Telemetry.TrackTrace("Flushing Redis database...");
                 await _cachingService.Flush().ConfigureAwait(false);
-                _loggingService.Telemetry.TrackTrace("Flushing Redis database completed.");
                 var loggingTraceEnd =
                     $@"Export ended at {
                             DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)
@@ -129,6 +125,7 @@ namespace PopcornExport.Services.Core
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.StackTrace);
                 _loggingService.Telemetry.TrackException(ex);
             }
         }
