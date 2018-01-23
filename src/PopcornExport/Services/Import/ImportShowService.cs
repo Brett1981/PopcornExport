@@ -104,8 +104,8 @@ namespace PopcornExport.Services.Import
                                 },
                                 Images = new ImageShow
                                 {
-                                    Banner = showJson.Images.Banner,
-                                    Poster = showJson.Images.Poster
+                                    Banner = showJson.Images?.Banner,
+                                    Poster = showJson.Images?.Poster
                                 },
                                 ImdbId = showJson.ImdbId,
                                 Title = WebUtility.HtmlDecode(showJson.Title),
