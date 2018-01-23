@@ -208,6 +208,8 @@ namespace PopcornExport.Services.Import
                                     {
                                         episode.Torrents.Torrent0.Peers = updatedEpisode.Torrents.Torrent0.Peers;
                                         episode.Torrents.Torrent0.Seeds = updatedEpisode.Torrents.Torrent0.Seeds;
+                                        if(!string.IsNullOrWhiteSpace(updatedEpisode.Torrents.Torrent0.Url))
+                                            episode.Torrents.Torrent0.Url = updatedEpisode.Torrents.Torrent0.Url;
                                     }
 
                                     if (episode.Torrents?.Torrent1080p != null &&
@@ -217,6 +219,8 @@ namespace PopcornExport.Services.Import
                                             updatedEpisode.Torrents.Torrent1080p.Peers;
                                         episode.Torrents.Torrent1080p.Seeds =
                                             updatedEpisode.Torrents.Torrent1080p.Seeds;
+                                        if (!string.IsNullOrWhiteSpace(updatedEpisode.Torrents.Torrent1080p.Url))
+                                            episode.Torrents.Torrent1080p.Url = updatedEpisode.Torrents.Torrent1080p.Url;
                                     }
 
                                     if (episode.Torrents?.Torrent720p != null &&
@@ -224,6 +228,8 @@ namespace PopcornExport.Services.Import
                                     {
                                         episode.Torrents.Torrent720p.Peers = updatedEpisode.Torrents.Torrent720p.Peers;
                                         episode.Torrents.Torrent720p.Seeds = updatedEpisode.Torrents.Torrent720p.Seeds;
+                                        if (!string.IsNullOrWhiteSpace(updatedEpisode.Torrents.Torrent720p.Url))
+                                            episode.Torrents.Torrent720p.Url = updatedEpisode.Torrents.Torrent720p.Url;
                                     }
 
                                     if (episode.Torrents?.Torrent480p != null &&
@@ -231,6 +237,8 @@ namespace PopcornExport.Services.Import
                                     {
                                         episode.Torrents.Torrent480p.Peers = updatedEpisode.Torrents.Torrent480p.Peers;
                                         episode.Torrents.Torrent480p.Seeds = updatedEpisode.Torrents.Torrent480p.Seeds;
+                                        if (!string.IsNullOrWhiteSpace(updatedEpisode.Torrents.Torrent480p.Url))
+                                            episode.Torrents.Torrent480p.Url = updatedEpisode.Torrents.Torrent480p.Url;
                                     }
                                 }
 
