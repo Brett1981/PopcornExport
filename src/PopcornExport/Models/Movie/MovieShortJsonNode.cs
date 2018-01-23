@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 
 namespace PopcornExport.Models.Movie
 {
+    [DataContract]
     public class MovieShortJsonNode
     {
         [DataMember(Name = "status")]

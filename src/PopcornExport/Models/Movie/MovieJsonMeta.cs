@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 
 namespace PopcornExport.Models.Movie
 {
+    [DataContract]
     public class MovieJsonMeta
     {
         [DataMember(Name = "server_time")]

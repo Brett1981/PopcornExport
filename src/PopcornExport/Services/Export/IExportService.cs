@@ -1,5 +1,4 @@
-﻿using MongoDB.Bson;
-using PopcornExport.Models.Export;
+﻿using PopcornExport.Models.Export;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ShellProgressBar;
@@ -17,6 +16,6 @@ namespace PopcornExport.Services.Export
         /// <param name="exportType">Export to load</param>
         /// <param name="pbar"><see cref="IProgressBar"/></param>
         /// <returns>Bson documents</returns>
-        Task<IEnumerable<BsonDocument>> LoadExport(ExportType exportType, IProgressBar pbar);
+        Task<IEnumerable<string>> LoadExport(ExportType exportType, IProgressBar pbar);
     }
 }

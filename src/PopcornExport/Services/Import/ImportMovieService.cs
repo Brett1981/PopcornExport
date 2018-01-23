@@ -1,12 +1,8 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using PopcornExport.Helpers;
+﻿using PopcornExport.Helpers;
 using PopcornExport.Models.Movie;
 using PopcornExport.Services.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using PopcornExport.Database;
@@ -15,6 +11,7 @@ using TMDbLib.Client;
 using TMDbLib.Objects.Movies;
 using Microsoft.EntityFrameworkCore;
 using ShellProgressBar;
+using Utf8Json;
 using Movie = PopcornExport.Database.Movie;
 
 namespace PopcornExport.Services.Import
@@ -71,7 +68,7 @@ namespace PopcornExport.Services.Import
         /// <param name="docs">Documents to import</param>
         /// <param name="pbar"><see cref="IProgressBar"/></param>
         /// <returns><see cref="Task"/></returns>
-        public async Task Import(IEnumerable<BsonDocument> docs, IProgressBar pbar)
+        public async Task Import(IEnumerable<string> docs, IProgressBar pbar)
         {
             var documents = docs.ToList();
             var workBarOptions = new ProgressBarOptions
@@ -90,7 +87,7 @@ namespace PopcornExport.Services.Import
                         {
                             // Deserialize a document to a movie
                             var movieJson =
-                                BsonSerializer.Deserialize<MovieBson>(document);
+                                JsonSerializer.Deserialize<MovieJson>(document);
 
                             if (movieJson.Torrents == null || movieJson.Cast == null)
                                 continue;

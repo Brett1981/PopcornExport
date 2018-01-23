@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using MongoDB.Bson;
 using ShellProgressBar;
 
 namespace PopcornExport.Services.Import
@@ -16,6 +15,6 @@ namespace PopcornExport.Services.Import
         /// <param name="documents">Documents to import</param>
         /// <param name="pbar"><see cref="IProgressBar"/></param>
         /// <returns><see cref="Task"/></returns>
-        Task Import(IEnumerable<BsonDocument> documents, IProgressBar pbar);
+        Task Import(IEnumerable<string> documents, IProgressBar pbar);
     }
 }

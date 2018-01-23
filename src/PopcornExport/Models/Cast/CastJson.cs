@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 
 namespace PopcornExport.Models.Cast
 {
+    [DataContract]
     public class CastJson
     {
         [DataMember(Name = "name")]

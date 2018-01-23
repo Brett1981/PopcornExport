@@ -6,6 +6,7 @@ using PopcornExport.Models.Torrent.Movie;
 
 namespace PopcornExport.Models.Movie
 {
+    [DataContract]
     public class MovieJson
     {
         [DataMember(Name = "url")]

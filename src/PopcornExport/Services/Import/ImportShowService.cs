@@ -1,11 +1,6 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using PopcornExport.Services.Logging;
+﻿using PopcornExport.Services.Logging;
 using System;
-using System.Collections.Async;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -18,6 +13,7 @@ using TMDbLib.Client;
 using PopcornExport.Helpers;
 using ShellProgressBar;
 using TMDbLib.Objects.TvShows;
+using Utf8Json;
 
 namespace PopcornExport.Services.Import
 {
@@ -73,7 +69,7 @@ namespace PopcornExport.Services.Import
         /// <param name="docs">Documents to import</param>
         /// <param name="pbar"><see cref="IProgressBar"/></param>
         /// <returns><see cref="Task"/></returns>
-        public async Task Import(IEnumerable<BsonDocument> docs, IProgressBar pbar)
+        public async Task Import(IEnumerable<string> docs, IProgressBar pbar)
         {
             var documents = docs.ToList();
             var workBarOptions = new ProgressBarOptions
@@ -92,7 +88,7 @@ namespace PopcornExport.Services.Import
                         {
                             // Deserialize a document to a show
                             var showJson =
-                                BsonSerializer.Deserialize<ShowBson>(document);
+                                JsonSerializer.Deserialize<ShowJson>(document);
 
                             if (showJson.Year == null) continue;
 
@@ -100,11 +96,11 @@ namespace PopcornExport.Services.Import
                             {
                                 Rating = new Rating
                                 {
-                                    Watching = showJson.Rating.Watching,
                                     Hated = showJson.Rating.Hated,
-                                    Percentage = showJson.Rating.Percentage,
+                                    Percentage = Convert.ToInt32(showJson.Rating.Percentage),
                                     Votes = showJson.Rating.Votes,
-                                    Loved = showJson.Rating.Loved
+                                    Loved = showJson.Rating.Loved,
+                                    Watching = showJson.Rating.Watching
                                 },
                                 Images = new ImageShow
                                 {
@@ -117,10 +113,10 @@ namespace PopcornExport.Services.Import
                                 Runtime = showJson.Runtime,
                                 Genres = showJson.Genres.Select(genre => new Genre
                                 {
-                                    Name = genre.AsString
+                                    Name = genre
                                 }).ToList(),
                                 GenreNames =
-                                    string.Join(", ", showJson.Genres.Select(a => FirstCharToUpper(a.AsString))),
+                                    string.Join(", ", showJson.Genres.Select(FirstCharToUpper)),
                                 Slug = showJson.Slug,
                                 LastUpdated = showJson.LastUpdated,
                                 TvdbId = showJson.TvdbId,
@@ -132,40 +128,36 @@ namespace PopcornExport.Services.Import
                                 {
                                     Title = WebUtility.HtmlDecode(episode.Title),
                                     DateBased = episode.DateBased,
-                                    TvdbId = episode.TvdbId,
+                                    TvdbId = int.TryParse(episode.TvdbId.ToString(), out var tvdbId) ? tvdbId : 0,
                                     Torrents = new TorrentNode
                                     {
                                         Torrent0 = new Torrent
                                         {
                                             Url = episode.Torrents.Torrent_0?.Url,
                                             Peers = episode.Torrents.Torrent_0?.Peers,
-                                            Seeds = episode.Torrents.Torrent_0?.Seeds,
-                                            Provider = episode.Torrents.Torrent_0?.Provider
+                                            Seeds = episode.Torrents.Torrent_0?.Seeds
                                         },
                                         Torrent1080p = new Torrent
                                         {
                                             Url = episode.Torrents.Torrent_1080p?.Url,
                                             Peers = episode.Torrents.Torrent_1080p?.Peers,
-                                            Seeds = episode.Torrents.Torrent_1080p?.Seeds,
-                                            Provider = episode.Torrents.Torrent_1080p?.Provider
+                                            Seeds = episode.Torrents.Torrent_1080p?.Seeds
                                         },
                                         Torrent480p = new Torrent
                                         {
                                             Url = episode.Torrents.Torrent_480p?.Url,
                                             Peers = episode.Torrents.Torrent_480p?.Peers,
-                                            Seeds = episode.Torrents.Torrent_480p?.Seeds,
-                                            Provider = episode.Torrents.Torrent_480p?.Provider
+                                            Seeds = episode.Torrents.Torrent_480p?.Seeds
                                         },
                                         Torrent720p = new Torrent
                                         {
                                             Url = episode.Torrents.Torrent_720p?.Url,
                                             Peers = episode.Torrents.Torrent_720p?.Peers,
-                                            Seeds = episode.Torrents.Torrent_720p?.Seeds,
-                                            Provider = episode.Torrents.Torrent_720p?.Provider
+                                            Seeds = episode.Torrents.Torrent_720p?.Seeds
                                         }
                                     },
-                                    EpisodeNumber = episode.EpisodeNumber,
-                                    Season = episode.Season,
+                                    EpisodeNumber = int.TryParse(episode.EpisodeNumber.ToString(), out var episodeNumber) ? episodeNumber : 0,
+                                    Season = int.TryParse(episode.Season.ToString(), out var season) ? season : 0,
                                     Overview = episode.Overview,
                                     FirstAired = episode.FirstAired
                                 }).ToList(),

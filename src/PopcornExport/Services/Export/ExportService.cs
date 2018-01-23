@@ -1,20 +1,16 @@
-﻿using MongoDB.Bson;
-using PopcornExport.Extensions;
-using PopcornExport.Helpers;
+﻿using PopcornExport.Helpers;
 using PopcornExport.Models.Export;
 using PopcornExport.Services.Logging;
 using RestSharp.Portable;
 using RestSharp.Portable.HttpClient;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using PopcornExport.Models.Movie;
 using System.Collections.Async;
 using System.Collections.Concurrent;
+using PopcornExport.Models.Show;
 using ShellProgressBar;
 using Utf8Json;
 
@@ -45,9 +41,9 @@ namespace PopcornExport.Services.Export
         /// <param name="exportType">Export to load</param>
         /// <param name="pbar"><see cref="IProgressBar"/></param>
         /// <returns>Bson documents</returns>
-        public async Task<IEnumerable<BsonDocument>> LoadExport(ExportType exportType, IProgressBar pbar)
+        public async Task<IEnumerable<string>> LoadExport(ExportType exportType, IProgressBar pbar)
         {
-            var export = new ConcurrentBag<BsonDocument>();
+            var export = new ConcurrentBag<string>();
             try
             {
                 var workBarOptions = new ProgressBarOptions
@@ -56,36 +52,56 @@ namespace PopcornExport.Services.Export
                     ProgressCharacter = '─',
                     BackgroundColor = ConsoleColor.DarkGray,
                 };
-                using (var childProgress = pbar?.Spawn(0, $"step export progress", workBarOptions))
+                using (var childProgress = pbar?.Spawn(0, "step export progress", workBarOptions))
                 {
                     if (exportType == ExportType.Shows)
                     {
-                        using (var client = new RestClient(Constants.OriginalPopcornApi))
+                        using (var client = new RestClient(Constants.TVShowAPI))
                         {
                             var request = new RestRequest("{segment}", Method.GET);
                             switch (exportType)
                             {
                                 case ExportType.Shows:
-                                    request.AddUrlSegment("segment", "show");
+                                    request.AddUrlSegment("segment", "shows");
                                     break;
                             }
 
                             // Execute request
-                            var response = await client.Execute(request).ConfigureAwait(false);
-                            // Load response into memory
-                            using (var data = new MemoryStream(response.RawBytes))
-                            using (var reader = new StreamReader(data, Encoding.UTF8))
+                            var response = await client.Execute<IEnumerable<string>>(request).ConfigureAwait(false);
+                            if(childProgress != null)
+                                childProgress.MaxTicks = response.Data.Count() * 50;
+
+                            foreach (var line in response.Data)
                             {
-                                string line;
-                                // Read all response parts
-                                while ((line = await reader.ReadLineAsync().ConfigureAwait(false)) != null)
+                                using (var innerClient = new RestClient(Constants.TVShowAPI))
                                 {
-                                    ConvertJsonToBsonDocument(line, export);
-                                    if (childProgress != null)
+                                    var innerRequest = new RestRequest("{segment}/{subsegment}", Method.GET);
+                                    var args = line.Split("/");
+                                    innerRequest.AddUrlSegment("segment", args[0]);
+                                    innerRequest.AddUrlSegment("subsegment", args[1]);
+                                    var innerResponse = await innerClient.Execute<IEnumerable<ShowJson>>(innerRequest).ConfigureAwait(false);
+                                    if (innerResponse?.Data == null)
                                     {
-                                        childProgress.Tick();
-                                        childProgress.MaxTicks = childProgress.CurrentTick;
+                                        for (int i = 0; i < 50; i++)
+                                            childProgress?.Tick();
+
+                                        continue;
                                     }
+
+                                    var imdbIds = innerResponse.Data.Select(a => a.ImdbId);
+                                    await imdbIds.ParallelForEachAsync(async imdbId => 
+                                    {
+                                        using (var showClient = new RestClient(Constants.TVShowAPI))
+                                        {
+                                            var showRequest = new RestRequest("{segment}/{subsegment}", Method.GET);
+                                            showRequest.AddUrlSegment("segment", "show");
+                                            showRequest.AddUrlSegment("subsegment", imdbId);
+                                            var showResponse = await showClient.Execute(showRequest)
+                                                .ConfigureAwait(false);
+                                            export.Add(showResponse.Content);
+                                            childProgress?.Tick();
+                                        }
+                                    });
                                 }
                             }
                         }
@@ -110,7 +126,7 @@ namespace PopcornExport.Services.Export
                                 }
                                 else
                                 {
-                                    if(childProgress != null)
+                                    if (childProgress != null)
                                         childProgress.MaxTicks = movieNode.Data.MovieCount;
 
                                     movieFound = true;
@@ -126,11 +142,8 @@ namespace PopcornExport.Services.Export
                                                     await innerClient.Execute(movieByIdRequest).ConfigureAwait(false);
                                                 var fullMovie =
                                                     JsonSerializer.Deserialize<MovieFullJsonNode>(
-                                                        movieFullResponse.RawBytes);
-                                                ConvertJsonToBsonDocument(
-                                                    JsonSerializer.ToJsonString(fullMovie.Data.Movie),
-                                                    export);
-
+                                                        movieFullResponse.Content);
+                                                export.Add(JsonSerializer.ToJsonString(fullMovie.Data.Movie));
                                                 childProgress?.Tick();
                                             }
                                         }
@@ -183,20 +196,6 @@ namespace PopcornExport.Services.Export
             request.AddQueryParameter("limit", 50);
             request.AddQueryParameter("page", page);
             return request;
-        }
-
-        /// <summary>
-        /// Convert json to BsonDocument
-        /// </summary>
-        /// <param name="json">Json to convert</param>
-        /// <param name="export">Bag of <see cref="BsonDocument"/> to update</param>
-        private void ConvertJsonToBsonDocument(string json, ConcurrentBag<BsonDocument> export)
-        {
-            // Try to parse a document
-            if (BsonDocument.TryParse(json, out var document))
-            {
-                export.Add(document);
-            }
         }
     }
 }

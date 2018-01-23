@@ -38,7 +38,11 @@ namespace PopcornExport.Comparers
             //Get hash code for the Id field
             var hashId = show.TvdbId.GetHashCode();
 
-            return hashId;
+            var hashSeason = show.Season.GetHashCode();
+
+            var hashEpisodeNumber = show.EpisodeNumber.GetHashCode();
+
+            return hashId ^ hashSeason ^ hashEpisodeNumber;
         }
     }
 }

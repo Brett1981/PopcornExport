@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 
 namespace PopcornExport.Models.Torrent.Movie
 {
+    [DataContract]
     public class TorrentMovieJson
     {
         [DataMember(Name = "url")]

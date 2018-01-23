@@ -69,7 +69,7 @@ namespace PopcornExport.Services.Core
                         }";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
                 Console.WriteLine(loggingTraceBegin);
-                var exports = new[] {ExportType.Movies, ExportType.Shows};
+                var exports = new[] {ExportType.Shows};
                 var overProgressOptions = new ProgressBarOptions
                 {
                     BackgroundColor = ConsoleColor.DarkGray
