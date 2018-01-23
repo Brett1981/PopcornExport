@@ -65,29 +65,29 @@ namespace PopcornExport.Services.Import
         /// <summary>
         /// Import movies to database
         /// </summary>
-        /// <param name="docs">Documents to import</param>
+        /// <param name="rawImports">Documents to import</param>
         /// <param name="pbar"><see cref="IProgressBar"/></param>
         /// <returns><see cref="Task"/></returns>
-        public async Task Import(IEnumerable<string> docs, IProgressBar pbar)
+        public async Task Import(IEnumerable<string> rawImports, IProgressBar pbar)
         {
-            var documents = docs.ToList();
+            var imports = rawImports.ToList();
             var workBarOptions = new ProgressBarOptions
             {
                 ForegroundColor = ConsoleColor.Yellow,
                 ProgressCharacter = '─',
                 BackgroundColor = ConsoleColor.DarkGray,
             };
-            using (var childProgress = pbar?.Spawn(documents.Count, "step import progress", workBarOptions))
+            using (var childProgress = pbar?.Spawn(imports.Count, "step import progress", workBarOptions))
             {
                 using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
                 {
-                    foreach (var document in documents)
+                    foreach (var import in imports)
                     {
                         try
                         {
                             // Deserialize a document to a movie
                             var movieJson =
-                                JsonSerializer.Deserialize<MovieJson>(document);
+                                JsonSerializer.Deserialize<MovieJson>(import);
 
                             if (movieJson.Torrents == null || movieJson.Cast == null)
                                 continue;
