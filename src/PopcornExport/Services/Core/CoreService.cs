@@ -69,7 +69,7 @@ namespace PopcornExport.Services.Core
                         }";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
                 Console.WriteLine(loggingTraceBegin);
-                var exports = new[] {ExportType.Shows};
+                var exports = new[] {ExportType.Movies, ExportType.Shows};
                 var overProgressOptions = new ProgressBarOptions
                 {
                     BackgroundColor = ConsoleColor.DarkGray
@@ -89,7 +89,7 @@ namespace PopcornExport.Services.Core
                             $"step {export.ToFriendlyString().ToLowerInvariant()} progress", stepBarOptions))
                         {
                             // Load export
-                            var documents = await _exportService.LoadExport(export, childProgress)
+                            var imports = await _exportService.LoadExport(export, childProgress)
                                 .ConfigureAwait(false);
                             pbar.Tick();
                             IImportService importService;
@@ -110,7 +110,7 @@ namespace PopcornExport.Services.Core
                                     throw new NotImplementedException();
                             }
 
-                            await importService.Import(documents, childProgress).ConfigureAwait(false);
+                            await importService.Import(imports, childProgress).ConfigureAwait(false);
                             pbar.Tick();
                         }
                     }
