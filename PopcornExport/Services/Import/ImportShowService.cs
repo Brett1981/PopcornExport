@@ -217,7 +217,7 @@ namespace PopcornExport.Services.Import
                                         Iso639 = subtitle.ISO639,
                                         LanguageId = subtitle.LanguageId,
                                         OsdbSubtitleId = subtitle.SubtitleId,
-                                        SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage(subtitle.SubtitleId + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), subtitle.SubTitleDownloadLink.OriginalString, ExportType.Subtitles),
+                                        SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), subtitle.SubTitleDownloadLink.OriginalString, ExportType.Subtitles),
                                         SubtitleFileName = subtitle.SubtitleFileName
                                     }).Select(a => a.Result).ToList();
                                 }
@@ -317,7 +317,7 @@ namespace PopcornExport.Services.Import
                                                 Iso639 = subtitle.ISO639,
                                                 LanguageId = subtitle.LanguageId,
                                                 OsdbSubtitleId = subtitle.SubtitleId,
-                                                SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage(subtitle.SubtitleId + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), subtitle.SubTitleDownloadLink.OriginalString, ExportType.Subtitles),
+                                                SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), subtitle.SubTitleDownloadLink.OriginalString, ExportType.Subtitles),
                                                 SubtitleFileName = subtitle.SubtitleFileName
                                             });
                                         }
@@ -348,7 +348,7 @@ namespace PopcornExport.Services.Import
                                         Iso639 = subtitle.ISO639,
                                         LanguageId = subtitle.LanguageId,
                                         OsdbSubtitleId = subtitle.SubtitleId,
-                                        SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage(subtitle.SubtitleId + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), subtitle.SubTitleDownloadLink.OriginalString, ExportType.Subtitles),
+                                        SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), subtitle.SubTitleDownloadLink.OriginalString, ExportType.Subtitles),
                                         SubtitleFileName = subtitle.SubtitleFileName
                                     }).Select(a => a.Result).ToList();
                                 }
