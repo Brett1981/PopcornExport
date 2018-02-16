@@ -192,7 +192,7 @@ namespace PopcornExport.Services.Import
                                         $@"subtitles/movies/{movie.ImdbCode}/{subtitle.SubtitleId}" + "." +
                                         subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(),
                                         await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
-                                            subtitle.LanguageName), ExportType.Subtitles),
+                                            subtitle.ISO639), ExportType.Subtitles),
                                     SubtitleFileName = subtitle.SubtitleFileName
                                 }).Select(a => a.Result).ToList();
                                 context.MovieSet.Add(movie);
@@ -232,7 +232,8 @@ namespace PopcornExport.Services.Import
                                             SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage(
                                                 $@"subtitles/movies/{movie.ImdbCode}/{subtitle.SubtitleId}" + "." +
                                                 subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(),
-                                                subtitle.SubTitleDownloadLink.OriginalString, ExportType.Subtitles),
+                                                await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
+                                                    subtitle.ISO639), ExportType.Subtitles),
                                             SubtitleFileName = subtitle.SubtitleFileName
                                         });
                                     }
