@@ -188,7 +188,11 @@ namespace PopcornExport.Services.Import
                                     Iso639 = subtitle.ISO639,
                                     LanguageId = subtitle.LanguageId,
                                     OsdbSubtitleId = subtitle.SubtitleId,
-                                    SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/movies/{movie.ImdbCode}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), subtitle.SubTitleDownloadLink.OriginalString, ExportType.Subtitles),
+                                    SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage(
+                                        $@"subtitles/movies/{movie.ImdbCode}/{subtitle.SubtitleId}" + "." +
+                                        subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(),
+                                        await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
+                                            subtitle.LanguageName), ExportType.Subtitles),
                                     SubtitleFileName = subtitle.SubtitleFileName
                                 }).Select(a => a.Result).ToList();
                                 context.MovieSet.Add(movie);
@@ -225,7 +229,10 @@ namespace PopcornExport.Services.Import
                                             Iso639 = subtitle.ISO639,
                                             LanguageId = subtitle.LanguageId,
                                             OsdbSubtitleId = subtitle.SubtitleId,
-                                            SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/movies/{movie.ImdbCode}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), subtitle.SubTitleDownloadLink.OriginalString, ExportType.Subtitles),
+                                            SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage(
+                                                $@"subtitles/movies/{movie.ImdbCode}/{subtitle.SubtitleId}" + "." +
+                                                subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(),
+                                                subtitle.SubTitleDownloadLink.OriginalString, ExportType.Subtitles),
                                             SubtitleFileName = subtitle.SubtitleFileName
                                         });
                                     }

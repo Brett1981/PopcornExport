@@ -1,8 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Net.Http;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
+using ICSharpCode.SharpZipLib.Core;
+using ICSharpCode.SharpZipLib.GZip;
+using ICSharpCode.SharpZipLib.Tar;
 using Polly;
 using Popcorn.OSDB;
+using PopcornExport.Extensions;
 using PopcornExport.Helpers;
 using PopcornExport.Services.Logging;
 
@@ -54,7 +66,8 @@ namespace PopcornExport.Services.Subtitle
         /// <param name="season">Season number</param>
         /// <param name="episode">Episode number</param>
         /// <returns>Subtitles</returns>
-        public async Task<IList<Popcorn.OSDB.Subtitle>> SearchSubtitlesFromImdb(string languages, string imdbId, int? season,
+        public async Task<IList<Popcorn.OSDB.Subtitle>> SearchSubtitlesFromImdb(string languages, string imdbId,
+            int? season,
             int? episode)
         {
             var retrySearchSubtitlesFromImdbPolicy = Policy
@@ -80,36 +93,127 @@ namespace PopcornExport.Services.Subtitle
             });
         }
 
-        /// <summary>
-        /// Download a subtitle to a path
-        /// </summary>
-        /// <param name="path">Path to download</param>
-        /// <param name="subtitle">Subtitle to download</param>
-        /// <param name="remote">Is remote download path</param>
-        /// <returns>Downloaded subtitle path</returns>
-        public async Task<string> DownloadSubtitleToPath(string path, Popcorn.OSDB.Subtitle subtitle, bool remote = true)
+        public async Task<string> DownloadSubtitleToPath(string subtitleId, string lang)
         {
-            var retryDownloadSubtitleToPathPolicy = Policy
-                .Handle<Exception>()
-                .WaitAndRetryAsync(5, retryAttempt =>
-                    TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))
-                );
-
-            return await retryDownloadSubtitleToPathPolicy.ExecuteAsync(async () =>
+            var directory =
+                new DirectoryInfo(
+                    $@"{Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName}\Subtitles\{lang}");
+            if (!directory.Exists)
             {
-                using (var osdb = await new Osdb().Login(Constants.OsdbUa))
+                directory.Create();
+            }
+
+            if (!Directory.Exists($@"{directory.FullName}\OpenSubtitles2018"))
+            {
+                using (var client = new HttpClient())
                 {
-                    try
+                    client.DefaultRequestHeaders.TryAddWithoutValidation("Accept",
+                        "text/html,application/xhtml+xml,application/xml");
+                    client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
+                    client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
+                        "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:19.0) Gecko/20100101 Firefox/19.0");
+                    client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Charset", "ISO-8859-1");
+
+                    var url = $"http://opus.nlpl.eu/download.php?f=OpenSubtitles2018/{lang}.tar.gz";
+                    using (var response =
+                        await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
+                    using (var streamToReadFrom = await response.Content.ReadAsStreamAsync())
                     {
-                        return await osdb.DownloadSubtitleToPath(path, subtitle, remote);
+                        using (Stream sourceStream = new GZipStream(streamToReadFrom, CompressionMode.Decompress))
+                        {
+                            using (var tarArchive =
+                                TarArchive.CreateInputTarArchive(sourceStream, TarBuffer.DefaultBlockFactor))
+                            {
+                                tarArchive.ExtractContents(directory.FullName);
+                            }
+                        }
                     }
-                    catch (Exception ex)
+
+                    Parallel.ForEach(directory.GetFiles("*.xml.gz", SearchOption.AllDirectories),
+                        file => { ExtractGZipSample(file.FullName, Directory.GetParent(file.FullName).FullName); });
+                }
+            }
+
+            var files = directory.GetFiles("*.xml", SearchOption.AllDirectories);
+            var match = files.First(file => file.FullName.Contains(subtitleId));
+            var xmldoc = new XmlDocument();
+            xmldoc.Load(match.FullName);
+            var xdoc = xmldoc.ToXDocument();
+            var sb = new StringBuilder();
+            var count = 1;
+            var beginTime = string.Empty;
+            var endTime = string.Empty;
+            var text = string.Empty;
+            foreach (var descendant in xdoc.Descendants("s"))
+            {
+                var nodes = descendant.Nodes().ToList();
+                if(string.IsNullOrEmpty(endTime))
+                    beginTime = (nodes.FirstOrDefault(a => (a as XElement).Name == "time") as XElement)?.LastAttribute?.Value;
+
+                if(!string.IsNullOrEmpty(beginTime))
+                    endTime = (nodes.FirstOrDefault(a => (a as XElement).Name == "time" && (a as XElement)?.LastAttribute?.Value != beginTime) as XElement)?.LastAttribute?.Value;
+
+                foreach (var node in nodes)
+                {
+                    var xElement = node as XElement;
+                    if (xElement.Value == string.Empty || xElement == descendant.FirstNode || xElement == descendant.LastNode)
+                        continue;
+
+                    var nextElement = xElement.NextNode as XElement;
+                    var nextNextElement = nextElement.NextNode as XElement;
+                    if (xElement.Name == "w" && xElement == descendant.LastNode || nextElement.Name == "time")
                     {
-                        _loggingService.Telemetry.TrackException(ex);
-                        return null;
+                        text += $"{xElement.Value} ";
+                    }
+                    else if (nextElement.Value == "," || xElement.Value == "\"" || nextNextElement == null ||
+                        nextNextElement.Name == "time" && nextNextElement == descendant.LastNode &&
+                        nextElement.Value.Length == 1)
+                    {
+                        text += $"{xElement.Value}";
+                    }
+                    else if (xElement.Name == "w")
+                    {
+                        text += $"{xElement.Value} ";
                     }
                 }
-            });
+
+                if (!string.IsNullOrEmpty(beginTime) && !string.IsNullOrEmpty(endTime))
+                {
+                    sb.AppendLine(count.ToString());
+                    sb.AppendLine($"{beginTime} --> {endTime}");
+                    sb.AppendLine(text);
+                    sb.AppendLine();
+                    count++;
+                    beginTime = string.Empty;
+                    endTime = string.Empty;
+                    text = string.Empty;
+                }
+            }
+
+            var outputPath = $@"{Directory.GetParent(match.FullName).FullName}\{subtitleId}.srt";
+            System.IO.File.WriteAllText(outputPath,
+                sb.ToString());
+            return outputPath;
+        }
+
+        private static void ExtractGZipSample(string gzipFileName, string targetDir)
+        {
+            // Use a 4K buffer. Any larger is a waste.    
+            var dataBuffer = new byte[4096];
+
+            using (Stream fs = new FileStream(gzipFileName, FileMode.Open, FileAccess.Read))
+            {
+                using (var gzipStream = new GZipInputStream(fs))
+                {
+                    // Change this to your needs
+                    var fnOut = Path.Combine(targetDir, Path.GetFileNameWithoutExtension(gzipFileName));
+
+                    using (var fsOut = System.IO.File.Create(fnOut))
+                    {
+                        StreamUtils.Copy(gzipStream, fsOut, dataBuffer);
+                    }
+                }
+            }
         }
     }
 }

@@ -27,10 +27,9 @@ namespace PopcornExport.Services.Subtitle
         /// <summary>
         /// Download a subtitle to a path
         /// </summary>
-        /// <param name="path">Path to download</param>
-        /// <param name="subtitle">Subtitle to download</param>
-        /// <param name="remote">Is remote download path</param>
+        /// <param name="subtitleId">Opensubtitle Id</param>
+        /// <param name="lang">Subtitle language</param>
         /// <returns>Downloaded subtitle path</returns>
-        Task<string> DownloadSubtitleToPath(string path, Popcorn.OSDB.Subtitle subtitle, bool remote = true);
+        Task<string> DownloadSubtitleToPath(string subtitleId, string lang);
     }
 }

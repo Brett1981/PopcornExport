@@ -1,10 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PopcornExport.Services.Caching;
 using PopcornExport.Services.Core;
 using PopcornExport.Services.File;
 using PopcornExport.Services.Logging;
+using PopcornExport.Services.Subtitle;
 using StructureMap;
 
 namespace PopcornExport
@@ -46,7 +49,7 @@ namespace PopcornExport
                 });
                 config.Populate(services);
             });
-
+            
             var coreService = container.GetInstance<ICoreService>();
             await coreService.Export().ConfigureAwait(false);
         }

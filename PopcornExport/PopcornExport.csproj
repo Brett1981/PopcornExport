@@ -63,6 +63,9 @@
     <Reference Include="FubarCoder.RestSharp.Portable.HttpClient, Version=4.0.0.0, Culture=neutral, PublicKeyToken=be81bb0f53eab22f, processorArchitecture=MSIL">
       <HintPath>packages\FubarCoder.RestSharp.Portable.HttpClient.4.0.8\lib\net45\FubarCoder.RestSharp.Portable.HttpClient.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpZipLib.1.0.0-alpha2\lib\netstandard1.3\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.AI.Agent.Intercept, Version=2.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.ApplicationInsights.Agent.Intercept.2.4.0\lib\net45\Microsoft.AI.Agent.Intercept.dll</HintPath>
     </Reference>
@@ -397,6 +400,7 @@
     <Compile Include="Database\Torrent.cs" />
     <Compile Include="Database\TorrentMovie.cs" />
     <Compile Include="Database\TorrentNode.cs" />
+    <Compile Include="Extensions\DocumentExtensions.cs" />
     <Compile Include="Extensions\EnumExtensions.cs" />
     <Compile Include="Helpers\Constants.cs" />
     <Compile Include="Models\Cast\CastJson.cs" />
