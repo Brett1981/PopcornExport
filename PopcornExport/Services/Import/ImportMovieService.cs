@@ -193,7 +193,8 @@ namespace PopcornExport.Services.Import
                                         subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(),
                                         await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
                                             subtitle.ISO639), ExportType.Subtitles),
-                                    SubtitleFileName = subtitle.SubtitleFileName
+                                    SubtitleFileName = subtitle.SubtitleId + "." +
+                                                       subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
                                 }).Select(a => a.Result).ToList();
                                 context.MovieSet.Add(movie);
                                 await context.SaveChangesAsync().ConfigureAwait(false);
@@ -234,7 +235,8 @@ namespace PopcornExport.Services.Import
                                                 subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(),
                                                 await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
                                                     subtitle.ISO639), ExportType.Subtitles),
-                                            SubtitleFileName = subtitle.SubtitleFileName
+                                            SubtitleFileName = subtitle.SubtitleId + "." +
+                                                               subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
                                         });
                                     }
                                 }

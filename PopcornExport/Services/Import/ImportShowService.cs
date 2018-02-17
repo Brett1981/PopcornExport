@@ -219,7 +219,8 @@ namespace PopcornExport.Services.Import
                                         OsdbSubtitleId = subtitle.SubtitleId,
                                         SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
                                             subtitle.ISO639), ExportType.Subtitles),
-                                        SubtitleFileName = subtitle.SubtitleFileName
+                                        SubtitleFileName = subtitle.SubtitleId + "." +
+                                                           subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
                                     }).Select(a => a.Result).ToList();
                                 }
 
@@ -320,7 +321,8 @@ namespace PopcornExport.Services.Import
                                                 OsdbSubtitleId = subtitle.SubtitleId,
                                                 SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
                                                     subtitle.ISO639), ExportType.Subtitles),
-                                                SubtitleFileName = subtitle.SubtitleFileName
+                                                SubtitleFileName = subtitle.SubtitleId + "." +
+                                                                   subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
                                             });
                                         }
                                     }
@@ -352,7 +354,8 @@ namespace PopcornExport.Services.Import
                                         OsdbSubtitleId = subtitle.SubtitleId,
                                         SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
                                             subtitle.ISO639), ExportType.Subtitles),
-                                        SubtitleFileName = subtitle.SubtitleFileName
+                                        SubtitleFileName = subtitle.SubtitleId + "." +
+                                                           subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
                                     }).Select(a => a.Result).ToList();
                                 }
 
