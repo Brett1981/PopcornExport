@@ -217,6 +217,14 @@ namespace PopcornExport.Services.File
                         using (var stream = System.IO.File.OpenRead(url))
                         {
                             await file.UploadFromStreamAsync(stream).ConfigureAwait(false);
+                            try
+                            {
+                                System.IO.File.Delete(url);
+                            }
+                            catch (Exception ex)
+                            {
+                                _loggingService.Telemetry.TrackException(ex);
+                            }
                         }
                     }
                 }

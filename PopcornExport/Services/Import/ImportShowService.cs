@@ -200,7 +200,8 @@ namespace PopcornExport.Services.Import
                                 {
                                     var subtitles = (await _subtitleService.SearchSubtitlesFromImdb(
                                         languages.Select(lang => lang.SubLanguageId).Aggregate((a, b) => a + "," + b),
-                                        showJson.ImdbId, episode.Season, episode.EpisodeNumber)).GroupBy(x => x.LanguageName,
+                                        showJson.ImdbId, episode.Season, episode.EpisodeNumber)).GroupBy(
+                                        x => x.LanguageName,
                                         (k, g) =>
                                             g.Aggregate(
                                                 (a, x) =>
@@ -217,10 +218,13 @@ namespace PopcornExport.Services.Import
                                         Iso639 = subtitle.ISO639,
                                         LanguageId = subtitle.LanguageId,
                                         OsdbSubtitleId = subtitle.SubtitleId,
-                                        SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
-                                            subtitle.ISO639), ExportType.Subtitles),
+                                        SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage(
+                                            $@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + ".srt",
+                                            await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
+                                                subtitle.ISO639), ExportType.Subtitles),
                                         SubtitleFileName = subtitle.SubtitleId + "." +
-                                                           subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
+                                                           subtitle.SubTitleDownloadLink.OriginalString.Split('.')
+                                                               .Last()
                                     }).Select(a => a.Result).ToList();
                                 }
 
@@ -263,7 +267,7 @@ namespace PopcornExport.Services.Import
                                     {
                                         episode.Torrents.Torrent0.Peers = updatedEpisode.Torrents.Torrent0.Peers;
                                         episode.Torrents.Torrent0.Seeds = updatedEpisode.Torrents.Torrent0.Seeds;
-                                        if(!string.IsNullOrWhiteSpace(updatedEpisode.Torrents.Torrent0.Url))
+                                        if (!string.IsNullOrWhiteSpace(updatedEpisode.Torrents.Torrent0.Url))
                                             episode.Torrents.Torrent0.Url = updatedEpisode.Torrents.Torrent0.Url;
                                     }
 
@@ -275,7 +279,8 @@ namespace PopcornExport.Services.Import
                                         episode.Torrents.Torrent1080p.Seeds =
                                             updatedEpisode.Torrents.Torrent1080p.Seeds;
                                         if (!string.IsNullOrWhiteSpace(updatedEpisode.Torrents.Torrent1080p.Url))
-                                            episode.Torrents.Torrent1080p.Url = updatedEpisode.Torrents.Torrent1080p.Url;
+                                            episode.Torrents.Torrent1080p.Url =
+                                                updatedEpisode.Torrents.Torrent1080p.Url;
                                     }
 
                                     if (episode.Torrents?.Torrent720p != null &&
@@ -298,7 +303,8 @@ namespace PopcornExport.Services.Import
 
                                     var subtitles = (await _subtitleService.SearchSubtitlesFromImdb(
                                         languages.Select(lang => lang.SubLanguageId).Aggregate((a, b) => a + "," + b),
-                                        showJson.ImdbId, episode.Season, episode.EpisodeNumber)).GroupBy(x => x.LanguageName,
+                                        showJson.ImdbId, episode.Season, episode.EpisodeNumber)).GroupBy(
+                                        x => x.LanguageName,
                                         (k, g) =>
                                             g.Aggregate(
                                                 (a, x) =>
@@ -308,21 +314,30 @@ namespace PopcornExport.Services.Import
                                                         : a));
                                     foreach (var subtitle in subtitles)
                                     {
-                                        if (episode.Subtitles.All(a => a.OsdbSubtitleId != subtitle.SubtitleId))
+                                        if (episode.Subtitles.All(a => a.OsdbSubtitleId != subtitle.SubtitleId) ||
+                                            episode.Subtitles.Any(a =>
+                                                a.OsdbSubtitleId == subtitle.SubtitleId &&
+                                                string.IsNullOrEmpty(a.SubtitleDownloadLink)))
                                         {
                                             episode.Subtitles.Add(new Database.Subtitle
                                             {
                                                 ImdbId = subtitle.ImdbId,
                                                 LanguageName = subtitle.LanguageName,
-                                                Rating = Convert.ToDouble(subtitle.Rating, CultureInfo.InvariantCulture),
+                                                Rating =
+                                                    Convert.ToDouble(subtitle.Rating, CultureInfo.InvariantCulture),
                                                 Bad = Convert.ToDouble(subtitle.Bad, CultureInfo.InvariantCulture),
                                                 Iso639 = subtitle.ISO639,
                                                 LanguageId = subtitle.LanguageId,
                                                 OsdbSubtitleId = subtitle.SubtitleId,
-                                                SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
-                                                    subtitle.ISO639), ExportType.Subtitles),
+                                                SubtitleDownloadLink =
+                                                    await _fileService.UploadFileFromUrlToAzureStorage(
+                                                        $@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + ".srt",
+                                                        await _subtitleService.DownloadSubtitleToPath(
+                                                            subtitle.SubtitleId,
+                                                            subtitle.ISO639), ExportType.Subtitles),
                                                 SubtitleFileName = subtitle.SubtitleId + "." +
-                                                                   subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
+                                                                   subtitle.SubTitleDownloadLink.OriginalString
+                                                                       .Split('.').Last()
                                             });
                                         }
                                     }
@@ -335,7 +350,8 @@ namespace PopcornExport.Services.Import
                                     existingEntity.Episodes.Add(newEpisode);
                                     var subtitles = (await _subtitleService.SearchSubtitlesFromImdb(
                                         languages.Select(lang => lang.SubLanguageId).Aggregate((a, b) => a + "," + b),
-                                        showJson.ImdbId, newEpisode.Season, newEpisode.EpisodeNumber)).GroupBy(x => x.LanguageName,
+                                        showJson.ImdbId, newEpisode.Season, newEpisode.EpisodeNumber)).GroupBy(
+                                        x => x.LanguageName,
                                         (k, g) =>
                                             g.Aggregate(
                                                 (a, x) =>
@@ -352,10 +368,13 @@ namespace PopcornExport.Services.Import
                                         Iso639 = subtitle.ISO639,
                                         LanguageId = subtitle.LanguageId,
                                         OsdbSubtitleId = subtitle.SubtitleId,
-                                        SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage($@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + "." + subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last(), await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
-                                            subtitle.ISO639), ExportType.Subtitles),
+                                        SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage(
+                                            $@"subtitles/shows/{show.ImdbId}/{subtitle.SubtitleId}" + ".srt",
+                                            await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
+                                                subtitle.ISO639), ExportType.Subtitles),
                                         SubtitleFileName = subtitle.SubtitleId + "." +
-                                                           subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
+                                                           subtitle.SubTitleDownloadLink.OriginalString.Split('.')
+                                                               .Last()
                                     }).Select(a => a.Result).ToList();
                                 }
 
