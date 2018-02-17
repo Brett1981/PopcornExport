@@ -147,27 +147,43 @@ namespace PopcornExport.Services.Subtitle
             foreach (var descendant in xdoc.Descendants("s"))
             {
                 var nodes = descendant.Nodes().ToList();
-                if(string.IsNullOrEmpty(endTime))
-                    beginTime = (nodes.FirstOrDefault(a => (a as XElement).Name == "time") as XElement)?.LastAttribute?.Value;
-
-                if(!string.IsNullOrEmpty(beginTime))
-                    endTime = (nodes.FirstOrDefault(a => (a as XElement).Name == "time" && (a as XElement)?.LastAttribute?.Value != beginTime) as XElement)?.LastAttribute?.Value;
-
                 foreach (var node in nodes)
                 {
-                    var xElement = node as XElement;
-                    if (xElement.Value == string.Empty || xElement == descendant.FirstNode || xElement == descendant.LastNode)
-                        continue;
+                    if (string.IsNullOrEmpty(beginTime) && string.IsNullOrEmpty(endTime) && (node as XElement).Name == "time")
+                        beginTime = (node as XElement)?.LastAttribute?.Value;
 
-                    var nextElement = xElement.NextNode as XElement;
-                    var nextNextElement = nextElement.NextNode as XElement;
-                    if (xElement.Name == "w" && xElement == descendant.LastNode || nextElement.Name == "time")
+                    if (string.IsNullOrEmpty(endTime) && !string.IsNullOrEmpty(beginTime) && (node as XElement).Name == "time" && (node as XElement)?.LastAttribute?.Value != beginTime)
+                        endTime = (node as XElement)?.LastAttribute?.Value;
+
+                    var xElement = node as XElement;
+                    if (xElement?.Name == "time")
                     {
-                        text += $"{xElement.Value} ";
+                        if (!string.IsNullOrEmpty(beginTime) && !string.IsNullOrEmpty(endTime))
+                        {
+                            sb.AppendLine(count.ToString());
+                            sb.AppendLine($"{beginTime} --> {endTime}");
+                            sb.AppendLine(text);
+                            sb.AppendLine();
+                            count++;
+                            beginTime = string.Empty;
+                            endTime = string.Empty;
+                            text = string.Empty;
+                        }
+
+                        continue;
                     }
-                    else if (nextElement.Value == "," || xElement.Value == "\"" || nextNextElement == null ||
-                        nextNextElement.Name == "time" && nextNextElement == descendant.LastNode &&
-                        nextElement.Value.Length == 1)
+
+                    var nextElement = xElement?.NextNode as XElement;
+                    var nextNextElement = nextElement?.NextNode as XElement;
+                    if (xElement?.Name == "w" && xElement == descendant.LastNode || nextElement?.Name == "time")
+                    {
+                        text += $"{xElement.Value}";
+                        if (xElement?.Name == "w" && xElement == descendant.LastNode)
+                        {
+                            text += Environment.NewLine;
+                        }
+                    }
+                    else if (xElement.Value.Any(char.IsPunctuation) || nextElement != null && nextElement.Value.Any(char.IsPunctuation))
                     {
                         text += $"{xElement.Value}";
                     }
@@ -176,23 +192,11 @@ namespace PopcornExport.Services.Subtitle
                         text += $"{xElement.Value} ";
                     }
                 }
-
-                if (!string.IsNullOrEmpty(beginTime) && !string.IsNullOrEmpty(endTime))
-                {
-                    sb.AppendLine(count.ToString());
-                    sb.AppendLine($"{beginTime} --> {endTime}");
-                    sb.AppendLine(text);
-                    sb.AppendLine();
-                    count++;
-                    beginTime = string.Empty;
-                    endTime = string.Empty;
-                    text = string.Empty;
-                }
             }
 
             var outputPath = $@"{Directory.GetParent(match.FullName).FullName}\{subtitleId}.srt";
             System.IO.File.WriteAllText(outputPath,
-                sb.ToString());
+                sb.ToString(), Encoding.UTF8);
             return outputPath;
         }
 
