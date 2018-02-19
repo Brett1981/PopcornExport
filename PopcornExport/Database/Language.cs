@@ -10,5 +10,6 @@ namespace PopcornExport.Database
         public string SubLanguageId { get; set; }
         public string LanguageName { get; set; }
         public string Iso639 { get; set; }
+        public bool OpusArchiveDownloaded { get; set; }
     }
 }

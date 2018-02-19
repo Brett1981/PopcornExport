@@ -75,5 +75,12 @@ namespace PopcornExport.Services.File
         /// <param name="outputStream">Output stream</param>
         /// <returns>Blob stream</returns>
         Task<Stream> DownloadBlobToStreamAsync(string fileName, ExportType type, Stream outputStream);
+
+        /// <summary>
+        /// Check if a directory exists
+        /// </summary>
+        /// <param name="path">Path to directory</param>
+        /// <returns></returns>
+        bool CheckIfDirectoryExists(string path);
     }
 }

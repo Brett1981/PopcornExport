@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -90,7 +91,6 @@ namespace PopcornExport.Services.File
             try
             {
                 if (!_initialized) throw new Exception("Service is not initialized");
-
                 var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
                 if (forceReplace || !await blob.ExistsAsync().ConfigureAwait(false))
                 {
@@ -343,6 +343,16 @@ namespace PopcornExport.Services.File
                 _loggingService.Telemetry.TrackException(ex);
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Check if a directory exists
+        /// </summary>
+        /// <param name="path">Path to directory</param>
+        /// <returns></returns>
+        public bool CheckIfDirectoryExists(string path)
+        {
+            return _container.ListBlobs(path).Any();
         }
     }
 }

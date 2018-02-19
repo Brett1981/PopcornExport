@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -18,18 +18,25 @@ using PopcornExport.Extensions;
 using PopcornExport.Helpers;
 using PopcornExport.Models.Export;
 using PopcornExport.Services.File;
+using PopcornExport.Services.Language;
 using PopcornExport.Services.Logging;
 
 namespace PopcornExport.Services.Subtitle
 {
     public class SubtitleService : ISubtitleService
     {
+        private DateTimeOffset _lastOpenSubtitlesLimitReached = DateTimeOffset.MinValue;
+
         private readonly ILoggingService _loggingService;
+
+        private readonly ILanguageService _languageService;
 
         private readonly IFileService _fileService;
 
-        public SubtitleService(ILoggingService loggingService, IFileService fileService)
+        public SubtitleService(ILoggingService loggingService, IFileService fileService,
+            ILanguageService languageService)
         {
+            _languageService = languageService;
             _loggingService = loggingService;
             _fileService = fileService;
         }
@@ -98,11 +105,12 @@ namespace PopcornExport.Services.Subtitle
             }
         }
 
-        public async Task<string> DownloadSubtitleToPath(string subtitleId, string lang, string outputPath)
+        public async Task<string> DownloadSubtitleToPath(string subtitleId, string lang, string outputPath,
+            string remoteSubtitlePath)
         {
             try
             {
-                if (!await _fileService.CheckIfBlobExists(outputPath, ExportType.Subtitles))
+                if (!await _languageService.IsOpusArchivedDownloadedForLang(lang))
                 {
                     using (var client = new HttpClient())
                     {
@@ -111,7 +119,7 @@ namespace PopcornExport.Services.Subtitle
                         client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
                         client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",
                             "Mozilla/5.0 (Windows NT 6.2; WOW64; rv:19.0) Gecko/20100101 Firefox/19.0");
-                        client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Charset", "ISO-8859-1");
+                        client.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Charset", "UTF-8");
 
                         var url = $"http://opus.nlpl.eu/download.php?f=OpenSubtitles2018/{lang}.tar.gz";
                         using (var response =
@@ -149,6 +157,12 @@ namespace PopcornExport.Services.Subtitle
                         }
                     }
 
+                    await _languageService.SetOpusArchivedDownloadedForLang(lang);
+                }
+
+                if (!await _fileService.CheckIfBlobExists(outputPath, ExportType.Subtitles) &&
+                         await _fileService.CheckIfBlobExists(outputPath.Replace("srt", "xml"), ExportType.Subtitles))
+                {
                     using (var blobStream = new MemoryStream())
                     {
                         await _fileService.DownloadBlobToStreamAsync(outputPath.Replace("srt", "xml"),
@@ -168,16 +182,16 @@ namespace PopcornExport.Services.Subtitle
                             var nodes = descendant.Nodes().ToList();
                             foreach (var node in nodes)
                             {
+                                var xElement = node as XElement;
                                 if (string.IsNullOrEmpty(beginTime) && string.IsNullOrEmpty(endTime) &&
-                                    (node as XElement).Name == "time")
-                                    beginTime = (node as XElement)?.LastAttribute?.Value;
+                                    xElement?.Name == "time")
+                                    beginTime = xElement.LastAttribute?.Value;
 
                                 if (string.IsNullOrEmpty(endTime) && !string.IsNullOrEmpty(beginTime) &&
-                                    (node as XElement).Name == "time" &&
-                                    (node as XElement)?.LastAttribute?.Value != beginTime)
-                                    endTime = (node as XElement)?.LastAttribute?.Value;
+                                    xElement?.Name == "time" &&
+                                    xElement.LastAttribute?.Value != beginTime)
+                                    endTime = xElement.LastAttribute?.Value;
 
-                                var xElement = node as XElement;
                                 if (xElement?.Name == "time")
                                 {
                                     if (!string.IsNullOrEmpty(beginTime) && !string.IsNullOrEmpty(endTime))
@@ -205,12 +219,12 @@ namespace PopcornExport.Services.Subtitle
                                         text += Environment.NewLine;
                                     }
                                 }
-                                else if (xElement.Value.Any(char.IsPunctuation) ||
+                                else if (xElement != null && xElement.Value.Any(char.IsPunctuation) && xElement.Value != "," ||
                                          nextElement != null && nextElement.Value.Any(char.IsPunctuation))
                                 {
                                     text += $"{xElement.Value}";
                                 }
-                                else if (xElement.Name == "w")
+                                else if (xElement?.Name == "w")
                                 {
                                     text += $"{xElement.Value} ";
                                 }
@@ -230,10 +244,71 @@ namespace PopcornExport.Services.Subtitle
                         }
                     }
                 }
-                else
+
+                if (!await _fileService.CheckIfBlobExists(outputPath, ExportType.Subtitles) &&
+                         _lastOpenSubtitlesLimitReached.AddDays(1) < DateTimeOffset.Now)
                 {
-                    return await _fileService.GetBlobPath(outputPath, ExportType.Subtitles);
+                    var cookieContainer = new CookieContainer();
+                    using (var handler = new HttpClientHandler {CookieContainer = cookieContainer})
+                    using (var client = new HttpClient(handler)
+                    {
+                        Timeout = TimeSpan.FromSeconds(10)
+                    })
+                    using (var request = new HttpRequestMessage(HttpMethod.Get, remoteSubtitlePath))
+                    {
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("__cfduid", "d89c398a4a225a96384a45172e9ad48d41518622455", "/",
+                                ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("__qca", "P0-626973130-1518622458255", "/", ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("_gat", "1", "/", ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("_ga", "GA1.2.1978819766.1518622457", "/", ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("_gid", "GA1.2.206745261.1518622457", "/", ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("logged", "1", "/", ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("PHPSESSID", "Mq%2CxP8s4hD2WE%2CT0oAte77-kTh8", "/",
+                                ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("remember_sid", "4SHIF6wndJ32qlAgQCBHe-HrHX2", "/",
+                                ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("user", "bbougot", "/", ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("weblang", "en", "/", ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("OAID", "501bd61c02c291c50eb8647612c16839", "/", ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("searchform",
+                                "formname%3Dsearchform%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C1%7C%7C%7C1%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C%7C",
+                                "/", ".opensubtitles.org"));
+                        cookieContainer.Add(new Uri(remoteSubtitlePath),
+                            new Cookie("show_iduserdnotrated", "1", "/", ".opensubtitles.org"));
+                        using (var response = await client.SendAsync(request).ConfigureAwait(false))
+                        {
+                            response.EnsureSuccessStatusCode();
+                            if (response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired)
+                            {
+                                _lastOpenSubtitlesLimitReached = DateTimeOffset.Now;
+                                return string.Empty;
+                            }
+
+                            using (var contentStream =
+                                await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                            {
+                                return await _fileService.UploadFileFromStreamToAzureStorage(outputPath,
+                                    contentStream,
+                                    ExportType.Subtitles);
+                            }
+                        }
+                    }
+
                 }
+
+                return await _fileService.GetBlobPath(outputPath, ExportType.Subtitles);
             }
             catch (Exception ex)
             {
