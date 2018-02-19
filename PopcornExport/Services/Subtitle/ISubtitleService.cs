@@ -29,7 +29,8 @@ namespace PopcornExport.Services.Subtitle
         /// </summary>
         /// <param name="subtitleId">Opensubtitle Id</param>
         /// <param name="lang">Subtitle language</param>
+        /// <param name="outputPath">Output path</param>
         /// <returns>Downloaded subtitle path</returns>
-        Task<string> DownloadSubtitleToPath(string subtitleId, string lang);
+        Task<string> DownloadSubtitleToPath(string subtitleId, string lang, string outputPath);
     }
 }

@@ -16,6 +16,8 @@ using Polly;
 using Popcorn.OSDB;
 using PopcornExport.Extensions;
 using PopcornExport.Helpers;
+using PopcornExport.Models.Export;
+using PopcornExport.Services.File;
 using PopcornExport.Services.Logging;
 
 namespace PopcornExport.Services.Subtitle
@@ -24,9 +26,12 @@ namespace PopcornExport.Services.Subtitle
     {
         private readonly ILoggingService _loggingService;
 
-        public SubtitleService(ILoggingService loggingService)
+        private readonly IFileService _fileService;
+
+        public SubtitleService(ILoggingService loggingService, IFileService fileService)
         {
             _loggingService = loggingService;
+            _fileService = fileService;
         }
 
         /// <summary>
@@ -93,19 +98,11 @@ namespace PopcornExport.Services.Subtitle
             }
         }
 
-        public async Task<string> DownloadSubtitleToPath(string subtitleId, string lang)
+        public async Task<string> DownloadSubtitleToPath(string subtitleId, string lang, string outputPath)
         {
             try
             {
-                var directory =
-                    new DirectoryInfo(
-                        $@"{Directory.GetParent(Assembly.GetExecutingAssembly().Location).FullName}\Subtitles\{lang}");
-                if (!directory.Exists)
-                {
-                    directory.Create();
-                }
-
-                if (!Directory.Exists($@"{directory.FullName}\OpenSubtitles2018"))
+                if (!await _fileService.CheckIfBlobExists(outputPath, ExportType.Subtitles))
                 {
                     using (var client = new HttpClient())
                     {
@@ -121,113 +118,127 @@ namespace PopcornExport.Services.Subtitle
                             await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead))
                         using (var streamToReadFrom = await response.Content.ReadAsStreamAsync())
                         {
-                            using (Stream sourceStream = new GZipStream(streamToReadFrom, CompressionMode.Decompress))
+                            using (Stream sourceStream =
+                                new GZipStream(streamToReadFrom, CompressionMode.Decompress))
                             {
-                                using (var tarArchive =
-                                    TarArchive.CreateInputTarArchive(sourceStream, TarBuffer.DefaultBlockFactor))
+                                using (var tarStream =
+                                    new TarInputStream(sourceStream, TarBuffer.DefaultBlockFactor))
                                 {
-                                    tarArchive.ExtractContents(directory.FullName);
+                                    var entry = tarStream.GetNextEntry();
+                                    while (entry != null)
+                                    {
+                                        using (var entryStream = new MemoryStream())
+                                        {
+                                            tarStream.CopyEntryContents(entryStream);
+                                            var dataBuffer = new byte[4096];
+                                            entryStream.Seek(0, SeekOrigin.Begin);
+                                            using (var blobStream = new MemoryStream())
+                                            using (var gzipStream = new GZipInputStream(entryStream))
+                                            {
+                                                StreamUtils.Copy(gzipStream, blobStream, dataBuffer);
+                                                blobStream.Seek(0, SeekOrigin.Begin);
+                                                await _fileService.UploadFileFromStreamToAzureStorage(
+                                                    outputPath.Replace("srt", "xml"),
+                                                    blobStream, ExportType.Subtitles);
+                                                entry = tarStream.GetNextEntry();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    using (var blobStream = new MemoryStream())
+                    {
+                        await _fileService.DownloadBlobToStreamAsync(outputPath.Replace("srt", "xml"),
+                            ExportType.Subtitles,
+                            blobStream);
+                        blobStream.Seek(0, SeekOrigin.Begin);
+                        var xmldoc = new XmlDocument();
+                        xmldoc.Load(blobStream);
+                        var xdoc = xmldoc.ToXDocument();
+                        var sb = new StringBuilder();
+                        var count = 1;
+                        var beginTime = string.Empty;
+                        var endTime = string.Empty;
+                        var text = string.Empty;
+                        foreach (var descendant in xdoc.Descendants("s"))
+                        {
+                            var nodes = descendant.Nodes().ToList();
+                            foreach (var node in nodes)
+                            {
+                                if (string.IsNullOrEmpty(beginTime) && string.IsNullOrEmpty(endTime) &&
+                                    (node as XElement).Name == "time")
+                                    beginTime = (node as XElement)?.LastAttribute?.Value;
+
+                                if (string.IsNullOrEmpty(endTime) && !string.IsNullOrEmpty(beginTime) &&
+                                    (node as XElement).Name == "time" &&
+                                    (node as XElement)?.LastAttribute?.Value != beginTime)
+                                    endTime = (node as XElement)?.LastAttribute?.Value;
+
+                                var xElement = node as XElement;
+                                if (xElement?.Name == "time")
+                                {
+                                    if (!string.IsNullOrEmpty(beginTime) && !string.IsNullOrEmpty(endTime))
+                                    {
+                                        sb.AppendLine(count.ToString());
+                                        sb.AppendLine($"{beginTime} --> {endTime}");
+                                        sb.AppendLine(text);
+                                        sb.AppendLine();
+                                        count++;
+                                        beginTime = string.Empty;
+                                        endTime = string.Empty;
+                                        text = string.Empty;
+                                    }
+
+                                    continue;
+                                }
+
+                                var nextElement = xElement?.NextNode as XElement;
+                                if (xElement?.Name == "w" && xElement == descendant.LastNode ||
+                                    nextElement?.Name == "time")
+                                {
+                                    text += $"{xElement.Value}";
+                                    if (xElement.Name == "w" && xElement == descendant.LastNode)
+                                    {
+                                        text += Environment.NewLine;
+                                    }
+                                }
+                                else if (xElement.Value.Any(char.IsPunctuation) ||
+                                         nextElement != null && nextElement.Value.Any(char.IsPunctuation))
+                                {
+                                    text += $"{xElement.Value}";
+                                }
+                                else if (xElement.Name == "w")
+                                {
+                                    text += $"{xElement.Value} ";
                                 }
                             }
                         }
 
-                        Parallel.ForEach(directory.GetFiles("*.xml.gz", SearchOption.AllDirectories),
-                            file => { ExtractGZipSample(file.FullName, Directory.GetParent(file.FullName).FullName); });
+                        using (var ms = new MemoryStream())
+                        {
+                            using (var sw = new StreamWriter(ms, Encoding.UTF8))
+                            {
+                                sw.Write(sb.ToString());
+                                ms.Seek(0, SeekOrigin.Begin);
+                                return await _fileService.UploadFileFromStreamToAzureStorage(outputPath,
+                                    ms,
+                                    ExportType.Subtitles);
+                            }
+                        }
                     }
                 }
-
-                var files = directory.GetFiles("*.xml", SearchOption.AllDirectories);
-                var match = files.First(file => file.FullName.Contains(subtitleId));
-                var xmldoc = new XmlDocument();
-                xmldoc.Load(match.FullName);
-                var xdoc = xmldoc.ToXDocument();
-                var sb = new StringBuilder();
-                var count = 1;
-                var beginTime = string.Empty;
-                var endTime = string.Empty;
-                var text = string.Empty;
-                foreach (var descendant in xdoc.Descendants("s"))
+                else
                 {
-                    var nodes = descendant.Nodes().ToList();
-                    foreach (var node in nodes)
-                    {
-                        if (string.IsNullOrEmpty(beginTime) && string.IsNullOrEmpty(endTime) &&
-                            (node as XElement).Name == "time")
-                            beginTime = (node as XElement)?.LastAttribute?.Value;
-
-                        if (string.IsNullOrEmpty(endTime) && !string.IsNullOrEmpty(beginTime) &&
-                            (node as XElement).Name == "time" && (node as XElement)?.LastAttribute?.Value != beginTime)
-                            endTime = (node as XElement)?.LastAttribute?.Value;
-
-                        var xElement = node as XElement;
-                        if (xElement?.Name == "time")
-                        {
-                            if (!string.IsNullOrEmpty(beginTime) && !string.IsNullOrEmpty(endTime))
-                            {
-                                sb.AppendLine(count.ToString());
-                                sb.AppendLine($"{beginTime} --> {endTime}");
-                                sb.AppendLine(text);
-                                sb.AppendLine();
-                                count++;
-                                beginTime = string.Empty;
-                                endTime = string.Empty;
-                                text = string.Empty;
-                            }
-
-                            continue;
-                        }
-
-                        var nextElement = xElement?.NextNode as XElement;
-                        var nextNextElement = nextElement?.NextNode as XElement;
-                        if (xElement?.Name == "w" && xElement == descendant.LastNode || nextElement?.Name == "time")
-                        {
-                            text += $"{xElement.Value}";
-                            if (xElement?.Name == "w" && xElement == descendant.LastNode)
-                            {
-                                text += Environment.NewLine;
-                            }
-                        }
-                        else if (xElement.Value.Any(char.IsPunctuation) ||
-                                 nextElement != null && nextElement.Value.Any(char.IsPunctuation))
-                        {
-                            text += $"{xElement.Value}";
-                        }
-                        else if (xElement.Name == "w")
-                        {
-                            text += $"{xElement.Value} ";
-                        }
-                    }
+                    return await _fileService.GetBlobPath(outputPath, ExportType.Subtitles);
                 }
-
-                var outputPath = $@"{Directory.GetParent(match.FullName).FullName}\{subtitleId}.srt";
-                System.IO.File.WriteAllText(outputPath,
-                    sb.ToString(), Encoding.UTF8);
-                return outputPath;
             }
             catch (Exception ex)
             {
                 _loggingService.Telemetry.TrackException(ex);
                 return string.Empty;
-            }
-        }
-
-        private static void ExtractGZipSample(string gzipFileName, string targetDir)
-        {
-            // Use a 4K buffer. Any larger is a waste.    
-            var dataBuffer = new byte[4096];
-
-            using (Stream fs = new FileStream(gzipFileName, FileMode.Open, FileAccess.Read))
-            {
-                using (var gzipStream = new GZipInputStream(fs))
-                {
-                    // Change this to your needs
-                    var fnOut = Path.Combine(targetDir, Path.GetFileNameWithoutExtension(gzipFileName));
-
-                    using (var fsOut = System.IO.File.Create(fnOut))
-                    {
-                        StreamUtils.Copy(gzipStream, fsOut, dataBuffer);
-                    }
-                }
             }
         }
     }

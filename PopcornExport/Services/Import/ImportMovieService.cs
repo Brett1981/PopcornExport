@@ -188,10 +188,8 @@ namespace PopcornExport.Services.Import
                                     Iso639 = subtitle.ISO639,
                                     LanguageId = subtitle.LanguageId,
                                     OsdbSubtitleId = subtitle.SubtitleId,
-                                    SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage(
-                                        $@"subtitles/movies/{movie.ImdbCode}/{subtitle.SubtitleId}" + ".srt",
-                                        await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
-                                            subtitle.ISO639), ExportType.Subtitles),
+                                    SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
+                                            subtitle.ISO639, $@"movies/{movie.ImdbCode}/{subtitle.SubtitleId}" + ".srt"),
                                     SubtitleFileName = subtitle.SubtitleId + "." +
                                                        subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
                                 }).Select(a => a.Result).ToList();
@@ -232,10 +230,8 @@ namespace PopcornExport.Services.Import
                                             Iso639 = subtitle.ISO639,
                                             LanguageId = subtitle.LanguageId,
                                             OsdbSubtitleId = subtitle.SubtitleId,
-                                            SubtitleDownloadLink = await _fileService.UploadFileFromUrlToAzureStorage(
-                                                $@"subtitles/movies/{movie.ImdbCode}/{subtitle.SubtitleId}" + ".srt",
-                                                await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
-                                                    subtitle.ISO639), ExportType.Subtitles),
+                                            SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
+                                                subtitle.ISO639, $@"movies/{movie.ImdbCode}/{subtitle.SubtitleId}" + ".srt"),
                                             SubtitleFileName = subtitle.SubtitleId + "." +
                                                                subtitle.SubTitleDownloadLink.OriginalString.Split('.')
                                                                    .Last()

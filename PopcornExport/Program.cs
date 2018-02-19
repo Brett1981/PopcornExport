@@ -49,7 +49,7 @@ namespace PopcornExport
                 });
                 config.Populate(services);
             });
-            
+
             var coreService = container.GetInstance<ICoreService>();
             await coreService.Export().ConfigureAwait(false);
         }
