@@ -47,23 +47,5 @@ namespace PopcornExport.Services.Language
                 return await context.LanguageSet.ToListAsync();
             }
         }
-
-        public async Task<bool> IsOpusArchivedDownloadedForLang(string lang)
-        {
-            using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
-            {
-                return await context.LanguageSet.AnyAsync(a => a.Iso639 == lang && a.OpusArchiveDownloaded);
-            }
-        }
-
-        public async Task SetOpusArchivedDownloadedForLang(string lang)
-        {
-            using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
-            {
-                var languageSet = await context.LanguageSet.FirstAsync(a => a.Iso639 == lang);
-                languageSet.OpusArchiveDownloaded = true;
-                await context.SaveChangesAsync();
-            }
-        }
     }
 }

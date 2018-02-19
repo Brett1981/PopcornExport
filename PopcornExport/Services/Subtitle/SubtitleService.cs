@@ -12,8 +12,10 @@ using System.Xml.Linq;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.GZip;
 using ICSharpCode.SharpZipLib.Tar;
+using Microsoft.EntityFrameworkCore;
 using Polly;
 using Popcorn.OSDB;
+using PopcornExport.Database;
 using PopcornExport.Extensions;
 using PopcornExport.Helpers;
 using PopcornExport.Models.Export;
@@ -29,14 +31,10 @@ namespace PopcornExport.Services.Subtitle
 
         private readonly ILoggingService _loggingService;
 
-        private readonly ILanguageService _languageService;
-
         private readonly IFileService _fileService;
 
-        public SubtitleService(ILoggingService loggingService, IFileService fileService,
-            ILanguageService languageService)
+        public SubtitleService(ILoggingService loggingService, IFileService fileService)
         {
-            _languageService = languageService;
             _loggingService = loggingService;
             _fileService = fileService;
         }
@@ -110,7 +108,13 @@ namespace PopcornExport.Services.Subtitle
         {
             try
             {
-                if (!await _languageService.IsOpusArchivedDownloadedForLang(lang))
+                bool isOpusArchiveDownloaded;
+                using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
+                {
+                    isOpusArchiveDownloaded = await context.LanguageSet.AnyAsync(a => a.Iso639 == lang && a.OpusArchiveDownloaded);
+                }
+
+                if (!isOpusArchiveDownloaded)
                 {
                     using (var client = new HttpClient())
                     {
@@ -157,7 +161,12 @@ namespace PopcornExport.Services.Subtitle
                         }
                     }
 
-                    await _languageService.SetOpusArchivedDownloadedForLang(lang);
+                    using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
+                    {
+                        var languageSet = await context.LanguageSet.FirstAsync(a => a.Iso639 == lang);
+                        languageSet.OpusArchiveDownloaded = true;
+                        await context.SaveChangesAsync();
+                    }
                 }
 
                 if (!await _fileService.CheckIfBlobExists(outputPath, ExportType.Subtitles) &&

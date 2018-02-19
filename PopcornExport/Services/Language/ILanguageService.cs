@@ -10,9 +10,5 @@ namespace PopcornExport.Services.Language
         Task UpdateLanguages();
 
         Task<IEnumerable<Database.Language>> GetLanguages();
-
-        Task<bool> IsOpusArchivedDownloadedForLang(string lang);
-
-        Task SetOpusArchivedDownloadedForLang(string lang);
     }
 }
