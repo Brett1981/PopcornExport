@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using PopcornExport.Models.Export;
 using PopcornExport.Services.Caching;
 using PopcornExport.Services.Core;
 using PopcornExport.Services.File;
@@ -50,6 +51,8 @@ namespace PopcornExport
                 config.Populate(services);
             });
 
+            //var subtitleService = container.GetInstance<ISubtitleService>();
+            //var sub = await subtitleService.DownloadSubtitleToPath("6484855", "af", "", "", ExportType.Movies);
             var coreService = container.GetInstance<ICoreService>();
             await coreService.Export().ConfigureAwait(false);
         }

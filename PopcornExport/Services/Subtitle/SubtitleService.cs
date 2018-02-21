@@ -103,15 +103,17 @@ namespace PopcornExport.Services.Subtitle
             }
         }
 
-        public async Task<string> DownloadSubtitleToPath(string subtitleId, string lang, string outputPath,
-            string remoteSubtitlePath)
+        public async Task<string> DownloadSubtitleToPath(string subtitleId, string imdbId, string lang,
+            string outputPath,
+            string remoteSubtitlePath, ExportType type)
         {
             try
             {
                 bool isOpusArchiveDownloaded;
                 using (var context = new PopcornContextFactory().CreateDbContext(new string[0]))
                 {
-                    isOpusArchiveDownloaded = await context.LanguageSet.AnyAsync(a => a.Iso639 == lang && a.OpusArchiveDownloaded);
+                    isOpusArchiveDownloaded =
+                        await context.LanguageSet.AnyAsync(a => a.Iso639 == lang && a.OpusArchiveDownloaded);
                 }
 
                 if (!isOpusArchiveDownloaded)
@@ -149,8 +151,11 @@ namespace PopcornExport.Services.Subtitle
                                             {
                                                 StreamUtils.Copy(gzipStream, blobStream, dataBuffer);
                                                 blobStream.Seek(0, SeekOrigin.Begin);
-                                                await _fileService.UploadFileFromStreamToAzureStorage(
-                                                    outputPath.Replace("srt", "xml"),
+                                                var id = entry.Name.GetMatches("/", ".").Last().Split(new[] {'/'})
+                                                    .Last();
+                                                var name =
+                                                    $"{type.ToFriendlyString().ToLowerInvariant()}/{entry.Name.GetMatches("/", $"/{id}").Last().Split(new[] {'/'}).Last()}/{lang}/{id}.xml";
+                                                await _fileService.UploadFileFromStreamToAzureStorage(name,
                                                     blobStream, ExportType.Subtitles);
                                                 entry = tarStream.GetNextEntry();
                                             }
@@ -170,7 +175,7 @@ namespace PopcornExport.Services.Subtitle
                 }
 
                 if (!await _fileService.CheckIfBlobExists(outputPath, ExportType.Subtitles) &&
-                         await _fileService.CheckIfBlobExists(outputPath.Replace("srt", "xml"), ExportType.Subtitles))
+                    await _fileService.CheckIfBlobExists(outputPath.Replace("srt", "xml"), ExportType.Subtitles))
                 {
                     using (var blobStream = new MemoryStream())
                     {
@@ -228,7 +233,8 @@ namespace PopcornExport.Services.Subtitle
                                         text += Environment.NewLine;
                                     }
                                 }
-                                else if (xElement != null && xElement.Value.Any(char.IsPunctuation) && xElement.Value != "," ||
+                                else if (xElement != null && xElement.Value.Any(char.IsPunctuation) &&
+                                         xElement.Value != "," ||
                                          nextElement != null && nextElement.Value.Any(char.IsPunctuation))
                                 {
                                     text += $"{xElement.Value}";
@@ -255,7 +261,7 @@ namespace PopcornExport.Services.Subtitle
                 }
 
                 if (!await _fileService.CheckIfBlobExists(outputPath, ExportType.Subtitles) &&
-                         _lastOpenSubtitlesLimitReached.AddDays(1) < DateTimeOffset.Now)
+                    _lastOpenSubtitlesLimitReached.AddDays(1) < DateTimeOffset.Now)
                 {
                     var cookieContainer = new CookieContainer();
                     using (var handler = new HttpClientHandler {CookieContainer = cookieContainer})

@@ -402,6 +402,7 @@
     <Compile Include="Database\TorrentNode.cs" />
     <Compile Include="Extensions\DocumentExtensions.cs" />
     <Compile Include="Extensions\EnumExtensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Helpers\Constants.cs" />
     <Compile Include="Models\Cast\CastJson.cs" />
     <Compile Include="Models\Episode\EpisodeShowJson.cs" />

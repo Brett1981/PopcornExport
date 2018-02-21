@@ -188,8 +188,8 @@ namespace PopcornExport.Services.Import
                                     Iso639 = subtitle.ISO639,
                                     LanguageId = subtitle.LanguageId,
                                     OsdbSubtitleId = subtitle.SubtitleId,
-                                    SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
-                                        subtitle.ISO639, $@"movies/{movie.ImdbCode}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString),
+                                    SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId, subtitle.ImdbId,
+                                        subtitle.ISO639, $@"movies/{movie.ImdbCode}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Movies),
                                     SubtitleFileName = subtitle.SubtitleId + "." +
                                                        subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
                                 }).Select(a => a.Result).ToList();
@@ -230,8 +230,8 @@ namespace PopcornExport.Services.Import
                                             Iso639 = subtitle.ISO639,
                                             LanguageId = subtitle.LanguageId,
                                             OsdbSubtitleId = subtitle.SubtitleId,
-                                            SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId,
-                                                subtitle.ISO639, $@"movies/{movie.ImdbCode}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString),
+                                            SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId, subtitle.ImdbId,
+                                                subtitle.ISO639, $@"movies/{movie.ImdbCode}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Movies),
                                             SubtitleFileName = subtitle.SubtitleId + "." +
                                                                subtitle.SubTitleDownloadLink.OriginalString.Split('.')
                                                                    .Last()

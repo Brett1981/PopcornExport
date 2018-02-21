@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Popcorn.OSDB;
+using PopcornExport.Models.Export;
 
 namespace PopcornExport.Services.Subtitle
 {
@@ -28,11 +29,13 @@ namespace PopcornExport.Services.Subtitle
         /// Download a subtitle to a path
         /// </summary>
         /// <param name="subtitleId">Opensubtitle Id</param>
+        /// <param name="imdbId">ImdbId</param>
         /// <param name="lang">Subtitle language</param>
         /// <param name="outputPath">Output path</param>
         /// <param name="remoteSubtitlePath">Opensubtitle remote path</param>
+        /// <param name="type">Export tyê</param>
         /// <returns>Downloaded subtitle path</returns>
-        Task<string> DownloadSubtitleToPath(string subtitleId, string lang, string outputPath,
-            string remoteSubtitlePath);
+        Task<string> DownloadSubtitleToPath(string subtitleId, string imdbId, string lang, string outputPath,
+            string remoteSubtitlePath, ExportType type);
     }
 }
