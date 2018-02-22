@@ -219,7 +219,7 @@ namespace PopcornExport.Services.Import
                                         LanguageId = subtitle.LanguageId,
                                         OsdbSubtitleId = subtitle.SubtitleId,
                                         SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId, subtitle.ImdbId,
-                                            subtitle.ISO639, $@"shows/{show.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Shows),
+                                            subtitle.ISO639, $@"shows/{subtitle.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Shows),
                                         SubtitleFileName = subtitle.SubtitleId + "." +
                                                            subtitle.SubTitleDownloadLink.OriginalString.Split('.')
                                                                .Last()
@@ -328,7 +328,7 @@ namespace PopcornExport.Services.Import
                                                 LanguageId = subtitle.LanguageId,
                                                 OsdbSubtitleId = subtitle.SubtitleId,
                                                 SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId, subtitle.ImdbId,
-                                                    subtitle.ISO639, $@"shows/{show.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Shows),
+                                                    subtitle.ISO639, $@"shows/{subtitle.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Shows),
                                                 SubtitleFileName = subtitle.SubtitleId + "." +
                                                                    subtitle.SubTitleDownloadLink.OriginalString
                                                                        .Split('.').Last()
@@ -363,7 +363,7 @@ namespace PopcornExport.Services.Import
                                         LanguageId = subtitle.LanguageId,
                                         OsdbSubtitleId = subtitle.SubtitleId,
                                         SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId, subtitle.ImdbId,
-                                            subtitle.ISO639, $@"shows/{show.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Shows),
+                                            subtitle.ISO639, $@"shows/{subtitle.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Shows),
                                         SubtitleFileName = subtitle.SubtitleId + "." +
                                                            subtitle.SubTitleDownloadLink.OriginalString.Split('.')
                                                                .Last()

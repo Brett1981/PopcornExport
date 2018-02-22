@@ -25,17 +25,23 @@ namespace PopcornExport.Schim
 
         public ChildProgressBar Spawn(int maxTicks, string message, ProgressBarOptions options = null)
         {
+            Console.WriteLine(message);
+            MaxTicks = maxTicks;
+            CurrentTick = 0;
+            Message = message;
             return null;
         }
 
         public void Tick(string message = "")
         {
+            Percentage = (double) CurrentTick / (double) MaxTicks * 100d;
+            Console.WriteLine($"{Percentage}%");
         }
 
         public int MaxTicks { get; set; }
         public string Message { get; set; }
-        public double Percentage { get; }
-        public int CurrentTick { get; }
+        public double Percentage { get; private set; }
+        public int CurrentTick { get; private set; }
         public ConsoleColor ForeGroundColor { get; }
     }
 }

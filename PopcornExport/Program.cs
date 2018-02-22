@@ -50,9 +50,7 @@ namespace PopcornExport
                 });
                 config.Populate(services);
             });
-
-            //var subtitleService = container.GetInstance<ISubtitleService>();
-            //var sub = await subtitleService.DownloadSubtitleToPath("6484855", "af", "", "", ExportType.Movies);
+            
             var coreService = container.GetInstance<ICoreService>();
             await coreService.Export().ConfigureAwait(false);
         }
