@@ -138,28 +138,35 @@ namespace PopcornExport.Services.Subtitle
                                 using (var tarStream =
                                     new TarInputStream(sourceStream, TarBuffer.DefaultBlockFactor))
                                 {
-                                    var entry = tarStream.GetNextEntry();
-                                    while (entry != null)
+                                    try
                                     {
-                                        using (var entryStream = new MemoryStream())
+                                        var entry = tarStream.GetNextEntry();
+                                        while (entry != null)
                                         {
-                                            tarStream.CopyEntryContents(entryStream);
-                                            var dataBuffer = new byte[4096];
-                                            entryStream.Seek(0, SeekOrigin.Begin);
-                                            using (var blobStream = new MemoryStream())
-                                            using (var gzipStream = new GZipInputStream(entryStream))
+                                            using (var entryStream = new MemoryStream())
                                             {
-                                                StreamUtils.Copy(gzipStream, blobStream, dataBuffer);
-                                                blobStream.Seek(0, SeekOrigin.Begin);
-                                                var id = entry.Name.GetMatches("/", ".").Last().Split(new[] {'/'})
-                                                    .Last();
-                                                var name =
-                                                    $"{type.ToFriendlyString().ToLowerInvariant()}/{entry.Name.GetMatches("/", $"/{id}").Last().Split(new[] {'/'}).Last()}/{lang}/{id}.xml";
-                                                await _fileService.UploadFileFromStreamToAzureStorage(name,
-                                                    blobStream, ExportType.Subtitles);
-                                                entry = tarStream.GetNextEntry();
+                                                tarStream.CopyEntryContents(entryStream);
+                                                var dataBuffer = new byte[4096];
+                                                entryStream.Seek(0, SeekOrigin.Begin);
+                                                using (var blobStream = new MemoryStream())
+                                                using (var gzipStream = new GZipInputStream(entryStream))
+                                                {
+                                                    StreamUtils.Copy(gzipStream, blobStream, dataBuffer);
+                                                    blobStream.Seek(0, SeekOrigin.Begin);
+                                                    var id = entry.Name.GetMatches("/", ".").Last().Split(new[] {'/'})
+                                                        .Last();
+                                                    var name =
+                                                        $"{type.ToFriendlyString().ToLowerInvariant()}/{entry.Name.GetMatches("/", $"/{id}").Last().Split(new[] {'/'}).Last()}/{lang}/{id}.xml";
+                                                    await _fileService.UploadFileFromStreamToAzureStorage(name,
+                                                        blobStream, ExportType.Subtitles);
+                                                    entry = tarStream.GetNextEntry();
+                                                }
                                             }
                                         }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _loggingService.Telemetry.TrackException(ex);
                                     }
                                 }
                             }
