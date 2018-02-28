@@ -311,8 +311,7 @@ namespace PopcornExport.Services.Subtitle
                             new Cookie("show_iduserdnotrated", "1", "/", ".opensubtitles.org"));
                         using (var response = await client.SendAsync(request).ConfigureAwait(false))
                         {
-                            response.EnsureSuccessStatusCode();
-                            if (response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired)
+                            if (response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired || response.StatusCode == HttpStatusCode.NotFound)
                             {
                                 _lastOpenSubtitlesLimitReached = DateTimeOffset.Now;
                                 return string.Empty;
@@ -327,7 +326,6 @@ namespace PopcornExport.Services.Subtitle
                             }
                         }
                     }
-
                 }
 
                 return await _fileService.GetBlobPath(outputPath, ExportType.Subtitles);
