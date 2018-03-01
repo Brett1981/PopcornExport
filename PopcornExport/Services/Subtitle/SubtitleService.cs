@@ -242,7 +242,9 @@ namespace PopcornExport.Services.Subtitle
                                 }
                                 else if (xElement != null && xElement.Value.Any(char.IsPunctuation) &&
                                          xElement.Value != "," ||
-                                         nextElement != null && nextElement.Value == "'")
+                                         nextElement != null &&
+                                         (nextElement.Value == "?" || nextElement.Value == "!" ||
+                                          nextElement.Value == "." || nextElement.Value == "'"))
                                 {
                                     text += $"{xElement.Value}";
                                 }
