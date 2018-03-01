@@ -242,7 +242,7 @@ namespace PopcornExport.Services.Subtitle
                                 }
                                 else if (xElement != null && xElement.Value.Any(char.IsPunctuation) &&
                                          xElement.Value != "," ||
-                                         nextElement != null && nextElement.Value.Any(char.IsPunctuation))
+                                         nextElement != null && nextElement.Value == "'")
                                 {
                                     text += $"{xElement.Value}";
                                 }
@@ -261,7 +261,7 @@ namespace PopcornExport.Services.Subtitle
                                 ms.Seek(0, SeekOrigin.Begin);
                                 return await _fileService.UploadFileFromStreamToAzureStorage(outputPath,
                                     ms,
-                                    ExportType.Subtitles);
+                                    ExportType.Subtitles, true);
                             }
                         }
                     }
@@ -311,7 +311,8 @@ namespace PopcornExport.Services.Subtitle
                             new Cookie("show_iduserdnotrated", "1", "/", ".opensubtitles.org"));
                         using (var response = await client.SendAsync(request).ConfigureAwait(false))
                         {
-                            if (response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired || response.StatusCode == HttpStatusCode.NotFound)
+                            if (response.StatusCode == HttpStatusCode.ProxyAuthenticationRequired ||
+                                response.StatusCode == HttpStatusCode.NotFound)
                             {
                                 _lastOpenSubtitlesLimitReached = DateTimeOffset.Now;
                                 return string.Empty;
@@ -320,9 +321,18 @@ namespace PopcornExport.Services.Subtitle
                             using (var contentStream =
                                 await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
                             {
-                                return await _fileService.UploadFileFromStreamToAzureStorage(outputPath,
-                                    contentStream,
-                                    ExportType.Subtitles);
+                                using (var decompressedFileStream = new MemoryStream())
+                                {
+                                    using (var decompressionStream =
+                                        new GZipStream(contentStream, CompressionMode.Decompress))
+                                    {
+                                        decompressionStream.CopyTo(decompressedFileStream);
+                                        decompressedFileStream.Seek(0, SeekOrigin.Begin);
+                                        return await _fileService.UploadFileFromStreamToAzureStorage(outputPath,
+                                            decompressedFileStream,
+                                            ExportType.Subtitles, true);
+                                    }
+                                }
                             }
                         }
                     }

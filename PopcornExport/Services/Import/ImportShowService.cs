@@ -206,45 +206,38 @@ namespace PopcornExport.Services.Import
                                 await UpdateImagesAndSimilarShow(show).ConfigureAwait(false);
                                 foreach (var episode in show.Episodes)
                                 {
-                                    if (int.TryParse(showJson.TvdbId, out var tvdbId))
+                                    var subtitles = (await _subtitleService.SearchSubtitlesFromImdb(
+                                            languages.Select(lang => lang.SubLanguageId)
+                                                .Aggregate((a, b) => a + "," + b),
+                                            showJson.ImdbId.Replace("tt", ""), episode.Season,
+                                            episode.EpisodeNumber))
+                                        .GroupBy(
+                                            x => x.LanguageName,
+                                            (k, g) =>
+                                                g.Aggregate(
+                                                    (a, x) =>
+                                                        (Convert.ToDouble(x.Rating, CultureInfo.InvariantCulture) >=
+                                                         Convert.ToDouble(a.Rating, CultureInfo.InvariantCulture))
+                                                            ? x
+                                                            : a));
+                                    episode.Subtitles = subtitles.Select(async subtitle => new Database.Subtitle
                                     {
-                                        var search = await TmdbClient.FindAsync(FindExternalSource.TvDb, tvdbId.ToString());
-                                        var tvEpisode = search.TvEpisode.FirstOrDefault();
-                                        var tmdb = await TmdbClient.GetTvEpisodeAsync(tvEpisode.ShowId, episode.Season,
-                                            episode.EpisodeNumber, TvEpisodeMethods.ExternalIds);
-                                        var subtitles = (await _subtitleService.SearchSubtitlesFromImdb(
-                                                languages.Select(lang => lang.SubLanguageId)
-                                                    .Aggregate((a, b) => a + "," + b),
-                                                tmdb.ExternalIds.ImdbId.Replace("tt", ""), episode.Season,
-                                                episode.EpisodeNumber))
-                                            .GroupBy(
-                                                x => x.LanguageName,
-                                                (k, g) =>
-                                                    g.Aggregate(
-                                                        (a, x) =>
-                                                            (Convert.ToDouble(x.Rating, CultureInfo.InvariantCulture) >=
-                                                             Convert.ToDouble(a.Rating, CultureInfo.InvariantCulture))
-                                                                ? x
-                                                                : a));
-                                        episode.Subtitles = subtitles.Select(async subtitle => new Database.Subtitle
-                                        {
-                                            ImdbId = subtitle.ImdbId,
-                                            LanguageName = subtitle.LanguageName,
-                                            Rating = Convert.ToDouble(subtitle.Rating, CultureInfo.InvariantCulture),
-                                            Bad = Convert.ToDouble(subtitle.Bad, CultureInfo.InvariantCulture),
-                                            Iso639 = subtitle.ISO639,
-                                            LanguageId = subtitle.LanguageId,
-                                            OsdbSubtitleId = subtitle.SubtitleId,
-                                            SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(
-                                                subtitle.SubtitleId, subtitle.ImdbId,
-                                                subtitle.ISO639,
-                                                $@"shows/{subtitle.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" +
-                                                ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Shows),
-                                            SubtitleFileName = subtitle.SubtitleId + "." +
-                                                               subtitle.SubTitleDownloadLink.OriginalString.Split('.')
-                                                                   .Last()
-                                        }).Select(a => a.Result).ToList();
-                                    }
+                                        ImdbId = subtitle.ImdbId,
+                                        LanguageName = subtitle.LanguageName,
+                                        Rating = Convert.ToDouble(subtitle.Rating, CultureInfo.InvariantCulture),
+                                        Bad = Convert.ToDouble(subtitle.Bad, CultureInfo.InvariantCulture),
+                                        Iso639 = subtitle.ISO639,
+                                        LanguageId = subtitle.LanguageId,
+                                        OsdbSubtitleId = subtitle.SubtitleId,
+                                        SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(
+                                            subtitle.SubtitleId, subtitle.ImdbId,
+                                            subtitle.ISO639,
+                                            $@"shows/{subtitle.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" +
+                                            ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Shows),
+                                        SubtitleFileName = subtitle.SubtitleId + "." +
+                                                           subtitle.SubTitleDownloadLink.OriginalString.Split('.')
+                                                               .Last()
+                                    }).Select(a => a.Result).ToList();
                                 }
 
                                 context.ShowSet.Add(show);
@@ -320,78 +313,12 @@ namespace PopcornExport.Services.Import
                                             episode.Torrents.Torrent480p.Url = updatedEpisode.Torrents.Torrent480p.Url;
                                     }
 
-                                    if (int.TryParse(showJson.TvdbId, out var tvdbId))
-                                    {
-                                        var search = await TmdbClient.FindAsync(FindExternalSource.TvDb, tvdbId.ToString());
-                                        var tvEpisode = search.TvEpisode.FirstOrDefault();
-                                        var tmdb = await TmdbClient.GetTvEpisodeAsync(tvEpisode.ShowId, episode.Season,
-                                            episode.EpisodeNumber, TvEpisodeMethods.ExternalIds);
-                                        var subtitles = (await _subtitleService.SearchSubtitlesFromImdb(
-                                                languages.Select(lang => lang.SubLanguageId)
-                                                    .Aggregate((a, b) => a + "," + b),
-                                                tmdb.ExternalIds.ImdbId.Replace("tt", ""), episode.Season,
-                                                episode.EpisodeNumber))
-                                            .GroupBy(
-                                                x => x.LanguageName,
-                                                (k, g) =>
-                                                    g.Aggregate(
-                                                        (a, x) =>
-                                                            (Convert.ToDouble(x.Rating, CultureInfo.InvariantCulture) >=
-                                                             Convert.ToDouble(a.Rating, CultureInfo.InvariantCulture))
-                                                                ? x
-                                                                : a));
-                                        foreach (var subtitle in subtitles)
-                                        {
-                                            if (episode.Subtitles.All(a => a.OsdbSubtitleId != subtitle.SubtitleId) ||
-                                                episode.Subtitles.Any(a =>
-                                                    a.OsdbSubtitleId == subtitle.SubtitleId &&
-                                                    string.IsNullOrEmpty(a.SubtitleDownloadLink)))
-                                            {
-                                                episode.Subtitles.Add(new Database.Subtitle
-                                                {
-                                                    ImdbId = subtitle.ImdbId,
-                                                    LanguageName = subtitle.LanguageName,
-                                                    Rating =
-                                                        Convert.ToDouble(subtitle.Rating, CultureInfo.InvariantCulture),
-                                                    Bad = Convert.ToDouble(subtitle.Bad, CultureInfo.InvariantCulture),
-                                                    Iso639 = subtitle.ISO639,
-                                                    LanguageId = subtitle.LanguageId,
-                                                    OsdbSubtitleId = subtitle.SubtitleId,
-                                                    SubtitleDownloadLink =
-                                                        await _subtitleService.DownloadSubtitleToPath(
-                                                            subtitle.SubtitleId, subtitle.ImdbId,
-                                                            subtitle.ISO639,
-                                                            $@"shows/{subtitle.ImdbId}/{subtitle.ISO639}/{
-                                                                    subtitle.SubtitleId
-                                                                }" + ".srt",
-                                                            subtitle.SubTitleDownloadLink.OriginalString,
-                                                            ExportType.Shows),
-                                                    SubtitleFileName = subtitle.SubtitleId + "." +
-                                                                       subtitle.SubTitleDownloadLink.OriginalString
-                                                                           .Split('.').Last()
-                                                });
-                                            }
-                                        }
-                                    }
-                                }
-
-                                var newEpisodes =
-                                    show.Episodes.Except(existingEntity.Episodes, new EpisodeComparer());
-                                foreach (var newEpisode in newEpisodes.ToList())
-                                {
-                                    existingEntity.Episodes.Add(newEpisode);
-
-                                    if (int.TryParse(showJson.TvdbId, out var tvdbId))
-                                    {
-                                        var search = await TmdbClient.FindAsync(FindExternalSource.TvDb, tvdbId.ToString());
-                                        var tvEpisode = search.TvEpisode.FirstOrDefault();
-                                        var tmdb = await TmdbClient.GetTvEpisodeAsync(tvEpisode.ShowId, newEpisode.Season,
-                                            newEpisode.EpisodeNumber, TvEpisodeMethods.ExternalIds);
-                                        var subtitles = (await _subtitleService.SearchSubtitlesFromImdb(
+                                    var subtitles = (await _subtitleService.SearchSubtitlesFromImdb(
                                             languages.Select(lang => lang.SubLanguageId)
                                                 .Aggregate((a, b) => a + "," + b),
-                                            tmdb.ExternalIds.ImdbId.Replace("tt", ""), newEpisode.Season,
-                                            newEpisode.EpisodeNumber)).GroupBy(
+                                            showJson.ImdbId.Replace("tt", ""), episode.Season,
+                                            episode.EpisodeNumber))
+                                        .GroupBy(
                                             x => x.LanguageName,
                                             (k, g) =>
                                                 g.Aggregate(
@@ -400,25 +327,77 @@ namespace PopcornExport.Services.Import
                                                          Convert.ToDouble(a.Rating, CultureInfo.InvariantCulture))
                                                             ? x
                                                             : a));
-                                        newEpisode.Subtitles = subtitles.Select(async subtitle => new Database.Subtitle
+                                    foreach (var subtitle in subtitles)
+                                    {
+                                        if (episode.Subtitles.All(a => a.OsdbSubtitleId != subtitle.SubtitleId) ||
+                                            episode.Subtitles.Any(a =>
+                                                a.OsdbSubtitleId == subtitle.SubtitleId &&
+                                                string.IsNullOrEmpty(a.SubtitleDownloadLink)))
                                         {
-                                            ImdbId = subtitle.ImdbId,
-                                            LanguageName = subtitle.LanguageName,
-                                            Rating = Convert.ToDouble(subtitle.Rating, CultureInfo.InvariantCulture),
-                                            Bad = Convert.ToDouble(subtitle.Bad, CultureInfo.InvariantCulture),
-                                            Iso639 = subtitle.ISO639,
-                                            LanguageId = subtitle.LanguageId,
-                                            OsdbSubtitleId = subtitle.SubtitleId,
-                                            SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(
-                                                subtitle.SubtitleId, subtitle.ImdbId,
-                                                subtitle.ISO639,
-                                                $@"shows/{subtitle.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" +
-                                                ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Shows),
-                                            SubtitleFileName = subtitle.SubtitleId + "." +
-                                                               subtitle.SubTitleDownloadLink.OriginalString.Split('.')
-                                                                   .Last()
-                                        }).Select(a => a.Result).ToList();
+                                            episode.Subtitles.Add(new Database.Subtitle
+                                            {
+                                                ImdbId = subtitle.ImdbId,
+                                                LanguageName = subtitle.LanguageName,
+                                                Rating =
+                                                    Convert.ToDouble(subtitle.Rating, CultureInfo.InvariantCulture),
+                                                Bad = Convert.ToDouble(subtitle.Bad, CultureInfo.InvariantCulture),
+                                                Iso639 = subtitle.ISO639,
+                                                LanguageId = subtitle.LanguageId,
+                                                OsdbSubtitleId = subtitle.SubtitleId,
+                                                SubtitleDownloadLink =
+                                                    await _subtitleService.DownloadSubtitleToPath(
+                                                        subtitle.SubtitleId, subtitle.ImdbId,
+                                                        subtitle.ISO639,
+                                                        $@"shows/{subtitle.ImdbId}/{subtitle.ISO639}/{
+                                                                subtitle.SubtitleId
+                                                            }" + ".srt",
+                                                        subtitle.SubTitleDownloadLink.OriginalString,
+                                                        ExportType.Shows),
+                                                SubtitleFileName = subtitle.SubtitleId + "." +
+                                                                   subtitle.SubTitleDownloadLink.OriginalString
+                                                                       .Split('.').Last()
+                                            });
+                                        }
                                     }
+
+                                }
+
+                                var newEpisodes =
+                                    show.Episodes.Except(existingEntity.Episodes, new EpisodeComparer());
+                                foreach (var newEpisode in newEpisodes.ToList())
+                                {
+                                    existingEntity.Episodes.Add(newEpisode);
+                                    var subtitles = (await _subtitleService.SearchSubtitlesFromImdb(
+                                        languages.Select(lang => lang.SubLanguageId)
+                                            .Aggregate((a, b) => a + "," + b),
+                                        showJson.ImdbId.Replace("tt", ""), newEpisode.Season,
+                                        newEpisode.EpisodeNumber)).GroupBy(
+                                        x => x.LanguageName,
+                                        (k, g) =>
+                                            g.Aggregate(
+                                                (a, x) =>
+                                                    (Convert.ToDouble(x.Rating, CultureInfo.InvariantCulture) >=
+                                                     Convert.ToDouble(a.Rating, CultureInfo.InvariantCulture))
+                                                        ? x
+                                                        : a));
+                                    newEpisode.Subtitles = subtitles.Select(async subtitle => new Database.Subtitle
+                                    {
+                                        ImdbId = subtitle.ImdbId,
+                                        LanguageName = subtitle.LanguageName,
+                                        Rating = Convert.ToDouble(subtitle.Rating, CultureInfo.InvariantCulture),
+                                        Bad = Convert.ToDouble(subtitle.Bad, CultureInfo.InvariantCulture),
+                                        Iso639 = subtitle.ISO639,
+                                        LanguageId = subtitle.LanguageId,
+                                        OsdbSubtitleId = subtitle.SubtitleId,
+                                        SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(
+                                            subtitle.SubtitleId, subtitle.ImdbId,
+                                            subtitle.ISO639,
+                                            $@"shows/{subtitle.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" +
+                                            ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Shows),
+                                        SubtitleFileName = subtitle.SubtitleId + "." +
+                                                           subtitle.SubTitleDownloadLink.OriginalString.Split('.')
+                                                               .Last()
+                                    }).Select(a => a.Result).ToList();
                                 }
 
                                 if (existingEntity.Episodes.Any())
