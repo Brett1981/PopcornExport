@@ -263,7 +263,7 @@ namespace PopcornExport.Services.Subtitle
                                 ms.Seek(0, SeekOrigin.Begin);
                                 return await _fileService.UploadFileFromStreamToAzureStorage(outputPath,
                                     ms,
-                                    ExportType.Subtitles, true);
+                                    ExportType.Subtitles);
                             }
                         }
                     }
@@ -332,7 +332,7 @@ namespace PopcornExport.Services.Subtitle
                                         decompressedFileStream.Seek(0, SeekOrigin.Begin);
                                         return await _fileService.UploadFileFromStreamToAzureStorage(outputPath,
                                             decompressedFileStream,
-                                            ExportType.Subtitles, true);
+                                            ExportType.Subtitles);
                                     }
                                 }
                             }
