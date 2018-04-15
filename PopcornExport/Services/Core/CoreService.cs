@@ -9,8 +9,6 @@ using PopcornExport.Extensions;
 using PopcornExport.Services.Assets;
 using PopcornExport.Services.Caching;
 using PopcornExport.Services.File;
-using PopcornExport.Services.Language;
-using PopcornExport.Services.Subtitle;
 using ShellProgressBar;
 
 namespace PopcornExport.Services.Core
@@ -41,33 +39,19 @@ namespace PopcornExport.Services.Core
         private readonly IFileService _fileService;
 
         /// <summary>
-        /// The language service
-        /// </summary>
-        private readonly ILanguageService _languageService;
-
-        /// <summary>
-        /// The subtitle service
-        /// </summary>
-        private readonly ISubtitleService _subtitleService;
-
-        /// <summary>
         /// Core service
         /// </summary>
         /// <param name="exportService">Export service</param>
         /// <param name="loggingService">Logging service</param>
         /// <param name="fileService">The file service</param>
         /// <param name="cachingService">The caching service</param>
-        /// <param name="languageService">The language service</param>
-        /// <param name="subtitleService">The subtitle service</param>
         public CoreService(IExportService exportService, ILoggingService loggingService, IFileService fileService,
-            ICachingService cachingService, ILanguageService languageService, ISubtitleService subtitleService)
+            ICachingService cachingService)
         {
-            _languageService = languageService;
             _exportService = exportService;
             _loggingService = loggingService;
             _fileService = fileService;
             _cachingService = cachingService;
-            _subtitleService = subtitleService;
         }
 
         /// <summary>
@@ -85,7 +69,6 @@ namespace PopcornExport.Services.Core
                         }";
                 _loggingService.Telemetry.TrackTrace(loggingTraceBegin);
                 Console.WriteLine(loggingTraceBegin);
-                await _languageService.UpdateLanguages();
                 var exports = new[] {ExportType.Movies, ExportType.Shows};
                 var overProgressOptions = new ProgressBarOptions
                 {
@@ -116,12 +99,12 @@ namespace PopcornExport.Services.Core
                                 case ExportType.Shows:
                                     importService = new ImportShowService(
                                         new AssetsShowService(_loggingService, _fileService),
-                                        _loggingService, _subtitleService, _languageService, _fileService);
+                                        _loggingService, _fileService);
                                     break;
                                 case ExportType.Movies:
                                     importService = new ImportMovieService(
                                         new AssetsMovieService(_loggingService, _fileService),
-                                        _loggingService, _subtitleService, _languageService, _fileService);
+                                        _loggingService, _fileService);
                                     break;
                                 default:
                                     throw new NotImplementedException();

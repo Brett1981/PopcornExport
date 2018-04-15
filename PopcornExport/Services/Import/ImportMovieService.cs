@@ -11,10 +11,7 @@ using PopcornExport.Services.Assets;
 using TMDbLib.Client;
 using TMDbLib.Objects.Movies;
 using Microsoft.EntityFrameworkCore;
-using PopcornExport.Models.Export;
 using PopcornExport.Services.File;
-using PopcornExport.Services.Language;
-using PopcornExport.Services.Subtitle;
 using ShellProgressBar;
 using Utf8Json;
 using Movie = PopcornExport.Database.Movie;
@@ -42,31 +39,17 @@ namespace PopcornExport.Services.Import
         private readonly IFileService _fileService;
 
         /// <summary>
-        /// The subtitle service
-        /// </summary>
-        private readonly ISubtitleService _subtitleService;
-
-        /// <summary>
-        /// The language service
-        /// </summary>
-        private readonly ILanguageService _languageService;
-
-        /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="assetsService">Assets service</param>
         /// <param name="loggingService">Logging service</param>
-        /// <param name="subtitleService">The subtitle service</param>
-        /// <param name="languageService">The language service</param>
         /// <param name="fileService">The file service</param>
         public ImportMovieService(IAssetsService assetsService,
-            ILoggingService loggingService, ISubtitleService subtitleService, ILanguageService languageService, IFileService fileService)
+            ILoggingService loggingService, IFileService fileService)
         {
             _fileService = fileService;
             _loggingService = loggingService;
             _assetsService = assetsService;
-            _subtitleService = subtitleService;
-            _languageService = languageService;
 
             TmdbClient = new TMDbClient(Constants.TmDbClientId)
             {
@@ -165,34 +148,9 @@ namespace PopcornExport.Services.Import
                                 PosterImage = movieJson.PosterImage
                             };
 
-                            var languages = await _languageService.GetLanguages();
-                            var subtitles = (await _subtitleService.SearchSubtitlesFromImdb(
-                                languages.Select(lang => lang.SubLanguageId).Aggregate((a, b) => a + "," + b),
-                                movieJson.ImdbCode.Replace("tt", ""), null, null)).GroupBy(x => x.LanguageName,
-                                (k, g) =>
-                                    g.Aggregate(
-                                        (a, x) =>
-                                            (Convert.ToDouble(x.Rating, CultureInfo.InvariantCulture) >=
-                                             Convert.ToDouble(a.Rating, CultureInfo.InvariantCulture))
-                                                ? x
-                                                : a));
                             if (!context.MovieSet.Any(a => a.ImdbCode == movie.ImdbCode))
                             {
                                 await RetrieveAssets(movie).ConfigureAwait(false);
-                                movie.Subtitles = subtitles.Select(async subtitle => new Database.Subtitle
-                                {
-                                    ImdbId = subtitle.ImdbId,
-                                    LanguageName = subtitle.LanguageName,
-                                    Rating = Convert.ToDouble(subtitle.Rating, CultureInfo.InvariantCulture),
-                                    Bad = Convert.ToDouble(subtitle.Bad, CultureInfo.InvariantCulture),
-                                    Iso639 = subtitle.ISO639,
-                                    LanguageId = subtitle.LanguageId,
-                                    OsdbSubtitleId = subtitle.SubtitleId,
-                                    SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId, subtitle.ImdbId,
-                                        subtitle.ISO639, $@"movies/{subtitle.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Movies),
-                                    SubtitleFileName = subtitle.SubtitleId + "." +
-                                                       subtitle.SubTitleDownloadLink.OriginalString.Split('.').Last()
-                                }).Select(a => a.Result).ToList();
                                 context.MovieSet.Add(movie);
                                 await context.SaveChangesAsync().ConfigureAwait(false);
                             }
@@ -212,31 +170,6 @@ namespace PopcornExport.Services.Import
                                     if (updatedTorrent == null) continue;
                                     torrent.Peers = updatedTorrent.Peers;
                                     torrent.Seeds = updatedTorrent.Seeds;
-                                }
-
-                                foreach (var subtitle in subtitles)
-                                {
-                                    if (existingEntity.Subtitles.All(a => a.OsdbSubtitleId != subtitle.SubtitleId) ||
-                                        existingEntity.Subtitles.Any(a =>
-                                            a.OsdbSubtitleId == subtitle.SubtitleId &&
-                                            string.IsNullOrEmpty(a.SubtitleDownloadLink)))
-                                    {
-                                        existingEntity.Subtitles.Add(new Database.Subtitle
-                                        {
-                                            ImdbId = subtitle.ImdbId,
-                                            LanguageName = subtitle.LanguageName,
-                                            Rating = Convert.ToDouble(subtitle.Rating, CultureInfo.InvariantCulture),
-                                            Bad = Convert.ToDouble(subtitle.Bad, CultureInfo.InvariantCulture),
-                                            Iso639 = subtitle.ISO639,
-                                            LanguageId = subtitle.LanguageId,
-                                            OsdbSubtitleId = subtitle.SubtitleId,
-                                            SubtitleDownloadLink = await _subtitleService.DownloadSubtitleToPath(subtitle.SubtitleId, subtitle.ImdbId,
-                                                subtitle.ISO639, $@"movies/{subtitle.ImdbId}/{subtitle.ISO639}/{subtitle.SubtitleId}" + ".srt", subtitle.SubTitleDownloadLink.OriginalString, ExportType.Movies),
-                                            SubtitleFileName = subtitle.SubtitleId + "." +
-                                                               subtitle.SubTitleDownloadLink.OriginalString.Split('.')
-                                                                   .Last()
-                                        });
-                                    }
                                 }
 
                                 await context.SaveChangesAsync().ConfigureAwait(false);

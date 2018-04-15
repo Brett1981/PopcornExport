@@ -11,7 +11,6 @@ using PopcornExport.Models.Movie;
 using System.Collections.Async;
 using System.Collections.Concurrent;
 using Polly;
-using Popcorn.OSDB;
 using PopcornExport.Models.Show;
 using ShellProgressBar;
 using Utf8Json;

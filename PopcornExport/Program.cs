@@ -8,7 +8,6 @@ using PopcornExport.Services.Caching;
 using PopcornExport.Services.Core;
 using PopcornExport.Services.File;
 using PopcornExport.Services.Logging;
-using PopcornExport.Services.Subtitle;
 using StructureMap;
 
 namespace PopcornExport
