@@ -136,10 +136,10 @@ namespace PopcornExport.Services.Import
                                     CharacterName = cast?.CharacterName,
                                     Name = cast?.Name
                                 }).ToList(),
-                                Genres = movieJson.Genres.Select(genre => new Genre
+                                Genres = movieJson.Genres?.Select(genre => new Genre
                                 {
                                     Name = genre
-                                }).ToList(),
+                                }).ToList() ?? new List<Genre>(),
                                 GenreNames = string.Join(", ", movieJson.Genres.Select(FirstCharToUpper)),
                                 Language = movieJson.Language,
                                 Slug = movieJson.Slug,
