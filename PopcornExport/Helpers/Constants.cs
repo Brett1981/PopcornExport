@@ -34,10 +34,5 @@
         /// Redis host
         /// </summary>
         public const string RedisHost = "popcorn.redis.cache.windows.net:6380";
-
-        /// <summary>
-        /// Open Subtitles User Agent
-        /// </summary>
-        public const string OsdbUa = "Popcorn v1.0";
     }
 }

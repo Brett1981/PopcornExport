@@ -4,8 +4,11 @@ using PopcornExport.Services.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
+using lt;
 using PopcornExport.Database;
 using PopcornExport.Services.Assets;
 using TMDbLib.Client;
@@ -170,6 +173,64 @@ namespace PopcornExport.Services.Import
                                     if (updatedTorrent == null) continue;
                                     torrent.Peers = updatedTorrent.Peers;
                                     torrent.Seeds = updatedTorrent.Seeds;
+                                    if (torrent.Peers == 0 && torrent.Seeds == 0)
+                                    {
+                                        string torrentPath = Path.GetTempFileName();
+                                        using (var httpClient = new HttpClient())
+                                        {
+                                            using (var request = new HttpRequestMessage(HttpMethod.Get, torrent.Url))
+                                            {
+                                                using (
+                                                    Stream contentStream = await (await httpClient.SendAsync(request))
+                                                            .Content.ReadAsStreamAsync(),
+                                                        stream = new FileStream(torrentPath, FileMode.Create,
+                                                            FileAccess.Write, FileShare.None, 4096,
+                                                            true))
+                                                {
+                                                    await contentStream.CopyToAsync(stream);
+                                                    using (var session = new session())
+                                                    {
+                                                        using (var error = new error_code())
+                                                        {
+                                                            var addParams = new add_torrent_params
+                                                            {
+                                                                save_path = Path.GetTempPath(),
+                                                                ti = new torrent_info(torrentPath)
+                                                            };
+                                                            using (var handle = session.add_torrent(addParams))
+                                                            {
+                                                                handle.pause();
+                                                                var i = 0;
+                                                                while (i < 3)
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        var status = handle.status();
+                                                                        torrent.Peers = status.list_peers;
+                                                                        torrent.Seeds = status.list_seeds;
+                                                                        await Task.Delay(2000);
+                                                                        i++;
+                                                                    }
+                                                                    catch (Exception)
+                                                                    {
+                                                                        break;
+                                                                    }
+                                                                }
+
+                                                                session.remove_torrent(handle, 1);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        try
+                                        {
+                                            System.IO.File.Delete(torrentPath);
+                                        }
+                                        catch (Exception) { }
+                                    }
                                 }
 
                                 await context.SaveChangesAsync().ConfigureAwait(false);
