@@ -15,12 +15,13 @@ using PopcornExport.Services.Assets;
 using TMDbLib.Client;
 using TMDbLib.Objects.Movies;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using PopcornExport.Models.Movie.v2;
 using PopcornExport.Services.File;
 using RestSharp.Portable;
 using RestSharp.Portable.HttpClient;
 using ShellProgressBar;
-using Utf8Json;
+using JsonSerializer = Utf8Json.JsonSerializer;
 using Movie = PopcornExport.Database.Movie;
 
 namespace PopcornExport.Services.Import
@@ -170,36 +171,25 @@ namespace PopcornExport.Services.Import
                                 existingEntity.DownloadCount = movie.DownloadCount;
                                 existingEntity.LikeCount = movie.LikeCount;
                                 existingEntity.Rating = movie.Rating;
-                                using (var client = new RestClient(Constants.MovieV2ApiUrl))
+                                using (var client = new HttpClient())
                                 {
-                                    var request = new RestRequest("{segment}", Method.GET);
-                                    request.AddUrlSegment("segment", movie.ImdbCode);
-                                    var moviev2 = await client.Execute<MovieV2>(request);
-                                    if (moviev2.StatusCode == HttpStatusCode.OK)
+                                    var response =
+                                        await client.GetStringAsync(Constants.MovieV2ApiUrl + movie.ImdbCode);
+                                    var moviev2 = JsonConvert.DeserializeObject<MovieV2>(response);
+                                    foreach (var torrent in existingEntity.Torrents)
                                     {
-                                        foreach (var torrent in existingEntity.Torrents)
+                                        if (torrent.Quality.ToLowerInvariant() == "1080p" &&
+                                            moviev2.Torrents?.En?.Quality1080p != null)
                                         {
-                                            if (torrent.Quality.ToLowerInvariant() == "1080p" &&
-                                                moviev2.Data.Torrents.Any(a => a.En?.Quality1080p != null))
-                                            {
-                                                torrent.Peers = moviev2.Data.Torrents.Select(a => a.En.Quality1080p)
-                                                    .First()
-                                                    .Peer;
-                                                torrent.Seeds = moviev2.Data.Torrents.Select(a => a.En.Quality1080p)
-                                                    .First()
-                                                    .Seed;
-                                            }
+                                            torrent.Peers = moviev2.Torrents.En.Quality1080p.Peer;
+                                            torrent.Seeds = moviev2.Torrents.En.Quality1080p.Seed;
+                                        }
 
-                                            if (torrent.Quality.ToLowerInvariant() == "720p" &&
-                                                moviev2.Data.Torrents.Any(a => a.En?.Quality720p != null))
-                                            {
-                                                torrent.Peers = moviev2.Data.Torrents.Select(a => a.En.Quality720p)
-                                                    .First()
-                                                    .Peer;
-                                                torrent.Seeds = moviev2.Data.Torrents.Select(a => a.En.Quality720p)
-                                                    .First()
-                                                    .Seed;
-                                            }
+                                        if (torrent.Quality.ToLowerInvariant() == "720p" &&
+                                            moviev2.Torrents?.En?.Quality720p != null)
+                                        {
+                                            torrent.Peers = moviev2.Torrents.En.Quality720p.Peer;
+                                            torrent.Seeds = moviev2.Torrents.En.Quality720p.Seed;
                                         }
                                     }
                                 }

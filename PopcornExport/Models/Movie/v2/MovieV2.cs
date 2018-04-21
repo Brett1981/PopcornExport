@@ -34,7 +34,7 @@ namespace PopcornExport.Models.Movie.v2
         public string Certification { get; set; }
 
         [DataMember(Name = "torrents")]
-        public List<TorrentV2> Torrents { get; set; }
+        public TorrentV2 Torrents { get; set; }
 
         [DataMember(Name = "genres")]
         public List<string> Genres { get; set; }
