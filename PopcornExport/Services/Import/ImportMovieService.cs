@@ -6,16 +6,19 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
-using lt;
 using PopcornExport.Database;
 using PopcornExport.Services.Assets;
 using TMDbLib.Client;
 using TMDbLib.Objects.Movies;
 using Microsoft.EntityFrameworkCore;
+using PopcornExport.Models.Movie.v2;
 using PopcornExport.Services.File;
+using RestSharp.Portable;
+using RestSharp.Portable.HttpClient;
 using ShellProgressBar;
 using Utf8Json;
 using Movie = PopcornExport.Database.Movie;
@@ -167,78 +170,36 @@ namespace PopcornExport.Services.Import
                                 existingEntity.DownloadCount = movie.DownloadCount;
                                 existingEntity.LikeCount = movie.LikeCount;
                                 existingEntity.Rating = movie.Rating;
-                                foreach (var torrent in existingEntity.Torrents)
+                                using (var client = new RestClient(Constants.MovieV2ApiUrl))
                                 {
-                                    var updatedTorrent =
-                                        movie.Torrents.FirstOrDefault(a => a.Quality == torrent.Quality);
-                                    if (updatedTorrent == null) continue;
-                                    torrent.Peers = updatedTorrent.Peers;
-                                    torrent.Seeds = updatedTorrent.Seeds;
-                                    if (torrent.Peers == 0 && torrent.Seeds == 0)
+                                    var request = new RestRequest("{segment}", Method.GET);
+                                    request.AddUrlSegment("segment", movie.ImdbCode);
+                                    var moviev2 = await client.Execute<MovieV2>(request);
+                                    if (moviev2.StatusCode == HttpStatusCode.OK)
                                     {
-                                        try
+                                        foreach (var torrent in existingEntity.Torrents)
                                         {
-                                            var torrentPath =
-                                                $@"{
-                                                        Path.GetDirectoryName(Assembly
-                                                            .GetAssembly(typeof(ImportMovieService)).Location)
-                                                    }\{Guid.NewGuid().ToString()}.torrent";
-                                            using (var httpClient = new HttpClient())
+                                            if (torrent.Quality.ToLowerInvariant() == "1080p" &&
+                                                moviev2.Data.Torrents.Any(a => a.En?.Quality1080p != null))
                                             {
-                                                using (var request =
-                                                    new HttpRequestMessage(HttpMethod.Get, torrent.Url))
-                                                {
-                                                    using (
-                                                        Stream contentStream =
-                                                                await (await httpClient.SendAsync(request))
-                                                                    .Content.ReadAsStreamAsync(),
-                                                            stream = new FileStream(torrentPath, FileMode.Create,
-                                                                FileAccess.Write, FileShare.Read, 4096,
-                                                                true))
-                                                    {
-                                                        await contentStream.CopyToAsync(stream);
-                                                        using (var session = new session())
-                                                        {
-                                                            using (var error = new error_code())
-                                                            {
-                                                                var addParams = new add_torrent_params
-                                                                {
-                                                                    save_path = Path.GetDirectoryName(Assembly
-                                                                        .GetAssembly(typeof(ImportMovieService)).Location),
-                                                                    ti = new torrent_info(torrentPath)
-                                                                };
-                                                                using (var handle = session.add_torrent(addParams))
-                                                                {
-                                                                    handle.pause();
-                                                                    var i = 0;
-                                                                    while (i < 3)
-                                                                    {
-                                                                        try
-                                                                        {
-                                                                            var status = handle.status();
-                                                                            torrent.Peers = status.list_peers;
-                                                                            torrent.Seeds = status.list_seeds;
-                                                                            await Task.Delay(2000);
-                                                                            i++;
-                                                                        }
-                                                                        catch (Exception)
-                                                                        {
-                                                                            break;
-                                                                        }
-                                                                    }
-
-                                                                    session.remove_torrent(handle, 1);
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
+                                                torrent.Peers = moviev2.Data.Torrents.Select(a => a.En.Quality1080p)
+                                                    .First()
+                                                    .Peer;
+                                                torrent.Seeds = moviev2.Data.Torrents.Select(a => a.En.Quality1080p)
+                                                    .First()
+                                                    .Seed;
                                             }
 
-                                            System.IO.File.Delete(torrentPath);
-                                        }
-                                        catch (Exception)
-                                        {
+                                            if (torrent.Quality.ToLowerInvariant() == "720p" &&
+                                                moviev2.Data.Torrents.Any(a => a.En?.Quality720p != null))
+                                            {
+                                                torrent.Peers = moviev2.Data.Torrents.Select(a => a.En.Quality720p)
+                                                    .First()
+                                                    .Peer;
+                                                torrent.Seeds = moviev2.Data.Torrents.Select(a => a.En.Quality720p)
+                                                    .First()
+                                                    .Seed;
+                                            }
                                         }
                                     }
                                 }

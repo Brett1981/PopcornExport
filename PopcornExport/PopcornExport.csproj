@@ -66,9 +66,6 @@
     <Reference Include="ICSharpCode.SharpZipLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
       <HintPath>..\packages\SharpZipLib.1.0.0-alpha2\lib\netstandard1.3\ICSharpCode.SharpZipLib.dll</HintPath>
     </Reference>
-    <Reference Include="ltnet, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <HintPath>..\packages\libtorrent-net.3.1.0\lib\net45\ltnet.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.AI.Agent.Intercept, Version=2.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.ApplicationInsights.Agent.Intercept.2.4.0\lib\net45\Microsoft.AI.Agent.Intercept.dll</HintPath>
     </Reference>
@@ -418,6 +415,10 @@
     <Compile Include="Models\Movie\MovieListYTSJson.cs" />
     <Compile Include="Models\Movie\MovieShortJsonNode.cs" />
     <Compile Include="Models\Movie\MovieYTSJson.cs" />
+    <Compile Include="Models\Movie\v2\ImagesV2.cs" />
+    <Compile Include="Models\Movie\v2\MovieV2.cs" />
+    <Compile Include="Models\Movie\v2\RatingV2.cs" />
+    <Compile Include="Models\Movie\v2\TorrentV2.cs" />
     <Compile Include="Models\Rating\RatingJson.cs" />
     <Compile Include="Models\Show\ShowJson.cs" />
     <Compile Include="Models\Torrent\Movie\TorrentMovieJson.cs" />

@@ -16,6 +16,11 @@
         public const string YtsApiUrl = "https://yts.am/api/v2/";
 
         /// <summary>
+        /// Popcorn Api for movies
+        /// </summary>
+        public const string MovieV2ApiUrl = "https://tv-v2.api-fetch.website/movie/";
+
+        /// <summary>
         /// Client ID for TMDb
         /// </summary>
         public const string TmDbClientId = "a21fe922d3bac6654e93450e9a18af1c";
