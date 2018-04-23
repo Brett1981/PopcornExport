@@ -171,27 +171,13 @@ namespace PopcornExport.Services.Import
                                 existingEntity.DownloadCount = movie.DownloadCount;
                                 existingEntity.LikeCount = movie.LikeCount;
                                 existingEntity.Rating = movie.Rating;
-                                using (var client = new HttpClient())
+                                foreach (var torrent in existingEntity.Torrents)
                                 {
-                                    var response =
-                                        await client.GetStringAsync(Constants.MovieV2ApiUrl + movie.ImdbCode);
-                                    var moviev2 = JsonConvert.DeserializeObject<MovieV2>(response);
-                                    foreach (var torrent in existingEntity.Torrents)
-                                    {
-                                        if (torrent.Quality.ToLowerInvariant() == "1080p" &&
-                                            moviev2.Torrents?.En?.Quality1080p != null)
-                                        {
-                                            torrent.Peers = moviev2.Torrents.En.Quality1080p.Peer;
-                                            torrent.Seeds = moviev2.Torrents.En.Quality1080p.Seed;
-                                        }
-
-                                        if (torrent.Quality.ToLowerInvariant() == "720p" &&
-                                            moviev2.Torrents?.En?.Quality720p != null)
-                                        {
-                                            torrent.Peers = moviev2.Torrents.En.Quality720p.Peer;
-                                            torrent.Seeds = moviev2.Torrents.En.Quality720p.Seed;
-                                        }
-                                    }
+                                    var updatedTorrent =
+                                        movie.Torrents.FirstOrDefault(a => a.Quality == torrent.Quality);
+                                    if (updatedTorrent == null) continue;
+                                    torrent.Peers = updatedTorrent.Peers;
+                                    torrent.Seeds = updatedTorrent.Seeds;
                                 }
 
                                 await context.SaveChangesAsync().ConfigureAwait(false);
