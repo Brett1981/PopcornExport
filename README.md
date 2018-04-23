@@ -20,4 +20,4 @@ Built with .NET Core SDK 2.0 and Visual Studio 2017.
 
 # Screenshot
 
-![Capture](https://github.com/bbougot/PopcornExport/blob/master/Screenshots/Capture.png)
+![Capture](https://github.com/bbougot/PopcornExport/blob/master/Screenshots/Capture.JPG)
