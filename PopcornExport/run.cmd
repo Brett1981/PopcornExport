@@ -1,2 +1,2 @@
 @echo off
-PopcornExport.exe
+dotnet PopcornExport.dll

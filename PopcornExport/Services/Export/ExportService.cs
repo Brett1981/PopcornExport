@@ -1,8 +1,6 @@
 ﻿using PopcornExport.Helpers;
 using PopcornExport.Models.Export;
 using PopcornExport.Services.Logging;
-using RestSharp.Portable;
-using RestSharp.Portable.HttpClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +10,7 @@ using System.Collections.Async;
 using System.Collections.Concurrent;
 using Polly;
 using PopcornExport.Models.Show;
+using RestSharp;
 using ShellProgressBar;
 using Utf8Json;
 
@@ -57,54 +56,48 @@ namespace PopcornExport.Services.Export
                 {
                     if (exportType == ExportType.Shows)
                     {
-                        using (var client = new RestClient(Constants.TVShowAPI))
+                        var client = new RestClient(Constants.TvShowApi);
+                        var request = new RestRequest("{segment}", Method.GET);
+                        switch (exportType)
                         {
-                            var request = new RestRequest("{segment}", Method.GET);
-                            switch (exportType)
+                            case ExportType.Shows:
+                                request.AddUrlSegment("segment", "shows");
+                                break;
+                        }
+
+                        // Execute request
+                        var response = await client.ExecuteGetTaskAsync<IEnumerable<string>>(request);
+                        if (childProgress != null)
+                            childProgress.MaxTicks = response.Data.Count() * 50;
+
+                        foreach (var line in response.Data)
+                        {
+                            var innerClient = new RestClient(Constants.TvShowApi);
+                            var innerRequest = new RestRequest("{segment}/{subsegment}", Method.GET);
+                            var args = line.Split('/');
+                            innerRequest.AddUrlSegment("segment", args[0]);
+                            innerRequest.AddUrlSegment("subsegment", args[1]);
+                            var innerResponse =
+                                await innerClient.ExecuteGetTaskAsync<IEnumerable<ShowJson>>(innerRequest);
+                            if (innerResponse?.Data == null)
                             {
-                                case ExportType.Shows:
-                                    request.AddUrlSegment("segment", "shows");
-                                    break;
+                                for (int i = 0; i < 50; i++)
+                                    childProgress?.Tick();
+
+                                continue;
                             }
 
-                            // Execute request
-                            var response = await client.Execute<IEnumerable<string>>(request).ConfigureAwait(false);
-                            if(childProgress != null)
-                                childProgress.MaxTicks = response.Data.Count() * 50;
-
-                            foreach (var line in response.Data)
+                            var imdbIds = innerResponse.Data.Select(a => a.ImdbId);
+                            await imdbIds.ParallelForEachAsync(async imdbId =>
                             {
-                                using (var innerClient = new RestClient(Constants.TVShowAPI))
-                                {
-                                    var innerRequest = new RestRequest("{segment}/{subsegment}", Method.GET);
-                                    var args = line.Split('/');
-                                    innerRequest.AddUrlSegment("segment", args[0]);
-                                    innerRequest.AddUrlSegment("subsegment", args[1]);
-                                    var innerResponse = await innerClient.Execute<IEnumerable<ShowJson>>(innerRequest).ConfigureAwait(false);
-                                    if (innerResponse?.Data == null)
-                                    {
-                                        for (int i = 0; i < 50; i++)
-                                            childProgress?.Tick();
-
-                                        continue;
-                                    }
-
-                                    var imdbIds = innerResponse.Data.Select(a => a.ImdbId);
-                                    await imdbIds.ParallelForEachAsync(async imdbId => 
-                                    {
-                                        using (var showClient = new RestClient(Constants.TVShowAPI))
-                                        {
-                                            var showRequest = new RestRequest("{segment}/{subsegment}", Method.GET);
-                                            showRequest.AddUrlSegment("segment", "show");
-                                            showRequest.AddUrlSegment("subsegment", imdbId);
-                                            var showResponse = await showClient.Execute(showRequest)
-                                                .ConfigureAwait(false);
-                                            export.Add(showResponse.Content);
-                                            childProgress?.Tick();
-                                        }
-                                    });
-                                }
-                            }
+                                var showClient = new RestClient(Constants.TvShowApi);
+                                var showRequest = new RestRequest("{segment}/{subsegment}", Method.GET);
+                                showRequest.AddUrlSegment("segment", "show");
+                                showRequest.AddUrlSegment("subsegment", imdbId);
+                                var showResponse = await showClient.ExecuteGetTaskAsync(showRequest);
+                                export.Add(showResponse.Content);
+                                childProgress?.Tick();
+                            });
                         }
                     }
                     else if (exportType == ExportType.Movies)
@@ -113,52 +106,50 @@ namespace PopcornExport.Services.Export
                         bool movieFound;
                         do
                         {
-                            using (var client = new RestClient(Constants.YtsApiUrl))
+                            var client = new RestClient(Constants.YtsApiUrl);
+                            var moviesByPageRequest = GetMoviesByPageRequest(page);
+                            // Execute request
+                            var movieShortResponse =
+                                await client.ExecuteGetTaskAsync(moviesByPageRequest);
+                            var movieNode =
+                                JsonSerializer.Deserialize<MovieShortJsonNode>(movieShortResponse.RawBytes);
+                            if (movieNode?.Data?.Movies == null || !movieNode.Data.Movies.Any())
                             {
-                                var moviesByPageRequest = GetMoviesByPageRequest(page);
-                                // Execute request
-                                var movieShortResponse =
-                                    await client.Execute(moviesByPageRequest).ConfigureAwait(false);
-                                var movieNode =
-                                    JsonSerializer.Deserialize<MovieShortJsonNode>(movieShortResponse.RawBytes);
-                                if (movieNode?.Data?.Movies == null || !movieNode.Data.Movies.Any())
-                                {
-                                    movieFound = false;
-                                }
-                                else
-                                {
-                                    if (childProgress != null)
-                                        childProgress.MaxTicks = movieNode.Data.MovieCount;
+                                movieFound = false;
+                            }
+                            else
+                            {
+                                if (childProgress != null)
+                                    childProgress.MaxTicks = movieNode.Data.MovieCount;
 
-                                    movieFound = true;
-                                    page++;
-                                    await movieNode.Data.Movies.ParallelForEachAsync(async movie =>
+                                movieFound = true;
+                                page++;
+                                await movieNode.Data.Movies.ParallelForEachAsync(async movie =>
+                                {
+                                    try
                                     {
-                                        try
-                                        {
-                                            using (var innerClient = new RestClient(Constants.YtsApiUrl))
-                                            {
-                                                var movieByIdRequest = GetMovieById(movie.Id);
-                                               
-                                                var retrySearchSubtitlesFromImdbPolicy = Policy
-                                                    .Handle<Exception>()
-                                                    .WaitAndRetryAsync(5, retryAttempt =>
-                                                        TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))
-                                                    );
-                                                var movieFullResponse = await retrySearchSubtitlesFromImdbPolicy.ExecuteAsync(async () => await innerClient.Execute(movieByIdRequest).ConfigureAwait(false));
-                                                var fullMovie =
-                                                    JsonSerializer.Deserialize<MovieFullJsonNode>(
-                                                        movieFullResponse.Content);
-                                                export.Add(JsonSerializer.ToJsonString(fullMovie.Data.Movie));
-                                                childProgress?.Tick();
-                                            }
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            _loggingService.Telemetry.TrackException(ex);
-                                        }
-                                    }).ConfigureAwait(false);
-                                }
+                                        var innerClient = new RestClient(Constants.YtsApiUrl);
+                                        var movieByIdRequest = GetMovieById(movie.Id);
+
+                                        var retrySearchSubtitlesFromImdbPolicy = Policy
+                                            .Handle<Exception>()
+                                            .WaitAndRetryAsync(5, retryAttempt =>
+                                                TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))
+                                            );
+                                        var movieFullResponse =
+                                            await retrySearchSubtitlesFromImdbPolicy.ExecuteAsync(async () =>
+                                                await innerClient.ExecuteGetTaskAsync(movieByIdRequest));
+                                        var fullMovie =
+                                            JsonSerializer.Deserialize<MovieFullJsonNode>(
+                                                movieFullResponse.Content);
+                                        export.Add(JsonSerializer.ToJsonString(fullMovie.Data.Movie));
+                                        childProgress?.Tick();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _loggingService.Telemetry.TrackException(ex);
+                                    }
+                                });
                             }
                         } while (movieFound);
                     }
@@ -184,7 +175,7 @@ namespace PopcornExport.Services.Export
         {
             var request = new RestRequest("{segment}", Method.GET);
             request.AddUrlSegment("segment", "movie_details.json");
-            request.AddQueryParameter("movie_id", movieId);
+            request.AddQueryParameter("movie_id", movieId.ToString());
             request.AddQueryParameter("with_images", "true");
             request.AddQueryParameter("with_cast", "true");
             return request;
@@ -199,8 +190,8 @@ namespace PopcornExport.Services.Export
         {
             var request = new RestRequest("{segment}", Method.GET);
             request.AddUrlSegment("segment", "list_movies.json");
-            request.AddQueryParameter("limit", 50);
-            request.AddQueryParameter("page", page);
+            request.AddQueryParameter("limit", 50.ToString());
+            request.AddQueryParameter("page", page.ToString());
             return request;
         }
     }

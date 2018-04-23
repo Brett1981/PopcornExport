@@ -52,7 +52,7 @@ namespace PopcornExport
             });
             
             var coreService = container.GetInstance<ICoreService>();
-            await coreService.Export().ConfigureAwait(false);
+            await coreService.Export();
         }
     }
 }

@@ -44,7 +44,7 @@ namespace PopcornExport.Services.Assets
                 if (Uri.TryCreate(fileUrl, UriKind.Absolute, out _))
                 {
                     return
-                        await _fileService.UploadFileFromUrlToAzureStorage(fileName, fileUrl, ExportType.Movies, forceReplace).ConfigureAwait(false);
+                        await _fileService.UploadFileFromUrlToAzureStorage(fileName, fileUrl, ExportType.Movies, forceReplace);
                 }
 
                 return string.Empty;

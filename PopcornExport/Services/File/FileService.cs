@@ -14,6 +14,8 @@ using PopcornExport.Services.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Processing.Transforms;
+using SixLabors.ImageSharp.Processing.Transforms.Resamplers;
 using SixLabors.Primitives;
 
 namespace PopcornExport.Services.File
@@ -92,7 +94,7 @@ namespace PopcornExport.Services.File
             {
                 if (!_initialized) throw new Exception("Service is not initialized");
                 var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
-                if (forceReplace || !await blob.ExistsAsync().ConfigureAwait(false))
+                if (forceReplace || !await blob.ExistsAsync())
                 {
                     var file = _container.GetBlockBlobReference(
                         $@"{type.ToFriendlyString()}/{fileName}");
@@ -118,11 +120,11 @@ namespace PopcornExport.Services.File
                                 new Cookie("uhh", "5703d275ec7d989652c497b9f921dfcf", "/", ".yts.am"));
                             cookieContainer.Add(new Uri(url), new Cookie("uid", "3788520", "/", ".yts.am"));
                         }
-                        using (var response = await client.SendAsync(request).ConfigureAwait(false))
+                        using (var response = await client.SendAsync(request))
                         {
                             response.EnsureSuccessStatusCode();
                             using (var contentStream =
-                                await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+                                await response.Content.ReadAsStreamAsync())
                             {
 
                                 if (blob.Name.Contains("background") ||
@@ -157,18 +159,18 @@ namespace PopcornExport.Services.File
                                                 Quality = 90
                                             });
                                             stream.Seek(0, SeekOrigin.Begin);
-                                            await file.UploadFromStreamAsync(stream).ConfigureAwait(false);
+                                            await file.UploadFromStreamAsync(stream);
                                         }
                                     }
                                     catch (Exception ex)
                                     {
                                         _loggingService.Telemetry.TrackException(ex);
-                                        await file.UploadFromStreamAsync(contentStream).ConfigureAwait(false);
+                                        await file.UploadFromStreamAsync(contentStream);
                                     }
                                 }
                                 else
                                 {
-                                    await file.UploadFromStreamAsync(contentStream).ConfigureAwait(false);
+                                    await file.UploadFromStreamAsync(contentStream);
                                 }
 
                                 return file.Uri.AbsoluteUri;
@@ -184,175 +186,6 @@ namespace PopcornExport.Services.File
                 _loggingService.Telemetry.TrackException(ex);
                 return string.Empty;
             }
-        }
-
-        /// <summary>
-        /// Upload a file to Azure Storage from a file
-        /// </summary>
-        /// <param name="fileName">File name</param>
-        /// <param name="path">Path of the file</param>
-        /// <param name="type"><see cref="ExportType"/></param>
-        /// <param name="forceReplace">Force replacing an existing file</param>
-        /// <param name="eraseSource">Erase source file</param>
-        /// <returns>Uri of the uploaded file</returns>
-        public async Task<string> UploadFileFromLocalToAzureStorage(string fileName, string path, ExportType type,
-            bool forceReplace = false, bool eraseSource = false)
-        {
-            try
-            {
-                if (!_initialized) throw new Exception("Service is not initialized");
-
-                var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
-                if (forceReplace || !await blob.ExistsAsync().ConfigureAwait(false))
-                {
-                    var file = _container.GetBlockBlobReference(
-                        $@"{type.ToFriendlyString()}/{fileName}");
-                    using (var stream = System.IO.File.OpenRead(path))
-                    {
-                        await file.UploadFromStreamAsync(stream).ConfigureAwait(false);
-                        if (eraseSource)
-                        {
-                            try
-                            {
-                                System.IO.File.Delete(path);
-                            }
-                            catch (Exception ex)
-                            {
-                                _loggingService.Telemetry.TrackException(ex);
-                            }
-                        }
-                    }
-                }
-
-                return blob.Uri.AbsoluteUri;
-            }
-            catch (Exception ex)
-            {
-                _loggingService.Telemetry.TrackException(ex);
-                return string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// Upload a file to Azure Storage from a stream
-        /// </summary>
-        /// <param name="fileName">File name</param>
-        /// <param name="stream">Stream of the file</param>
-        /// <param name="type"><see cref="ExportType"/></param>
-        /// <param name="forceReplace">Force replacing an existing file</param>
-        /// <returns>Uri of the uploaded file</returns>
-        public async Task<string> UploadFileFromStreamToAzureStorage(string fileName, Stream stream, ExportType type,
-            bool forceReplace = false)
-        {
-            try
-            {
-                if (!_initialized) throw new Exception("Service is not initialized");
-
-                var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
-                if (forceReplace || !await blob.ExistsAsync().ConfigureAwait(false))
-                {
-                    await blob.UploadFromStreamAsync(stream);
-                }
-
-                return blob.Uri.AbsoluteUri;
-            }
-            catch (Exception ex)
-            {
-                _loggingService.Telemetry.TrackException(ex);
-                return string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// Check if a blob exists
-        /// </summary>
-        /// <param name="fileName">File name</param>
-        /// <param name="type"><see cref="ExportType"/></param>
-        /// <returns>True if blob exists, false otherwise</returns>
-        public async Task<bool> CheckIfBlobExists(string fileName, ExportType type)
-        {
-            try
-            {
-                if (!_initialized) throw new Exception("Service is not initialized");
-
-                var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
-                if (await blob.ExistsAsync().ConfigureAwait(false))
-                {
-                    return true;
-                }
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _loggingService.Telemetry.TrackException(ex);
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Get blob path
-        /// </summary>
-        /// <param name="fileName">File name</param>
-        /// <param name="type"><see cref="ExportType"/></param>
-        /// <returns>Blob path</returns>
-        public async Task<string> GetBlobPath(string fileName, ExportType type)
-        {
-            try
-            {
-                if (!_initialized) throw new Exception("Service is not initialized");
-
-                var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
-                if (await blob.ExistsAsync().ConfigureAwait(false))
-                {
-                    return blob.Uri.OriginalString;
-                }
-
-                return string.Empty;
-            }
-            catch (Exception ex)
-            {
-                _loggingService.Telemetry.TrackException(ex);
-                return string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// Get a blob stream
-        /// </summary>
-        /// <param name="fileName">File name</param>
-        /// <param name="type"><see cref="ExportType"/></param>
-        /// <param name="outputStream">Output stream</param>
-        /// <returns>Blob stream</returns>
-        public async Task<Stream> DownloadBlobToStreamAsync(string fileName, ExportType type, Stream outputStream)
-        {
-            try
-            {
-                if (!_initialized) throw new Exception("Service is not initialized");
-
-                var blob = _container.GetBlockBlobReference($@"{type.ToFriendlyString()}/{fileName}");
-                if (await blob.ExistsAsync().ConfigureAwait(false))
-                {
-                    await blob.DownloadToStreamAsync(outputStream);
-                }
-
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _loggingService.Telemetry.TrackException(ex);
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Check if a directory exists
-        /// </summary>
-        /// <param name="path">Path to directory</param>
-        /// <returns></returns>
-        public bool CheckIfDirectoryExists(string path)
-        {
-            return _container.ListBlobs(path).Any();
         }
     }
 }

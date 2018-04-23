@@ -57,15 +57,6 @@ namespace PopcornExport.Services.Import
             {
                 MaxRetryCount = 10
             };
-
-            try
-            {
-                TmdbClient.GetConfig();
-            }
-            catch (Exception ex)
-            {
-                _loggingService.Telemetry.TrackException(ex);
-            }
         }
 
         /// <summary>
@@ -81,6 +72,7 @@ namespace PopcornExport.Services.Import
         /// <returns><see cref="Task"/></returns>
         public async Task Import(IEnumerable<string> rawImports, IProgressBar pbar)
         {
+            await TmdbClient.GetConfigAsync();
             var imports = rawImports.ToList();
             var workBarOptions = new ProgressBarOptions
             {
@@ -184,7 +176,7 @@ namespace PopcornExport.Services.Import
 
                             if (!context.ShowSet.Any(a => a.ImdbId == show.ImdbId))
                             {
-                                await UpdateImagesAndSimilarShow(show).ConfigureAwait(false);
+                                await UpdateImagesAndSimilarShow(show);
                                 context.ShowSet.Add(show);
                             }
                             else
@@ -205,7 +197,7 @@ namespace PopcornExport.Services.Import
                                     .Include(a => a.Genres)
                                     .Include(a => a.Images)
                                     .Include(a => a.Similars).FirstOrDefaultAsync(a => a.ImdbId == show.ImdbId)
-                                    .ConfigureAwait(false);
+                                    ;
 
                                 existingEntity.Rating.Hated = show.Rating.Hated;
                                 existingEntity.Rating.Loved = show.Rating.Loved;
@@ -273,7 +265,7 @@ namespace PopcornExport.Services.Import
                                 }
                             }
 
-                            await context.SaveChangesAsync().ConfigureAwait(false);
+                            await context.SaveChangesAsync();
                             childProgress?.Tick();
                         }
                         catch (Exception ex)
@@ -304,14 +296,14 @@ namespace PopcornExport.Services.Import
         {
             if (int.TryParse(show.TvdbId, out _))
             {
-                var search = await TmdbClient.SearchTvShowAsync(show.Title).ConfigureAwait(false);
+                var search = await TmdbClient.SearchTvShowAsync(show.Title);
                 if (search.TotalResults != 0)
                 {
                     var result = search.Results.FirstOrDefault();
                     if (result == null) return;
                     var tmdbShow =
                         await TmdbClient.GetTvShowAsync(result.Id, TvShowMethods.Images | TvShowMethods.Similar)
-                            .ConfigureAwait(false);
+                            ;
                     if (tmdbShow.Images?.Backdrops != null && tmdbShow.Images.Backdrops.Any())
                     {
                         var backdrop = GetImagePathFromTmdb(TmdbClient,
@@ -322,7 +314,7 @@ namespace PopcornExport.Services.Import
                         show.Images.Banner =
                             await _assetsService.UploadFile(
                                 $@"images/{show.ImdbId}/banner/{backdrop.Split('/').Last()}",
-                                backdrop).ConfigureAwait(false);
+                                backdrop);
                     }
 
                     if (tmdbShow.Images?.Posters != null && tmdbShow.Images.Posters.Any())
@@ -335,7 +327,7 @@ namespace PopcornExport.Services.Import
                         show.Images.Poster =
                             await _assetsService.UploadFile(
                                 $@"images/{show.ImdbId}/poster/{poster.Split('/').Last()}",
-                                poster).ConfigureAwait(false);
+                                poster);
                     }
 
                     if (tmdbShow.Similar.Results.Any())
@@ -345,7 +337,7 @@ namespace PopcornExport.Services.Import
                         {
                             try
                             {
-                                var externalIds = await TmdbClient.GetTvShowExternalIdsAsync(id).ConfigureAwait(false);
+                                var externalIds = await TmdbClient.GetTvShowExternalIdsAsync(id);
                                 if (externalIds != null)
                                 {
                                     show.Similars.Add(new Similar

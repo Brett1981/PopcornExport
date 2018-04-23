@@ -90,7 +90,7 @@ namespace PopcornExport.Services.Core
                         {
                             // Load export
                             var imports = await _exportService.LoadExport(export, childProgress)
-                                .ConfigureAwait(false);
+                                ;
                             pbar.Tick();
                             IImportService importService;
                             // Import the documents according to export type
@@ -110,13 +110,13 @@ namespace PopcornExport.Services.Core
                                     throw new NotImplementedException();
                             }
 
-                            await importService.Import(imports, childProgress).ConfigureAwait(false);
+                            await importService.Import(imports, childProgress);
                             pbar.Tick();
                         }
                     }
                 }
 
-                await _cachingService.Flush().ConfigureAwait(false);
+                await _cachingService.Flush();
                 var loggingTraceEnd =
                     $@"Export ended at {
                             DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss.fff", CultureInfo.InvariantCulture)

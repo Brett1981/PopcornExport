@@ -16,10 +16,7 @@ using TMDbLib.Client;
 using TMDbLib.Objects.Movies;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using PopcornExport.Models.Movie.v2;
 using PopcornExport.Services.File;
-using RestSharp.Portable;
-using RestSharp.Portable.HttpClient;
 using ShellProgressBar;
 using JsonSerializer = Utf8Json.JsonSerializer;
 using Movie = PopcornExport.Database.Movie;
@@ -63,15 +60,6 @@ namespace PopcornExport.Services.Import
             {
                 MaxRetryCount = 10
             };
-
-            try
-            {
-                TmdbClient.GetConfig();
-            }
-            catch (Exception ex)
-            {
-                _loggingService.Telemetry.TrackException(ex);
-            }
         }
 
         /// <summary>
@@ -87,6 +75,7 @@ namespace PopcornExport.Services.Import
         /// <returns><see cref="Task"/></returns>
         public async Task Import(IEnumerable<string> rawImports, IProgressBar pbar)
         {
+            await TmdbClient.GetConfigAsync();
             var imports = rawImports.ToList();
             var workBarOptions = new ProgressBarOptions
             {
@@ -148,7 +137,7 @@ namespace PopcornExport.Services.Import
                                 {
                                     Name = genre
                                 }).ToList() ?? new List<Genre>(),
-                                GenreNames = string.Join(", ", movieJson.Genres.Select(FirstCharToUpper)),
+                                GenreNames = string.Join(", ", movieJson.Genres?.Select(FirstCharToUpper) ?? new List<string>()),
                                 Language = movieJson.Language,
                                 Slug = movieJson.Slug,
                                 Title = movieJson.Title,
@@ -158,15 +147,15 @@ namespace PopcornExport.Services.Import
 
                             if (!context.MovieSet.Any(a => a.ImdbCode == movie.ImdbCode))
                             {
-                                await RetrieveAssets(movie).ConfigureAwait(false);
+                                await RetrieveAssets(movie);
                                 context.MovieSet.Add(movie);
-                                await context.SaveChangesAsync().ConfigureAwait(false);
+                                await context.SaveChangesAsync();
                             }
                             else
                             {
                                 var existingEntity =
                                     await context.MovieSet.Include(a => a.Torrents)
-                                        .FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode).ConfigureAwait(false);
+                                        .FirstOrDefaultAsync(a => a.ImdbCode == movie.ImdbCode);
 
                                 existingEntity.DownloadCount = movie.DownloadCount;
                                 existingEntity.LikeCount = movie.LikeCount;
@@ -180,7 +169,7 @@ namespace PopcornExport.Services.Import
                                     torrent.Seeds = updatedTorrent.Seeds;
                                 }
 
-                                await context.SaveChangesAsync().ConfigureAwait(false);
+                                await context.SaveChangesAsync();
                             }
 
                             childProgress?.Tick();
@@ -212,7 +201,7 @@ namespace PopcornExport.Services.Import
         private async Task RetrieveAssets(Movie movie)
         {
             var tmdbMovie = await TmdbClient.GetMovieAsync(movie.ImdbCode, MovieMethods.Images | MovieMethods.Similar)
-                .ConfigureAwait(false);
+                ;
             if (tmdbMovie.Images?.Backdrops != null && tmdbMovie.Images.Backdrops.Any())
             {
                 var backdrop = GetImagePathFromTmdb(TmdbClient,
@@ -223,7 +212,7 @@ namespace PopcornExport.Services.Import
                 movie.BackgroundImage =
                     await _assetsService.UploadFile(
                         $@"images/{movie.ImdbCode}/background/{backdrop.Split('/').Last()}",
-                        backdrop).ConfigureAwait(false);
+                        backdrop);
             }
 
             if (tmdbMovie.Images?.Posters != null && tmdbMovie.Images.Posters.Any())
@@ -236,7 +225,7 @@ namespace PopcornExport.Services.Import
                 movie.PosterImage =
                     await _assetsService.UploadFile(
                         $@"images/{movie.ImdbCode}/poster/{poster.Split('/').Last()}",
-                        poster).ConfigureAwait(false);
+                        poster);
             }
 
             if (movie.Torrents != null)
@@ -246,7 +235,7 @@ namespace PopcornExport.Services.Import
                     torrent.Url =
                         await _assetsService.UploadFile(
                             $@"torrents/{movie.ImdbCode}/{torrent.Quality}/{movie.ImdbCode}.torrent",
-                            torrent.Url).ConfigureAwait(false);
+                            torrent.Url);
                 }
             }
 
@@ -261,7 +250,7 @@ namespace PopcornExport.Services.Import
                                     cast.SmallImage.Split
                                         ('/')
                                         .Last()
-                                }", cast.SmallImage).ConfigureAwait(false);
+                                }", cast.SmallImage);
                     }
                 }
             }
@@ -273,7 +262,7 @@ namespace PopcornExport.Services.Import
                 {
                     try
                     {
-                        var res = await TmdbClient.GetMovieAsync(id).ConfigureAwait(false);
+                        var res = await TmdbClient.GetMovieAsync(id);
                         if (!string.IsNullOrEmpty(res?.ImdbId))
                         {
                             movie.Similars.Add(new Similar

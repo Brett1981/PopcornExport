@@ -8,17 +8,12 @@
         /// <summary>
         /// Popcorn Api to import
         /// </summary>
-        public const string TVShowAPI = "https://api-fetch.website/tv/";
+        public const string TvShowApi = "https://api-fetch.website/tv/";
 
         /// <summary>
         /// YTS Api
         /// </summary>
         public const string YtsApiUrl = "https://yts.am/api/v2/";
-
-        /// <summary>
-        /// Popcorn Api for movies
-        /// </summary>
-        public const string MovieV2ApiUrl = "https://tv-v2.api-fetch.website/movie/";
 
         /// <summary>
         /// Client ID for TMDb

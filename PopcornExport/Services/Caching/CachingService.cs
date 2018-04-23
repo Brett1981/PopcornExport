@@ -38,7 +38,7 @@ namespace PopcornExport.Services.Caching
         public async Task Flush()
         {
             var server = _connection.GetServer(Constants.RedisHost);
-            await server.FlushAllDatabasesAsync().ConfigureAwait(false);
+            await server.FlushAllDatabasesAsync();
         }
     }
 }
